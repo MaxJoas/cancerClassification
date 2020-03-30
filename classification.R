@@ -3,6 +3,7 @@ library(ranger)
 library(caret)
 library(foreach)
 library(doMC)
+library(e1071)
 
 
 ## register a paralell backend and define number of Threads
@@ -132,10 +133,12 @@ colnames(exprTableTransposed) <- make.names(colnames(exprTableTransposed))
 
 SelectFeaturesWithRandomForest <- function(featureNumber) {
     fit <- ranger(y = phenoTable[, classVariable],
-                  x = exprTableTransposed[,1:4],
+                  x = exprTableTransposed[,1:50],
                   importance = "impurity")
     varImportance <- fit$variable.importance
+    print(varImportance)
     selectedGenes <- sort(varImportance, na.last = TRUE, decreasing = TRUE)
+    plot(sort(varImportance, na.last = TRUE, decreasing = TRUE))
     selectedGenes <- selectedGenes[1:featureNumber]
     return(selectedGenes)
 }
@@ -186,9 +189,18 @@ RandomForestLOOCV <- function(numberTrees,
 
 
 
+#### SVM sandbox ####
 
-
-#### EXECUTION ####
+svm1 <- svm(y = phenoTable[, classVariable], x = exprTableTransposed, 
+            method="C-classification", kernal="radial", 
+            gamma=0.1, cost=10)
+plot(svm1)
+pred <- predict(svm1, exprTableTransposed)
+plot(svm1, data = data.frame(exprTableTransposed))
+xtab <- table(phenoTable[, classVariable], pred)
+xtab
+table(phenoTable[,classVariable])
+#### EXECUTION ####t
 ## --------------------------------------------------------------------
 
 pr <- RandomForestClassifier(200, 2, c(1:190), c(1:190),
@@ -196,7 +208,9 @@ pr <- RandomForestClassifier(200, 2, c(1:190), c(1:190),
 pr
 train.control <- trainControl(method = "LOOCV")
 rf.fit <- train(method = "ranger", x = testing, y = classVariableVector,
-                trainControl = train.control)
+                trainControl = ctrain.control)
 
 prLoocv <- RandomForestLOOCV(50, 2, colnames(exprTableTransposed)[1:5])
-
+prLoocv
+selected <- SelectFeaturesWithRandomForest(10);
+save(memImageFile);

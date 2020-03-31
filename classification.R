@@ -127,7 +127,13 @@ exprTableTransposed <- t(exprTable)
 ## this prevents an error in the ranger function due to illliegal names
 colnames(exprTableTransposed) <- make.names(colnames(exprTableTransposed))
 
+#### Tune Number of Trees for Random Forest ####
+## Function for tree tuning
 
+tuneNumberOfTrees <- function() {
+    ## TODO
+    return(100)
+}
 
 #### Feature Selection ####
 ## Function that selects genes based on the random forest variable importance
@@ -148,11 +154,16 @@ SelectFeaturesWithRandomForest <- function(index,
     return(selectedGenes[1:numFeatures])
 }
 
+## Selection with leave one out cross validation
+SelectRandomForestLOOCV <- function() {
+    return NULL
+    ## TODO
+}
+
 
 
 ## Function that classifies patients with random forest
 RandomForestClassifier <- function(numberTrees,
-                                   tunedMtry,
                                    trainIndex,
                                    testIndex,
                                    selectedCovariates) {
@@ -161,8 +172,7 @@ RandomForestClassifier <- function(numberTrees,
     fit <- ranger(y = phenoTable[trainIndex, classVariable],
                      x = exprTableTransposed[trainIndex, selectedCovariates],
                      num.trees = numberTrees,
-                     num.threads = numberThreads,
-                     mtry = tunedMtry)
+                     num.threads = numberThreads)
     message("Starting prediction based on the fitted model")
     predicted <- predict(fit,
                          exprTableTransposed[testIndex, selectedCovariates])
@@ -170,7 +180,7 @@ RandomForestClassifier <- function(numberTrees,
     return(predicted$predictions)
 }
 
-## Funvtion that classiefies patients with SVM
+## Function that classiefies patients with SVM
 SvmClassifier <- function(myKernel,
                           selectedCovariates,
                           testIndex,
@@ -193,7 +203,6 @@ SvmClassifier <- function(myKernel,
 ## --------------------------------------------------------------------
 
 RandomForestLOOCV <- function(numberTrees,
-                              my.mtry,
                               numFeatures) {
     res <- foreach(i = 1:nrow(exprTableTransposed)) %do% {
         helper <- c(1:nrow(exprTableTransposed))
@@ -262,27 +271,56 @@ table(phenoTable[,classVariable])
 #### EXECUTION ####t
 ## --------------------------------------------------------------------
 
-numberOfTrees <- c(10, 50, 200, 500, 1000)i
+trainIndex <- c(1:19) # for testing
+testIndex <- c(20:190) # for testing
+
+numberFeatures <- 40
+tunedNumberOfTrees <- tuneNumberOfTrees()
+numberOfTrees <- c(200, 500, 1000, tunedNumberOfTrees)
 kernels <- c("radial", "linear", "polynomial", "sigmoid")
+sel <- 1
+selections <- list(allGenes = colnames(exprTableTransposed), rfSelection = sel)
+names(selections)
+for(selection in selections) {
+    for (numTree in numberOfTrees) {
+        #rf.loocv <- RandomForestLOOCV(numTree, numberFeatures)
+        #rf.sample <- RandomForestClassifier(numTree, trainIndex, testIndex, selection)
+        helperLoocvFile <- paste0("rf_loocv_Selection_",
+                                  names(selection),
+                                  "_numTrees_",
+                                  numTree,
+                                  ".csv")
+        curLoocvFile <- file.path(resultDir, helperLoocvFile)
+        helperSampleFilie <- paste0("rf_sample_Selection_",
+                              names(selection) ,
+                              "_numTrees_",
+                              numTree,
+                              ".csv")
+        curSampleFile <- file.path(resultDir, helperSampleFilie)
+    }
 
-pr <- RandomForestClassifier(10, 2, c(1:190), c(1:190),
-                             colnames(exprTableTransposed)[1:8])
-pr
-train.control <- trainControl(method = "LOOCV")
-rf.fit <- train(method = "ranger", x = testing, y = classVariableVector,
-                trainControl = ctrain.control)
+    for (kern in kernels) {
+        svm.loocv <- SvmLOOCV(kern, numberFeatures)
+        svm.sample <- SvmClassifier(kern, selection, testIndex, trainIndex)
+        helperLoocvFile <- paste0("SVM_loocv_Selection_",
+                                  names(selection) ,
+                                  "_kernel_",
+                                  kern,
+                                  ".csv")
+        curLoocvFile <- file.path(resultDir, helperLoocvFile)
+        helperSampleFilie <- paste0("SVM_sample_Selection_",
+                             names(selection),
+                              "_kernel_",
+                              kern,
+                              ".csv")
 
-prLoocv <- RandomForestLOOCV(10, 2, 5)
-length(prLoocv)
-prLoocv
-svm.fit <- SvmClassifier("radial",c(1:10),c(1:190), c(1:190))
-svm.fit
-svmloocv <- SvmLOOCV(10, "linear", 5)
-table(svmloocv)
-selected <- SelectFeaturesWithRandomForest()
-## plot variable importance
+        curSampleFile <- file.path(resultDir, helperSampleFilie)
+        print(curLoocvFile)
+        print(curSampleFile)
+    }
+}
+
 plot(sort(selected, na.last = TRUE, decreasing = TRUE))
-
 message("Saving Image file")
 message(paste(memImageFile))
 save.image(memImageFile);

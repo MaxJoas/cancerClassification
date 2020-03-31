@@ -1,4 +1,5 @@
 library(knitr)
+library(gdata)
 library(ranger)
 library(caret)
 library(foreach)
@@ -16,7 +17,7 @@ doMC::registerDoMC(numberThreads)
 myHome <- Sys.getenv("HOME")
 
 ## Define the main directory for the  data and results
-mainDir <- file.path(myHome, "uni/4_sem/biostatistics/report/")
+mainDir <- file.path(myHome, "uni/4_sem/biostatistics/report")
 dir.create(path = mainDir, showWarnings = FALSE)
 message("Main dir: ", mainDir)
 
@@ -102,6 +103,7 @@ phenoTable <- read.table(file.path(destDir, files["pheno"]),
 dim(phenoTable)
 names(phenoTable)
 head(phenoTable)
+
 ## for reusability provide the name of the class variable for this dataset
 classVariable <- "sample.labels"
 
@@ -124,76 +126,96 @@ message("Do Pheno and Expressiondata have the same order of patients")
 print(all(check = T))
 exprTableTransposed <- t(exprTable)
 
-## this prevents an error in the ranger function due to illliegal names
+## this prevents an error in the ranger function due to ilegal names
 colnames(exprTableTransposed) <- make.names(colnames(exprTableTransposed))
-
-#### Tune Number of Trees for Random Forest ####
-## Function for tree tuning
-
-tuneNumberOfTrees <- function() {
-    ## TODO
-    return(100)
-}
 
 #### Feature Selection ####
 ## Function that selects genes based on the random forest variable importance
-
-SelectFeaturesWithRandomForest <- function(index,
+SelectFeaturesWithRandomForest <- function(trainIndex,
                                            numFeatures,
-                                           numberTrees
+                                           verbose = TRUE
                                            ) {
-    message("Fitting a Random Forest for feature selection")
-    fit <- ranger(y = phenoTable[index, classVariable],
-                  x = exprTableTransposed[index, c(1:20)],
+    if(verbose) message("Fitting a Random Forest for feature selection")
+    fit <- ranger(y = phenoTable[trainIndex, classVariable],
+                  x = exprTableTransposed[trainIndex,]
                   importance = "impurity",
-                  num.trees = numberTrees)
+                  mtry = tunedMtry,
+                  num.threads = numberThreads,
+                  )
 
-    message("Finished fitting, now extracting variable importance and returning")
+    if(verbose) message("Finished fitting, now extracting variable importance")
     varImportance <- fit$variable.importance
     selectedGenes <- sort(varImportance, na.last = TRUE, decreasing = TRUE)
     return(selectedGenes[1:numFeatures])
 }
 
+
+
 ## Selection with leave one out cross validation
-SelectRandomForestLOOCV <- function() {
-    return NULL
-    ## TODO
+SelectRandomForestLOOCV <- function(numFeatures,
+                                    verbose = FALSE) {
+    res <- foreach(i = 1:nrow(exprTableTransposed)) %dopar% {
+            helper <- c(1:nrow(exprTableTransposed))
+            curTrainIndex <- helper[-(i)]
+            curVariables <- SelectFeaturesWithRandomForest(curTrainIndex,
+                                                           numFeatures,
+                                                           verbose)
+            return(curVariables)
+
+    }
+    names(res) <- rownames(phenoTable)
+    return(res)
 }
 
 
 
 ## Function that classifies patients with random forest
 RandomForestClassifier <- function(numberTrees,
-                                   trainIndex,
                                    testIndex,
-                                   selectedCovariates) {
-    message("Fitting the Random Forest")
-    message(paste0("Using ",numberTrees," trees"))
-    fit <- ranger(y = phenoTable[trainIndex, classVariable],
+                                   trainIndex,
+                                   selectedCovariates,
+                                   verbose = TRUE) {
+    if(verbose) message("Fitting the Random Forest")
+    if(verbose) message(paste0("Using ",numberTrees," trees"))
+    rf.fit <- ranger(y = phenoTable[trainIndex, classVariable],
                      x = exprTableTransposed[trainIndex, selectedCovariates],
                      num.trees = numberTrees,
-                     num.threads = numberThreads)
-    message("Starting prediction based on the fitted model")
-    predicted <- predict(fit,
-                         exprTableTransposed[testIndex, selectedCovariates])
-    message("Finished predicting, now returning the predictions")
+                     num.threads = numberThreads,
+                     mtry = tunedMtry)
+
+    testData <- t(as.data.frame(exprTableTransposed[testIndex,
+                                selectedCovariates]))
+    if(length(testIndex) !=1) {
+        testData <- exprTableTransposed[testIndex, selectedCovariates]
+        }
+    if(verbose) message("Starting prediction based on the fitted model")
+    predicted <- predict(rf.fit, testData)
+    if(verbose) message("Finished predicting, now returning the predictions")
+    predicted$predictions
     return(predicted$predictions)
 }
 
-## Function that classiefies patients with SVM
-SvmClassifier <- function(myKernel,
-                          selectedCovariates,
-                          testIndex,
-                          trainIndex) {
 
+## Function that classifies patients with SVM
+SvmClassifier <- function(myKernel,
+                          testIndex,
+                          trainIndex,
+                          selectedCovariates,
+                          verbose = TRUE) {
+    if(verbose) message("Starting fitting a SVM Mode")
     svm.fit <- svm(y = phenoTable[trainIndex, classVariable],
                    x = exprTableTransposed[trainIndex, selectedCovariates],
                    kernel = myKernel,
                    gamma = 0.1,
                    cost = 10,
                    type = "C-classification")
-    predicted <- predict(svm.fit,
-                         exprTableTransposed[testIndex, selectedCovariates])
+    # neccessary in case the test index has length one (loocv)
+    testData <- t(as.data.frame(exprTableTransposed[testIndex,
+                                                           selectedCovariates]))
+    if(length(testIndex) !=1) {
+        testData <- exprTableTransposed[testIndex, selectedCovariates]
+    }
+    predicted <- predict(svm.fit, newdata = testData)
     return(predicted)
 }
 
@@ -202,125 +224,110 @@ SvmClassifier <- function(myKernel,
 #### Function for LOOCV ####
 ## --------------------------------------------------------------------
 
-RandomForestLOOCV <- function(numberTrees,
-                              numFeatures) {
-    res <- foreach(i = 1:nrow(exprTableTransposed)) %do% {
-        helper <- c(1:nrow(exprTableTransposed))
-        curTrainIndex <- helper[-(i)]
-        curVariables <- SelectFeaturesWithRandomForest(curTrainIndex,
-                                                       numberTrees,
-                                                       numFeatures)
-        inputData <- exprTableTransposed[, names(curVariables)]
-        curTrain <- inputData[-i,]
-        curTest <- t(as.data.frame(inputData[i,]))
-        curTrainGroup <- phenoTable[-i, classVariable]
-
-        message("Fitting Loocv")
-        rf.out <- ranger(y = curTrainGroup,
-                         x = curTrain)
-        predicted <- predict(rf.out, curTest)
-        res <- predicted$predictions
+LOOCV <- function(FUN,
+                  parameter,
+                  selection,
+                  verbose = FALSE) {
+    res <- foreach(i = 1:nrow(exprTableTransposed)) %dopar% {
+        curVariables <- names(selection[
+                              rownames(exprTableTransposed)[i]][[1]])
+        trainIndex <- c(1:nrow(exprTableTransposed))[-i]
+        if(verbose) message("Fitting Loocv")
+        res <- FUN(parameter,
+                   i, -i,
+                   curVariables,
+                   verbose)
         res <- droplevels(res)
+        names(res) <- NULL
         return(res)
     }
+    if(verbose) message('returning')
     names(res) <- rownames(exprTableTransposed)
     return(unlist(res))
 }
 
 
 
-SvmLOOCV <- function(numberTrees,
-                     myKernel,
-                     numberFeatures) {
-    res <- foreach(1:nrow(exprTableTransposed)) %dopar% {
-        helper <- c(1:nrow(exprTableTransposed))
-        curTrainIndex <- helper[-(i)]
-        curVariables <- SelectFeaturesWithRandomForest(curTrainIndex,
-                                                       numberTrees,
-                                                       numberFeatures)
-        print("finished variale selection")
-        inputData <- exprTableTransposed[, names(curVariables)]
-        curTrain <- inputData[curTrainIndex, ]
-        curTest <- t(as.data.frame(inputData[i,]))
-        curTrainGroup <- phenoTable[curTrainIndex, classVariable]
-        print("starting svm")
-        print(length(curTrainGroup))
-        svm.fit <- svm(y = curTrainGroup,
-                       x = curTrain,
-                       kernel = myKernel,
-                       gamma = 0.01,
-                       cost = 10,
-                       type = "C-classification"
-                       )
-        message("finished svm")
-        res <- predict(svm.fit, curTest)
-        res <- droplevels(res)
-        names(res) <- NULL
+
+#### EXECUTION ####
+## --------------------------------------------------------------------
+
+## first we tune the mtry parameter of the random forest model with cared
+## 10 folds repeat 3 times
+control <- trainControl(method = 'repeatedcv',
+                        number = 10,
+                        repeats = 3,
+                        search = 'random')
+set.seed(123)
+rf_random <- train(y = phenoTable[,classVariable],
+                   x = exprTableTransposed,
+                   method = "ranger",
+                   metric = "Accuracy",
+                   trControl = control)
+tunedMtry <- rf_random$finalModel$mtry
+
+## now we select how many covariates we want to select
+x <- SelectFeaturesWithRandomForest(c(1:nrow(exprTableTransposed)),
+                                    nrow(exprTableTransposed))
+plot(sort(selected, na.last = TRUE, decreasing = TRUE))
+lo <- loess(selected ~ c(1:nrow(exprTableTransposed)))
+out = predict(lo)
+secondDer <- diff(diff(out))
+maximalChangePoint <- max(secondDer)
+maximalChangeIndex <- match(maximalChangePoint, secondDer)
+pointHelper <- (1:nrow(phenoTable) == maximalChangeIndex)
+lines(out, col = 'red', lwd = 2)
+abline(v =maximalChangeIndex)
+points(out[pointHelper], x = maximalChangeIndex, col = "red", pch = 22, cex = 2)
+numberFeatures <- maximalChangeIndex
+
+
+## finally we can perform the acutal selection
+loocvSelections <- SelectRandomForestLOOCV(numberFeatures)
+write.csv(loocvSelections, 'loocvSelections.csv')
+numberOfTrees <- c(200, 500, 1000)
+kernels <- c("radial", "linear", "polynomial", "sigmoid")
+allGenesSelected <- rep(list(x), nrow(exprTableTransposed))
+
+names(allGenesSelected) <- rownames(exprTableTransposed)
+selections <- list(allGenes = allGenesSelected,
+                   rfSelection = loocvSelections)
+resultList <- foreach(selection = names(selections)) %do% {
+    selData <- selections[[selection]]
+    rf.comb <- foreach(numTree = numberOfTrees) %do% {
+        rf.loocv <- LOOCV(RandomForestClassifier, numTree, selData)
+        helperLoocvFile <- paste0("rf_loocv_Selection_", selection,
+                                  "_numTrees_", numTree, ".csv")
+        curLoocvFile <- file.path(resultDir, helperLoocvFile)
+        write.csv(rf.loocv, curLoocvFile)
+        res <- list(numTree = rf.loocv)
+        names(res) <- paste0(numTree)
         return(res)
     }
-    names(res) <- row.names(exprTableTransposed)
-    return(unlist(res))
+    svm.comb <- foreach (kern = kernels) %do% {
+        svm.loocv <- LOOCV(SvmClassifier, kern, selData)
+        helperLoocvFile <- paste0("SVM_loocv_Selection_",
+                                  selection, "_kernel_", kern, ".csv")
+        curLoocvFile <- file.path(resultDir, helperLoocvFile)
+        write.csv(svm.loocv, curLoocvFile)
+        res <- list(kern = svm.loocv)
+        names(res) <- paste0(kern)
+        return(res)
+    }
+    svm.name <- paste0("svm ", selection)
+    rf.name <- paste0("rf ", selection)
+    res <- list(rfRes = rf.comb, svmRes = svm.comb)
 }
-
+names(resultList) <- names(selections)
+length(resultList[[1]])
+resultList[[1]]
 
 #### SVM sandbox ####
 
-xtab <- table(phenoTable[, classVariable], pred)
-xtab
-table(phenoTable[,classVariable])
-#### EXECUTION ####t
-## --------------------------------------------------------------------
+#xtab <- table(phenoTable[, classVariable], pred)
+#xtab
+#table(phenoTable[,classVariable])
 
-trainIndex <- c(1:19) # for testing
-testIndex <- c(20:190) # for testing
-
-numberFeatures <- 40
-tunedNumberOfTrees <- tuneNumberOfTrees()
-numberOfTrees <- c(200, 500, 1000, tunedNumberOfTrees)
-kernels <- c("radial", "linear", "polynomial", "sigmoid")
-sel <- 1
-selections <- list(allGenes = colnames(exprTableTransposed), rfSelection = sel)
-names(selections)
-for(selection in selections) {
-    for (numTree in numberOfTrees) {
-        #rf.loocv <- RandomForestLOOCV(numTree, numberFeatures)
-        #rf.sample <- RandomForestClassifier(numTree, trainIndex, testIndex, selection)
-        helperLoocvFile <- paste0("rf_loocv_Selection_",
-                                  names(selection),
-                                  "_numTrees_",
-                                  numTree,
-                                  ".csv")
-        curLoocvFile <- file.path(resultDir, helperLoocvFile)
-        helperSampleFilie <- paste0("rf_sample_Selection_",
-                              names(selection) ,
-                              "_numTrees_",
-                              numTree,
-                              ".csv")
-        curSampleFile <- file.path(resultDir, helperSampleFilie)
-    }
-
-    for (kern in kernels) {
-        svm.loocv <- SvmLOOCV(kern, numberFeatures)
-        svm.sample <- SvmClassifier(kern, selection, testIndex, trainIndex)
-        helperLoocvFile <- paste0("SVM_loocv_Selection_",
-                                  names(selection) ,
-                                  "_kernel_",
-                                  kern,
-                                  ".csv")
-        curLoocvFile <- file.path(resultDir, helperLoocvFile)
-        helperSampleFilie <- paste0("SVM_sample_Selection_",
-                             names(selection),
-                              "_kernel_",
-                              kern,
-                              ".csv")
-
-        curSampleFile <- file.path(resultDir, helperSampleFilie)
-        print(curLoocvFile)
-        print(curSampleFile)
-    }
-}
-
-plot(sort(selected, na.last = TRUE, decreasing = TRUE))
 message("Saving Image file")
 message(paste(memImageFile))
 save.image(memImageFile);

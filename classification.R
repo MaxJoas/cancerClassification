@@ -9,7 +9,7 @@ library(e1071)
 
 ## register a paralell backend and define number of Threads
 numberThreads <- 4
-doMC::registerDoMC(numberThreads)
+doMC::registerDoMC(8)
 
 
 ####  Define Local directories and files ####
@@ -137,7 +137,7 @@ SelectFeaturesWithRandomForest <- function(trainIndex,
                                            ) {
     if(verbose) message("Fitting a Random Forest for feature selection")
     fit <- ranger(y = phenoTable[trainIndex, classVariable],
-                  x = exprTableTransposed[trainIndex,]
+                  x = exprTableTransposed[trainIndex,],
                   importance = "impurity",
                   mtry = tunedMtry,
                   num.threads = numberThreads,
@@ -259,18 +259,20 @@ control <- trainControl(method = 'repeatedcv',
                         repeats = 3,
                         search = 'random')
 set.seed(123)
-rf_random <- train(y = phenoTable[,classVariable],
+rf.random <- train(y = phenoTable[,classVariable],
                    x = exprTableTransposed,
                    method = "ranger",
                    metric = "Accuracy",
                    trControl = control)
-tunedMtry <- rf_random$finalModel$mtry
+tunedMtry <- rf.random$finalModel$mtry
+tunedMtryAllFeatures <- rf.random$finalModel$mtry
 
+tunedMtryAllFeatures
 ## now we select how many covariates we want to select
 x <- SelectFeaturesWithRandomForest(c(1:nrow(exprTableTransposed)),
                                     nrow(exprTableTransposed))
-plot(sort(selected, na.last = TRUE, decreasing = TRUE))
-lo <- loess(selected ~ c(1:nrow(exprTableTransposed)))
+plot(sort(x, na.last = TRUE, decreasing = TRUE))
+lo <- loess(x ~ c(1:nrow(exprTableTransposed)))
 out = predict(lo)
 secondDer <- diff(diff(out))
 maximalChangePoint <- max(secondDer)
@@ -282,17 +284,33 @@ points(out[pointHelper], x = maximalChangeIndex, col = "red", pch = 22, cex = 2)
 numberFeatures <- maximalChangeIndex
 
 
+
 ## finally we can perform the acutal selection
 loocvSelections <- SelectRandomForestLOOCV(numberFeatures)
 write.csv(loocvSelections, 'loocvSelections.csv')
+
+control <- trainControl(method = 'repeatedcv',
+                        number = 10,
+                        repeats = 3,
+                        search = 'random')
+set.seed(123)
+rf_random <- train(y = phenoTable[,classVariable],
+                   x = exprTableTransposed[,names(x)],
+                   method = "ranger",
+                   metric = "Accuracy",
+                   trControl = control)
+tunedMtryFeatureSelection <- rf_random$finalModel$mtry
+
 numberOfTrees <- c(200, 500, 1000)
 kernels <- c("radial", "linear", "polynomial", "sigmoid")
 allGenesSelected <- rep(list(x), nrow(exprTableTransposed))
 
 names(allGenesSelected) <- rownames(exprTableTransposed)
-selections <- list(allGenes = allGenesSelected,
+selections <- list(#allGenes = allGenesSelected,
                    rfSelection = loocvSelections)
 resultList <- foreach(selection = names(selections)) %do% {
+    if(selection == "rfSelection") tunedMtry = tunedMtryFeatureSelection else tunedMtry = tunedMtryAllFeatures
+    message(tunedMtry)
     selData <- selections[[selection]]
     rf.comb <- foreach(numTree = numberOfTrees) %do% {
         rf.loocv <- LOOCV(RandomForestClassifier, numTree, selData)
@@ -320,7 +338,7 @@ resultList <- foreach(selection = names(selections)) %do% {
 }
 names(resultList) <- names(selections)
 length(resultList[[1]])
-resultList[[1]]
+resultList[[1]][[1]]
 
 #### SVM sandbox ####
 

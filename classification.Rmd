@@ -368,7 +368,7 @@ LOOCV <- function(FUN,
 
 TODO
 
-```{r} execution_mtry, eval=FALSE}
+```{r execution_mtry, eval=FALSE}
 #### EXECUTION ####
 ## --------------------------------------------------------------------
 
@@ -420,7 +420,7 @@ write.csv(loocvSelections, 'loocvSelections.csv')
 
 ## Tune Mtry after the Feature Selection
 TOD
-```{r} tuned_mtry2, eval= FALSE}
+```{r tuned_mtry2, eval= FALSE}
 control <- trainControl(method = 'repeatedcv',
                         number = 10,
                         repeats = 3,

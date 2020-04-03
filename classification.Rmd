@@ -2,6 +2,7 @@
 title: "Final Report Statistics for Biology 2"
 author: "Maximilian Joas"
 date: "`r Sys.Date()`"
+bibliography: lib.bib
 output:
   html_document:
     code_folding: hide
@@ -75,10 +76,29 @@ knitr::opts_chunk$set(
 
 
 ```
+## Background
+This report is based on a 2009 study by Den Boer et al. The goal of this study was to TODO
+Genetic subtypes of acute lymphoblastic leukaemia (ALL) are used to determine risk and treatment in children. 25% of precursor B-ALL cases are genetically unclassified and have intermediate prognosis. We aimed to use a genome-wide study to improve prognostic classification of ALL in children. TODO
+In the report however I am to use the data set to methodigaly explore which methods for classificatoin 
+works best and how different parameters influence the classification. Precisly I use support vector machine (SVM) and random forest for classification. Additionally I use random forest for feature selection.
+
+## Methods Theory
+Random forest is a widely used method for classification it works like bla bla
+it depends on trees mtry blabla. It is also widely used for feature selection bla bla masterarbeit
+
+SVM is another well estbalished method for classification it tries to seperate the data by 
+I relies on different kernels for dimension mappings in particular
+
+## Methods Implementation
+
+## Results
+
+## Interpretation
+
 
 
 ## Data Loading and Preparation
-I will not go into detail in this part, since it is basiacally the same code that we did
+I will not go into detail in this part[@den2009subtype], since it is basiacally the same code that we did @den2009subtype
 together in class. I will only comment on things that I have changed in comparison to the work in class.
 The main difference in this section is that I registered a prallel backend for multithreading and that 
 I stored the class Variable "sample.labels" in an extra variable to make the code more reusable in case

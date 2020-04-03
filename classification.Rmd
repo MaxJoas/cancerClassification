@@ -84,7 +84,7 @@ The main difference in this section is that I registered a prallel backend for m
 I stored the class Variable "sample.labels" in an extra variable to make the code more reusable in case
 we use a different dataset where the class variable has another name, we just need to change this variable once.
 
-```{r loading_library, eval=FALSE}
+```{r loading_library}
 library(knitr)
 library(gdata)
 library(ranger)

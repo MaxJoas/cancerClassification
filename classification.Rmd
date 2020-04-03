@@ -510,7 +510,7 @@ evaluationResults <- foreach(res = resultList, .combine = 'rbind') %do% {
   check <- names(response) == names(res)
   message("Patients in Same Order:")
   print(all(check,TRUE))
- 
+  auc <- multiclass.roc(response = as.numeric(response), predictor = as.numeric(res))
   tab <- table(res, response)
   misclError <- 1-sum(diag(tab))/sum(tab)
   ci.upper <- misclError + 1.96 * sqrt( (misclError * (1 - misclError)) / 190)
@@ -518,9 +518,10 @@ evaluationResults <- foreach(res = resultList, .combine = 'rbind') %do% {
   ci.interval <- paste0(round(ci.lower,4), "-", round(ci.upper,4))
   message("Misclassifiction Error for current predictions:")
   message(round(misclError,4))
-  return(data.frame(MisclassificationError = round(misclError,4), CI = ci.interval))
+  return(data.frame(MisclassificationError = round(misclError,4), CI = ci.interval,
+         AUC = auc$auc))
 }
-
+evaluationResults
 ## make resulttable more beautiful
 
 helper <- evaluationResults[8:14,]
@@ -538,7 +539,7 @@ rownames(evaluationResults) <- parameters
 colnames(evaluationResults) <- c("All Genes",
                                  "95% CI",
                                  "48 Selected Genes",
-                                 "95% CI")
+                                 "95% CI", "AUC ROC")
 
 kable(evaluationResults)
 ```

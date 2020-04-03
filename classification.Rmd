@@ -213,7 +213,7 @@ This should be the case, but a mistake here would be crucial. I also transposed 
 have all the patient as rows and the gene expression values in columns. This format is required by
 many packages for classification.
 
-```{r prepare_classification, eval=TRUE}
+```{r prepare_classification, eval=FALSE}
 #### Prepare data for classification task ####
 ## check if pheno data and expression data have same order of patients
 check <- colnames(exprTable) == rownames(phenoTable)
@@ -234,7 +234,18 @@ however, to implement the functionality myself. The reason for this is that I al
 the LOOCV approach for feature selection to avoid any bias. With my own implementation I could be sure
 that I used the exact same method for feature selection and the training of the model. For my Implementation I used the foreach package for parallelization, which is highly optimized. Thus,
 my implementation is also highly performant.
-```{r functions, eval=TRUE}
+
+My functions are structured as follows: I have one function "SelectFeaturesWithWu
+
+```{r functions, eval=FALSE}
+
+FilterClass <- function(minimumNumberofCases){
+  releventClasses <- names(which(table(
+                    phenoTable[, classVariable]) > minimumNumberofCases))
+   helper <- phenoTable[, classVariable] %in% releventClasses
+   phenoTable <- phenoTable[helper, ]
+   exprTableTransposed <- exprTableTransposed[helper, ]
+}
 #### Feature Selection ####
 ## Function that selects genes based on the random forest variable importance
 ## It takes a vector as index variable that indicates which patients should be used
@@ -262,9 +273,7 @@ SelectFeaturesWithRandomForest <- function(trainIndex,
 SelectRandomForestLOOCV <- function(numFeatures,
                                     verbose = FALSE) {
     res <- foreach(i = 1:nrow(exprTableTransposed)) %dopar% {
-            helper <- c(1:nrow(exprTableTransposed))
-            curTrainIndex <- helper[-(i)]
-            curVariables <- SelectFeaturesWithRandomForest(curTrainIndex,
+            curVariables <- SelectFeaturesWithRandomForest(-i,
                                                            numFeatures,
                                                            verbose)
             return(curVariables)
@@ -359,12 +368,15 @@ LOOCV <- function(FUN,
 
 TODO
 
-```{r} execution_mtry}
+```{r} execution_mtry, eval=FALSE}
 #### EXECUTION ####
 ## --------------------------------------------------------------------
 
 ## first we tune the mtry parameter of the random forest model with cared
 ## 10 folds repeat 3 times
+
+# at first we need to perform class filtering
+FilterClass(30)
 control <- trainControl(method = 'repeatedcv',
                         number = 10,
                         repeats = 3,
@@ -383,7 +395,7 @@ tunedMtryAllFeatures <- rf.random$finalModel$mtry
 
 ## Feature Selection Execution
 TODO
-```{r feature_selection}
+```{r feature_selection, eval=FALSE}
 ## now we select how many covariates we want to select
 x <- SelectFeaturesWithRandomForest(c(1:nrow(exprTableTransposed)),
                                     nrow(exprTableTransposed))
@@ -408,7 +420,7 @@ write.csv(loocvSelections, 'loocvSelections.csv')
 
 ## Tune Mtry after the Feature Selection
 TOD
-```{r} tuned_mtry2}
+```{r} tuned_mtry2, eval= FALSE}
 control <- trainControl(method = 'repeatedcv',
                         number = 10,
                         repeats = 3,
@@ -470,7 +482,7 @@ resultList <- foreach(selection = names(selections), .combine = "c") %do% {
 ## Evaluation
 TODO
 
-```{r evaluation}
+```{r evaluation, eval=FALSE}
 response <- phenoTable[, classVariable]
 response <- factor(response, levels = rev(levels(response)))
 names(response) <- rownames(phenoTable)

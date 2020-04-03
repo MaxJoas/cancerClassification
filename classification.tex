@@ -1,0 +1,603 @@
+\PassOptionsToPackage{unicode=true}{hyperref} % options for packages loaded elsewhere
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provides euro and other symbols
+\else % if luatex or xelatex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage[]{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\usepackage{hyperref}
+\hypersetup{
+            pdftitle={Final Report Statistics for Biology 2},
+            pdfauthor={Maximilian Joas},
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{48,48,48}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{1.00,0.81,0.69}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.50,0.62,0.50}{\textbf{#1}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.80,0.80,0.80}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.86,0.64,0.64}{#1}}
+\newcommand{\BuiltInTok}[1]{\textcolor[rgb]{0.80,0.80,0.80}{#1}}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.86,0.64,0.64}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.50,0.62,0.50}{#1}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.50,0.62,0.50}{\textbf{#1}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.86,0.64,0.64}{\textbf{#1}}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.94,0.87,0.69}{#1}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.87,0.87,0.75}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.86,0.86,0.80}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.50,0.62,0.50}{#1}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.76,0.75,0.62}{#1}}
+\newcommand{\ExtensionTok}[1]{\textcolor[rgb]{0.80,0.80,0.80}{#1}}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.75,0.75,0.82}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.94,0.94,0.56}{#1}}
+\newcommand{\ImportTok}[1]{\textcolor[rgb]{0.80,0.80,0.80}{#1}}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.50,0.62,0.50}{\textbf{#1}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.94,0.87,0.69}{#1}}
+\newcommand{\NormalTok}[1]{\textcolor[rgb]{0.80,0.80,0.80}{#1}}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.94,0.94,0.82}{#1}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.94,0.94,0.56}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{1.00,0.81,0.69}{\textbf{#1}}}
+\newcommand{\RegionMarkerTok}[1]{\textcolor[rgb]{0.80,0.80,0.80}{#1}}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.86,0.64,0.64}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.80,0.58,0.58}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.80,0.58,0.58}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.80,0.80,0.80}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.80,0.58,0.58}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.50,0.62,0.50}{\textbf{#1}}}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+% set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+
+\usepackage{etoolbox}
+\makeatletter
+\providecommand{\subtitle}[1]{% add subtitle to \maketitle
+  \apptocmd{\@title}{\par {\large #1 \par}}{}{}
+}
+\makeatother
+
+\title{Final Report Statistics for Biology 2}
+\providecommand{\subtitle}[1]{}
+\subtitle{Random Forest and SVM for Cancer Classification}
+\author{Maximilian Joas}
+\date{2020-04-03}
+
+\begin{document}
+\maketitle
+
+{
+\setcounter{tocdepth}{3}
+\tableofcontents
+}
+\hypertarget{data-loading-and-preparation}{%
+\subsection{Data Loading and
+Preparation}\label{data-loading-and-preparation}}
+
+I will not go into detail in this part, since it is basiacally the same
+code that we did together in class. I will only comment on things that I
+have changed in comparison to the work in class. The main difference in
+this section is that I registered a prallel backend for multithreading
+and that I stored the class Variable ``sample.labels'' in an extra
+variable to make the code more reusable in case we use a different
+dataset where the class variable has another name, we just need to
+change this variable once.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{library}\NormalTok{(knitr)}
+\KeywordTok{library}\NormalTok{(gdata)}
+\KeywordTok{library}\NormalTok{(ranger)}
+\KeywordTok{library}\NormalTok{(caret)}
+\KeywordTok{library}\NormalTok{(foreach)}
+\KeywordTok{library}\NormalTok{(doMC)}
+\KeywordTok{library}\NormalTok{(e1071)}
+\KeywordTok{library}\NormalTok{(pROC)}
+
+\CommentTok{## register a paralell backend and define number of Threads}
+\CommentTok{## Note the the numberThreads variable gets passed later to the ranger function}
+\CommentTok{## this is neccessary, because ranger uses all available threads as a default and I }
+\CommentTok{## did not intend to overload the cluster.}
+\NormalTok{numberThreads <-}\StringTok{ }\DecValTok{4}
+\NormalTok{doMC}\OperatorTok{::}\KeywordTok{registerDoMC}\NormalTok{(}\DecValTok{8}\NormalTok{)}
+
+
+\CommentTok{####  Define Local directories and files ####}
+\CommentTok{## Find the home directory}
+\NormalTok{myHome <-}\StringTok{ }\KeywordTok{Sys.getenv}\NormalTok{(}\StringTok{"HOME"}\NormalTok{)}
+
+\CommentTok{## Define the main directory for the  data and results}
+\NormalTok{mainDir <-}\StringTok{ }\KeywordTok{file.path}\NormalTok{(myHome, }\StringTok{"uni/4_sem/biostatistics/report"}\NormalTok{)}
+\KeywordTok{dir.create}\NormalTok{(}\DataTypeTok{path =}\NormalTok{ mainDir, }\DataTypeTok{showWarnings =} \OtherTok{FALSE}\NormalTok{)}
+\KeywordTok{message}\NormalTok{(}\StringTok{"Main dir: "}\NormalTok{, mainDir)}
+
+\CommentTok{## Define a file where we wills store the memory image}
+\NormalTok{memImageFile <-}\StringTok{ }\KeywordTok{file.path}\NormalTok{(mainDir, }\StringTok{"DenBoerData_loaded.Rdata"}\NormalTok{)}
+
+\CommentTok{## Define the dir where we will download the data}
+\NormalTok{destDir <-}\StringTok{ }\KeywordTok{file.path}\NormalTok{(mainDir, }\StringTok{"data"}\NormalTok{)}
+\KeywordTok{message}\NormalTok{(}\StringTok{"Local data dir: "}\NormalTok{, destDir)}
+
+\CommentTok{## Define a file where we will store all results}
+\NormalTok{resultDir <-}\StringTok{ }\KeywordTok{file.path}\NormalTok{(mainDir, }\StringTok{"resultDir"}\NormalTok{)}
+\KeywordTok{message}\NormalTok{(}\StringTok{"Result direcotry"}\NormalTok{, resultDir)}
+
+
+\CommentTok{#### Define variables for the location and name of the input files ####}
+\CommentTok{## URL fo the folder containing the data fle}
+\CommentTok{## Maybe refactor and pass via command line arguments later}
+\NormalTok{dataURL <-}\StringTok{ "https://github.com/jvanheld/stat1/raw/master/data/DenBoer_2009/"}
+
+\NormalTok{files <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}
+  \DataTypeTok{expr =} \StringTok{"GSE13425_Norm_Whole.tsv.gz"}\NormalTok{,}
+  \DataTypeTok{pheno =} \StringTok{"phenoData_GSE13425.tsv.gz"}\NormalTok{,}
+  \DataTypeTok{groups =} \StringTok{"GSE13425_group_descriptions.tsv.gz"}
+\NormalTok{)}
+
+
+
+\CommentTok{## Function that downloads input files in case they don"t exist locally yet}
+\NormalTok{DownloadMyFiles <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(files,}
+\NormalTok{                            dataURL,}
+\NormalTok{                            destDir) \{}
+
+  \CommentTok{## Create local directory}
+  \KeywordTok{dir.create}\NormalTok{(destDir, }\DataTypeTok{recursive =} \OtherTok{TRUE}\NormalTok{, }\DataTypeTok{showWarnings =} \OtherTok{FALSE}\NormalTok{)}
+
+  \ControlFlowTok{for}\NormalTok{ (f }\ControlFlowTok{in}\NormalTok{ files) \{}
+
+    \CommentTok{## Destination file}
+\NormalTok{    destFile <-}\StringTok{ }\KeywordTok{file.path}\NormalTok{(destDir, f)}
+
+    \CommentTok{## Check if file exists}
+    \ControlFlowTok{if}\NormalTok{ (}\KeywordTok{file.exists}\NormalTok{(destFile)) \{}
+      \KeywordTok{message}\NormalTok{(}\StringTok{"skipping download because file exists: }\CharTok{\textbackslash{}n}\StringTok{"}\NormalTok{, destFile)}
+\NormalTok{    \} }\ControlFlowTok{else}\NormalTok{ \{}
+\NormalTok{      sourceURL <-}\StringTok{ }\KeywordTok{file.path}\NormalTok{(dataURL, f)}
+      \KeywordTok{download.file}\NormalTok{(}\DataTypeTok{url =}\NormalTok{ sourceURL, }\DataTypeTok{destfile =}\NormalTok{ destFile)}
+\NormalTok{    \}}
+\NormalTok{  \}}
+\NormalTok{\}}
+
+
+
+
+\CommentTok{## Call the function to download the files}
+\KeywordTok{DownloadMyFiles}\NormalTok{(}\DataTypeTok{files =}\NormalTok{ files, }\DataTypeTok{dataURL =}\NormalTok{ dataURL, }\DataTypeTok{destDir =}\NormalTok{ destDir)}
+
+\KeywordTok{kable}\NormalTok{(}\KeywordTok{data.frame}\NormalTok{(}\KeywordTok{list.files}\NormalTok{(destDir)),}
+      \DataTypeTok{caption =} \StringTok{"Content of the destination directory after file download. "}\NormalTok{)}
+
+
+
+\CommentTok{## ---------------------------------------------------------------------}
+\CommentTok{#### Load data tables ####}
+
+\CommentTok{## Load expression table}
+\NormalTok{exprTable <-}\StringTok{ }\KeywordTok{read.table}\NormalTok{(}\KeywordTok{file.path}\NormalTok{(destDir, files[}\StringTok{"expr"}\NormalTok{]),}
+                        \DataTypeTok{sep =} \StringTok{"}\CharTok{\textbackslash{}t}\StringTok{"}\NormalTok{,}
+                        \DataTypeTok{header =} \OtherTok{TRUE}\NormalTok{,}
+                        \DataTypeTok{quote =} \StringTok{""}\NormalTok{,}
+                        \DataTypeTok{row.names =} \DecValTok{1}\NormalTok{)}
+\KeywordTok{dim}\NormalTok{(exprTable)}
+\KeywordTok{head}\NormalTok{(exprTable)}
+
+\CommentTok{## Load metadescriptions (pheno table)}
+\NormalTok{phenoTable <-}\StringTok{ }\KeywordTok{read.table}\NormalTok{(}\KeywordTok{file.path}\NormalTok{(destDir, files[}\StringTok{"pheno"}\NormalTok{]),}
+                         \DataTypeTok{sep =} \StringTok{"}\CharTok{\textbackslash{}t}\StringTok{"}\NormalTok{,}
+                         \DataTypeTok{header =} \OtherTok{TRUE}\NormalTok{,}
+                         \DataTypeTok{quote =} \StringTok{""}\NormalTok{,}
+                         \DataTypeTok{row.names =} \DecValTok{1}
+\NormalTok{                         )}
+\KeywordTok{head}\NormalTok{(phenoTable)}
+
+\CommentTok{## for reusability provide the name of the class variable for this dataset}
+\NormalTok{classVariable <-}\StringTok{ "sample.labels"}
+
+\CommentTok{## Load group descriptions}
+\NormalTok{groupDescriptions <-}\StringTok{ }\KeywordTok{read.table}\NormalTok{(}\KeywordTok{file.path}\NormalTok{(destDir, files[}\StringTok{"groups"}\NormalTok{]),}
+                                \DataTypeTok{sep =} \StringTok{"}\CharTok{\textbackslash{}t}\StringTok{"}\NormalTok{,}
+                                \DataTypeTok{header =} \OtherTok{TRUE}\NormalTok{,}
+                                \DataTypeTok{quote =} \StringTok{""}\NormalTok{,}
+                                \DataTypeTok{row.names =} \DecValTok{1}\NormalTok{)}
+\KeywordTok{dim}\NormalTok{(groupDescriptions)}
+\KeywordTok{print}\NormalTok{(groupDescriptions)}
+\KeywordTok{kable}\NormalTok{(groupDescriptions)}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{prepare-data-specifically-for-the-classification-task}{%
+\subsection{Prepare Data specifically for the classification
+task}\label{prepare-data-specifically-for-the-classification-task}}
+
+Since I am working with two data tables, one with the gene expression
+data and one with the pheno data, I check if the patients have the same
+order in each of the tables. This should be the case, but a mistake here
+would be crucial. I also transposed the expression table to have all the
+patient as rows and the gene expression values in columns. This format
+is required by many packages for classification.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#### Prepare data for classification task ####}
+\CommentTok{## check if pheno data and expression data have same order of patients}
+\NormalTok{check <-}\StringTok{ }\KeywordTok{colnames}\NormalTok{(exprTable) }\OperatorTok{==}\StringTok{ }\KeywordTok{rownames}\NormalTok{(phenoTable)}
+\KeywordTok{message}\NormalTok{(}\StringTok{"Do Pheno and Expressiondata have the same order of patients"}\NormalTok{)}
+\KeywordTok{message}\NormalTok{(}\KeywordTok{all}\NormalTok{(}\DataTypeTok{check =} \OtherTok{TRUE}\NormalTok{))}
+
+\CommentTok{## Transposing the exprTable do that it has the right format for the package}
+\NormalTok{exprTableTransposed <-}\StringTok{ }\KeywordTok{t}\NormalTok{(exprTable)}
+
+\CommentTok{## this prevents an error in the ranger function due to ilegal names}
+\KeywordTok{colnames}\NormalTok{(exprTableTransposed) <-}\StringTok{ }\KeywordTok{make.names}\NormalTok{(}\KeywordTok{colnames}\NormalTok{(exprTableTransposed))}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{functions-for-feature-selection-and-classification}{%
+\subsection{Functions for Feature Selection and
+Classification}\label{functions-for-feature-selection-and-classification}}
+
+I order to have as many training and test patients as possible I decided
+to use leave one out cross validation as an approach. The standard way
+to do this would be to use the caret packages. I decided, however, to
+implement the functionality myself. The reason for this is that I also
+wanted to use the LOOCV approach for feature selection to avoid any
+bias. With my own implementation I could be sure that I used the exact
+same method for feature selection and the training of the model. For my
+Implementation I used the foreach package for parallelization, which is
+highly optimized. Thus, my implementation is also highly performant.
+
+My functions are structured as follows: I have one function
+"SelectFeaturesWithWu
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{FilterClass <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(minimumNumberofCases)\{}
+\NormalTok{  releventClasses <-}\StringTok{ }\KeywordTok{names}\NormalTok{(}\KeywordTok{which}\NormalTok{(}\KeywordTok{table}\NormalTok{(}
+\NormalTok{                    phenoTable[, classVariable]) }\OperatorTok{>}\StringTok{ }\NormalTok{minimumNumberofCases))}
+\NormalTok{   helper <-}\StringTok{ }\NormalTok{phenoTable[, classVariable] }\OperatorTok{%in%}\StringTok{ }\NormalTok{releventClasses}
+\NormalTok{   phenoTable <-}\StringTok{ }\NormalTok{phenoTable[helper, ]}
+\NormalTok{   exprTableTransposed <-}\StringTok{ }\NormalTok{exprTableTransposed[helper, ]}
+\NormalTok{\}}
+\CommentTok{#### Feature Selection ####}
+\CommentTok{## Function that selects genes based on the random forest variable importance}
+\CommentTok{## It takes a vector as index variable that indicates which patients should be used}
+\NormalTok{SelectFeaturesWithRandomForest <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(trainIndex,}
+\NormalTok{                                           numFeatures,}
+                                           \DataTypeTok{verbose =} \OtherTok{TRUE}
+\NormalTok{                                           ) \{}
+    \ControlFlowTok{if}\NormalTok{(verbose) }\KeywordTok{message}\NormalTok{(}\StringTok{"Fitting a Random Forest for feature selection"}\NormalTok{)}
+\NormalTok{    fit <-}\StringTok{ }\KeywordTok{ranger}\NormalTok{(}\DataTypeTok{y =}\NormalTok{ phenoTable[trainIndex, classVariable],}
+                  \DataTypeTok{x =}\NormalTok{ exprTableTransposed[trainIndex,],}
+                  \DataTypeTok{importance =} \StringTok{"impurity"}\NormalTok{,}
+                  \DataTypeTok{mtry =}\NormalTok{ tunedMtry,}
+                  \DataTypeTok{num.threads =}\NormalTok{ numberThreads,}
+\NormalTok{                  )}
+
+    \ControlFlowTok{if}\NormalTok{(verbose) }\KeywordTok{message}\NormalTok{(}\StringTok{"Finished fitting, now extracting variable importance"}\NormalTok{)}
+\NormalTok{    varImportance <-}\StringTok{ }\NormalTok{fit}\OperatorTok{$}\NormalTok{variable.importance}
+\NormalTok{    selectedGenes <-}\StringTok{ }\KeywordTok{sort}\NormalTok{(varImportance, }\DataTypeTok{na.last =} \OtherTok{TRUE}\NormalTok{, }\DataTypeTok{decreasing =} \OtherTok{TRUE}\NormalTok{)}
+    \KeywordTok{return}\NormalTok{(selectedGenes[}\DecValTok{1}\OperatorTok{:}\NormalTok{numFeatures])}
+\NormalTok{\}}
+
+
+
+\CommentTok{## Selection with leave one out cross validation}
+\NormalTok{SelectRandomForestLOOCV <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(numFeatures,}
+                                    \DataTypeTok{verbose =} \OtherTok{FALSE}\NormalTok{) \{}
+\NormalTok{    res <-}\StringTok{ }\KeywordTok{foreach}\NormalTok{(}\DataTypeTok{i =} \DecValTok{1}\OperatorTok{:}\KeywordTok{nrow}\NormalTok{(exprTableTransposed)) }\OperatorTok{%dopar%}\StringTok{ }\NormalTok{\{}
+\NormalTok{            curVariables <-}\StringTok{ }\KeywordTok{SelectFeaturesWithRandomForest}\NormalTok{(}\OperatorTok{-}\NormalTok{i,}
+\NormalTok{                                                           numFeatures,}
+\NormalTok{                                                           verbose)}
+            \KeywordTok{return}\NormalTok{(curVariables)}
+
+\NormalTok{    \}}
+    \KeywordTok{names}\NormalTok{(res) <-}\StringTok{ }\KeywordTok{rownames}\NormalTok{(phenoTable)}
+    \KeywordTok{return}\NormalTok{(res)}
+\NormalTok{\}}
+
+
+
+\CommentTok{## Function that classifies patients with random forest}
+\NormalTok{RandomForestClassifier <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(numberTrees,}
+\NormalTok{                                   testIndex,}
+\NormalTok{                                   trainIndex,}
+\NormalTok{                                   selectedCovariates,}
+                                   \DataTypeTok{verbose =} \OtherTok{TRUE}\NormalTok{) \{}
+    \ControlFlowTok{if}\NormalTok{(verbose) }\KeywordTok{message}\NormalTok{(}\StringTok{"Fitting the Random Forest"}\NormalTok{)}
+    \ControlFlowTok{if}\NormalTok{(verbose) }\KeywordTok{message}\NormalTok{(}\KeywordTok{paste0}\NormalTok{(}\StringTok{"Using "}\NormalTok{,numberTrees,}\StringTok{" trees"}\NormalTok{))}
+\NormalTok{    rf.fit <-}\StringTok{ }\KeywordTok{ranger}\NormalTok{(}\DataTypeTok{y =}\NormalTok{ phenoTable[trainIndex, classVariable],}
+                     \DataTypeTok{x =}\NormalTok{ exprTableTransposed[trainIndex, selectedCovariates],}
+                     \DataTypeTok{num.trees =}\NormalTok{ numberTrees,}
+                     \DataTypeTok{num.threads =}\NormalTok{ numberThreads,}
+                     \DataTypeTok{mtry =}\NormalTok{ tunedMtry)}
+
+\NormalTok{    testData <-}\StringTok{ }\KeywordTok{t}\NormalTok{(}\KeywordTok{as.data.frame}\NormalTok{(exprTableTransposed[testIndex,}
+\NormalTok{                                selectedCovariates]))}
+    \ControlFlowTok{if}\NormalTok{(}\KeywordTok{length}\NormalTok{(testIndex) }\OperatorTok{!=}\DecValTok{1}\NormalTok{) \{}
+\NormalTok{        testData <-}\StringTok{ }\NormalTok{exprTableTransposed[testIndex, selectedCovariates]}
+\NormalTok{        \}}
+    \ControlFlowTok{if}\NormalTok{(verbose) }\KeywordTok{message}\NormalTok{(}\StringTok{"Starting prediction based on the fitted model"}\NormalTok{)}
+\NormalTok{    predicted <-}\StringTok{ }\KeywordTok{predict}\NormalTok{(rf.fit, testData)}
+    \ControlFlowTok{if}\NormalTok{(verbose) }\KeywordTok{message}\NormalTok{(}\StringTok{"Finished predicting, now returning the predictions"}\NormalTok{)}
+\NormalTok{    predicted}\OperatorTok{$}\NormalTok{predictions}
+    \KeywordTok{return}\NormalTok{(predicted}\OperatorTok{$}\NormalTok{predictions)}
+\NormalTok{\}}
+
+
+\CommentTok{## Function that classifies patients with SVM}
+\NormalTok{SvmClassifier <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(myKernel,}
+\NormalTok{                          testIndex,}
+\NormalTok{                          trainIndex,}
+\NormalTok{                          selectedCovariates,}
+                          \DataTypeTok{verbose =} \OtherTok{TRUE}\NormalTok{) \{}
+    \ControlFlowTok{if}\NormalTok{(verbose) }\KeywordTok{message}\NormalTok{(}\StringTok{"Starting fitting a SVM Mode"}\NormalTok{)}
+\NormalTok{    svm.fit <-}\StringTok{ }\KeywordTok{svm}\NormalTok{(}\DataTypeTok{y =}\NormalTok{ phenoTable[trainIndex, classVariable],}
+                   \DataTypeTok{x =}\NormalTok{ exprTableTransposed[trainIndex, selectedCovariates],}
+                   \DataTypeTok{kernel =}\NormalTok{ myKernel,}
+                   \DataTypeTok{gamma =} \FloatTok{0.1}\NormalTok{,}
+                   \DataTypeTok{cost =} \DecValTok{10}\NormalTok{,}
+                   \DataTypeTok{type =} \StringTok{"C-classification"}\NormalTok{)}
+    \CommentTok{# neccessary in case the test index has length one (loocv)}
+\NormalTok{    testData <-}\StringTok{ }\KeywordTok{t}\NormalTok{(}\KeywordTok{as.data.frame}\NormalTok{(exprTableTransposed[testIndex,}
+\NormalTok{                                                           selectedCovariates]))}
+    \ControlFlowTok{if}\NormalTok{(}\KeywordTok{length}\NormalTok{(testIndex) }\OperatorTok{!=}\DecValTok{1}\NormalTok{) \{}
+\NormalTok{        testData <-}\StringTok{ }\NormalTok{exprTableTransposed[testIndex, selectedCovariates]}
+\NormalTok{    \}}
+\NormalTok{    predicted <-}\StringTok{ }\KeywordTok{predict}\NormalTok{(svm.fit, }\DataTypeTok{newdata =}\NormalTok{ testData)}
+    \KeywordTok{return}\NormalTok{(predicted)}
+\NormalTok{\}}
+
+
+
+\CommentTok{#### Function for LOOCV ####}
+\CommentTok{## --------------------------------------------------------------------}
+
+\NormalTok{LOOCV <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(FUN,}
+\NormalTok{                  parameter,}
+\NormalTok{                  selection,}
+                  \DataTypeTok{verbose =} \OtherTok{FALSE}\NormalTok{) \{}
+\NormalTok{    res <-}\StringTok{ }\KeywordTok{foreach}\NormalTok{(}\DataTypeTok{i =} \DecValTok{1}\OperatorTok{:}\KeywordTok{nrow}\NormalTok{(exprTableTransposed)) }\OperatorTok{%dopar%}\StringTok{ }\NormalTok{\{}
+\NormalTok{        curVariables <-}\StringTok{ }\KeywordTok{names}\NormalTok{(selection[}
+                              \KeywordTok{rownames}\NormalTok{(exprTableTransposed)[i]][[}\DecValTok{1}\NormalTok{]])}
+\NormalTok{        trainIndex <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\KeywordTok{nrow}\NormalTok{(exprTableTransposed))[}\OperatorTok{-}\NormalTok{i]}
+        \ControlFlowTok{if}\NormalTok{(verbose) }\KeywordTok{message}\NormalTok{(}\StringTok{"Fitting Loocv"}\NormalTok{)}
+\NormalTok{        res <-}\StringTok{ }\KeywordTok{FUN}\NormalTok{(parameter,}
+\NormalTok{                   i, }\OperatorTok{-}\NormalTok{i,}
+\NormalTok{                   curVariables,}
+\NormalTok{                   verbose)}
+\NormalTok{        res <-}\StringTok{ }\KeywordTok{droplevels}\NormalTok{(res)}
+        \KeywordTok{names}\NormalTok{(res) <-}\StringTok{ }\OtherTok{NULL}
+        \KeywordTok{return}\NormalTok{(res)}
+\NormalTok{    \}}
+    \ControlFlowTok{if}\NormalTok{(verbose) }\KeywordTok{message}\NormalTok{(}\StringTok{'returning'}\NormalTok{)}
+    \KeywordTok{names}\NormalTok{(res) <-}\StringTok{ }\KeywordTok{rownames}\NormalTok{(exprTableTransposed)}
+    \KeywordTok{return}\NormalTok{(}\KeywordTok{unlist}\NormalTok{(res))}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{execution-of-code}{%
+\subsection{Execution of code}\label{execution-of-code}}
+
+TODO
+
+```\{r\} execution\_mtry, eval=FALSE\} \#\#\#\# EXECUTION \#\#\#\# \#\#
+--------------------------------------------------------------------
+
+\hypertarget{first-we-tune-the-mtry-parameter-of-the-random-forest-model-with-cared}{%
+\subsection{first we tune the mtry parameter of the random forest model
+with
+cared}\label{first-we-tune-the-mtry-parameter-of-the-random-forest-model-with-cared}}
+
+\hypertarget{folds-repeat-3-times}{%
+\subsection{10 folds repeat 3 times}\label{folds-repeat-3-times}}
+
+\hypertarget{at-first-we-need-to-perform-class-filtering}{%
+\section{at first we need to perform class
+filtering}\label{at-first-we-need-to-perform-class-filtering}}
+
+FilterClass(30) control \textless{}- trainControl(method = `repeatedcv',
+number = 10, repeats = 3, search = `random') set.seed(123) rf.random
+\textless{}- train(y = phenoTable{[},classVariable{]}, x =
+exprTableTransposed, method = ``ranger'', metric = ``Accuracy'',
+trControl = control) tunedMtry \textless{}- rf.random\(finalModel\)mtry
+tunedMtryAllFeatures \textless{}- rf.random\(finalModel\)mtry
+
+```
+
+\hypertarget{feature-selection-execution}{%
+\subsection{Feature Selection
+Execution}\label{feature-selection-execution}}
+
+TODO
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{## now we select how many covariates we want to select}
+\NormalTok{x <-}\StringTok{ }\KeywordTok{SelectFeaturesWithRandomForest}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\KeywordTok{nrow}\NormalTok{(exprTableTransposed)),}
+                                    \KeywordTok{nrow}\NormalTok{(exprTableTransposed))}
+\KeywordTok{plot}\NormalTok{(}\KeywordTok{sort}\NormalTok{(x, }\DataTypeTok{na.last =} \OtherTok{TRUE}\NormalTok{, }\DataTypeTok{decreasing =} \OtherTok{TRUE}\NormalTok{))}
+\NormalTok{lo <-}\StringTok{ }\KeywordTok{loess}\NormalTok{(x }\OperatorTok{~}\StringTok{ }\KeywordTok{c}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\KeywordTok{nrow}\NormalTok{(exprTableTransposed)))}
+\NormalTok{out =}\StringTok{ }\KeywordTok{predict}\NormalTok{(lo)}
+\NormalTok{secondDer <-}\StringTok{ }\KeywordTok{diff}\NormalTok{(}\KeywordTok{diff}\NormalTok{(out))}
+\NormalTok{maximalChangePoint <-}\StringTok{ }\KeywordTok{max}\NormalTok{(secondDer)}
+\NormalTok{maximalChangeIndex <-}\StringTok{ }\KeywordTok{match}\NormalTok{(maximalChangePoint, secondDer)}
+\NormalTok{pointHelper <-}\StringTok{ }\NormalTok{(}\DecValTok{1}\OperatorTok{:}\KeywordTok{nrow}\NormalTok{(phenoTable) }\OperatorTok{==}\StringTok{ }\NormalTok{maximalChangeIndex)}
+\KeywordTok{lines}\NormalTok{(out, }\DataTypeTok{col =} \StringTok{'red'}\NormalTok{, }\DataTypeTok{lwd =} \DecValTok{2}\NormalTok{)}
+\KeywordTok{abline}\NormalTok{(}\DataTypeTok{v =}\NormalTok{maximalChangeIndex)}
+\KeywordTok{points}\NormalTok{(out[pointHelper], }\DataTypeTok{x =}\NormalTok{ maximalChangeIndex, }\DataTypeTok{col =} \StringTok{"red"}\NormalTok{, }\DataTypeTok{pch =} \DecValTok{22}\NormalTok{, }\DataTypeTok{cex =} \DecValTok{2}\NormalTok{)}
+\NormalTok{numberFeatures <-}\StringTok{ }\NormalTok{maximalChangeIndex}
+
+
+
+\CommentTok{## finally we can perform the acutal selection}
+\NormalTok{loocvSelections <-}\StringTok{ }\KeywordTok{SelectRandomForestLOOCV}\NormalTok{(numberFeatures)}
+\KeywordTok{write.csv}\NormalTok{(loocvSelections, }\StringTok{'loocvSelections.csv'}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{tune-mtry-after-the-feature-selection}{%
+\subsection{Tune Mtry after the Feature
+Selection}\label{tune-mtry-after-the-feature-selection}}
+
+TOD
+\texttt{\{r\}\ tuned\_mtry2,\ eval=\ FALSE\}\ control\ \textless{}-\ trainControl(method\ =\ \textquotesingle{}repeatedcv\textquotesingle{},\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ number\ =\ 10,\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ repeats\ =\ 3,\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ search\ =\ \textquotesingle{}random\textquotesingle{})\ set.seed(123)\ rf\_random\ \textless{}-\ train(y\ =\ phenoTable{[},classVariable{]},\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ x\ =\ exprTableTransposed{[},names(x){]},\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ method\ =\ "ranger",\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ metric\ =\ "Accuracy",\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ trControl\ =\ control)\ tunedMtryFeatureSelection\ \textless{}-\ rf\_random\$finalModel\$mtry}
+
+\hypertarget{classification-execution}{%
+\subsection{Classification Execution}\label{classification-execution}}
+
+TODO
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{numberOfTrees <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\DecValTok{200}\NormalTok{, }\DecValTok{500}\NormalTok{, }\DecValTok{1000}\NormalTok{)}
+\NormalTok{kernels <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"radial"}\NormalTok{, }\StringTok{"linear"}\NormalTok{, }\StringTok{"polynomial"}\NormalTok{, }\StringTok{"sigmoid"}\NormalTok{)}
+\NormalTok{allGenesSelected <-}\StringTok{ }\KeywordTok{rep}\NormalTok{(}\KeywordTok{list}\NormalTok{(x), }\KeywordTok{nrow}\NormalTok{(exprTableTransposed))}
+
+\KeywordTok{names}\NormalTok{(allGenesSelected) <-}\StringTok{ }\KeywordTok{rownames}\NormalTok{(exprTableTransposed)}
+\NormalTok{selections <-}\StringTok{ }\KeywordTok{list}\NormalTok{(}\DataTypeTok{allGenes =}\NormalTok{ allGenesSelected,}
+                   \DataTypeTok{rfSelection =}\NormalTok{ loocvSelections)}
+\NormalTok{resultList <-}\StringTok{ }\KeywordTok{foreach}\NormalTok{(}\DataTypeTok{selection =} \KeywordTok{names}\NormalTok{(selections), }\DataTypeTok{.combine =} \StringTok{"c"}\NormalTok{) }\OperatorTok{%do%}\StringTok{ }\NormalTok{\{}
+    \ControlFlowTok{if}\NormalTok{(selection }\OperatorTok{==}\StringTok{ "rfSelection"}\NormalTok{) tunedMtry =}\StringTok{ }\NormalTok{tunedMtryFeatureSelection }\ControlFlowTok{else}\NormalTok{ tunedMtry =}\StringTok{ }\KeywordTok{ceiling}\NormalTok{(}\KeywordTok{sqrt}\NormalTok{(}\KeywordTok{ncol}\NormalTok{(exprTableTransposed)))}
+    \KeywordTok{message}\NormalTok{(tunedMtry)}
+\NormalTok{    selData <-}\StringTok{ }\NormalTok{selections[[selection]]}
+\NormalTok{    rf.comb <-}\StringTok{ }\KeywordTok{foreach}\NormalTok{(}\DataTypeTok{numTree =}\NormalTok{ numberOfTrees, }\DataTypeTok{.combine =} \StringTok{"c"}\NormalTok{) }\OperatorTok{%do%}\StringTok{ }\NormalTok{\{}
+\NormalTok{        rf.loocv <-}\StringTok{ }\KeywordTok{LOOCV}\NormalTok{(RandomForestClassifier, numTree, selData)}
+\NormalTok{        helperLoocvFile <-}\StringTok{ }\KeywordTok{paste0}\NormalTok{(}\StringTok{"rf_loocv_Selection_"}\NormalTok{, selection,}
+                                  \StringTok{"_numTrees_"}\NormalTok{, numTree, }\StringTok{".csv"}\NormalTok{)}
+\NormalTok{        curLoocvFile <-}\StringTok{ }\KeywordTok{file.path}\NormalTok{(resultDir, helperLoocvFile)}
+        \KeywordTok{write.csv}\NormalTok{(rf.loocv, curLoocvFile)}
+\NormalTok{        res <-}\StringTok{ }\KeywordTok{list}\NormalTok{(}\DataTypeTok{numTree =}\NormalTok{ rf.loocv)}
+        \KeywordTok{names}\NormalTok{(res) <-}\StringTok{ }\KeywordTok{paste0}\NormalTok{(numTree)}
+        \KeywordTok{return}\NormalTok{(res)}
+\NormalTok{    \}}
+\NormalTok{    svm.comb <-}\StringTok{ }\KeywordTok{foreach}\NormalTok{ (}\DataTypeTok{kern =}\NormalTok{ kernels, }\DataTypeTok{.combine =} \StringTok{"c"}\NormalTok{) }\OperatorTok{%do%}\StringTok{ }\NormalTok{\{}
+\NormalTok{        svm.loocv <-}\StringTok{ }\KeywordTok{LOOCV}\NormalTok{(SvmClassifier, kern, selData)}
+\NormalTok{        helperLoocvFile <-}\StringTok{ }\KeywordTok{paste0}\NormalTok{(}\StringTok{"SVM_loocv_Selection_"}\NormalTok{,}
+\NormalTok{                                  selection, }\StringTok{"_kernel_"}\NormalTok{, kern, }\StringTok{".csv"}\NormalTok{)}
+\NormalTok{        curLoocvFile <-}\StringTok{ }\KeywordTok{file.path}\NormalTok{(resultDir, helperLoocvFile)}
+        \KeywordTok{write.csv}\NormalTok{(svm.loocv, curLoocvFile)}
+\NormalTok{        res <-}\StringTok{ }\KeywordTok{list}\NormalTok{(}\DataTypeTok{kern =}\NormalTok{ svm.loocv)}
+        \KeywordTok{names}\NormalTok{(res) <-}\StringTok{ }\KeywordTok{paste0}\NormalTok{(kern)}
+        \KeywordTok{return}\NormalTok{(res)}
+\NormalTok{    \}}
+\NormalTok{    svm.name <-}\StringTok{ }\KeywordTok{paste0}\NormalTok{(}\StringTok{"svm "}\NormalTok{, selection)}
+\NormalTok{    rf.name <-}\StringTok{ }\KeywordTok{paste0}\NormalTok{(}\StringTok{"rf "}\NormalTok{, selection)}
+\NormalTok{    res <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\DataTypeTok{rfRes =}\NormalTok{ rf.comb, }\DataTypeTok{svmRes =}\NormalTok{ svm.comb)}
+    \KeywordTok{names}\NormalTok{(res) <-}\StringTok{ }\KeywordTok{paste0}\NormalTok{(selection, }\KeywordTok{names}\NormalTok{(res))}
+    \KeywordTok{return}\NormalTok{(res)}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{evaluation}{%
+\subsection{Evaluation}\label{evaluation}}
+
+TODO
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{response <-}\StringTok{ }\NormalTok{phenoTable[, classVariable]}
+\NormalTok{response <-}\StringTok{ }\KeywordTok{factor}\NormalTok{(response, }\DataTypeTok{levels =} \KeywordTok{rev}\NormalTok{(}\KeywordTok{levels}\NormalTok{(response)))}
+\KeywordTok{names}\NormalTok{(response) <-}\StringTok{ }\KeywordTok{rownames}\NormalTok{(phenoTable)}
+\NormalTok{evaluationResults <-}\StringTok{ }\KeywordTok{foreach}\NormalTok{(}\DataTypeTok{res =}\NormalTok{ resultList, }\DataTypeTok{.combine =} \StringTok{'rbind'}\NormalTok{) }\OperatorTok{%do%}\StringTok{ }\NormalTok{\{}
+\NormalTok{  check <-}\StringTok{ }\KeywordTok{names}\NormalTok{(response) }\OperatorTok{==}\StringTok{ }\KeywordTok{names}\NormalTok{(res)}
+  \KeywordTok{message}\NormalTok{(}\StringTok{"Patients in Same Order:"}\NormalTok{)}
+  \KeywordTok{print}\NormalTok{(}\KeywordTok{all}\NormalTok{(check,}\OtherTok{TRUE}\NormalTok{))}
+ 
+\NormalTok{  tab <-}\StringTok{ }\KeywordTok{table}\NormalTok{(res, response)}
+\NormalTok{  misclError <-}\StringTok{ }\DecValTok{1}\OperatorTok{-}\KeywordTok{sum}\NormalTok{(}\KeywordTok{diag}\NormalTok{(tab))}\OperatorTok{/}\KeywordTok{sum}\NormalTok{(tab)}
+\NormalTok{  ci.upper <-}\StringTok{ }\NormalTok{misclError }\OperatorTok{+}\StringTok{ }\FloatTok{1.96} \OperatorTok{*}\StringTok{ }\KeywordTok{sqrt}\NormalTok{( (misclError }\OperatorTok{*}\StringTok{ }\NormalTok{(}\DecValTok{1} \OperatorTok{-}\StringTok{ }\NormalTok{misclError)) }\OperatorTok{/}\StringTok{ }\DecValTok{190}\NormalTok{)}
+\NormalTok{  ci.lower <-}\StringTok{ }\NormalTok{misclError }\OperatorTok{-}\StringTok{ }\FloatTok{1.96} \OperatorTok{*}\StringTok{ }\KeywordTok{sqrt}\NormalTok{( (misclError }\OperatorTok{*}\StringTok{ }\NormalTok{(}\DecValTok{1} \OperatorTok{-}\StringTok{ }\NormalTok{misclError)) }\OperatorTok{/}\StringTok{ }\DecValTok{190}\NormalTok{)}
+\NormalTok{  ci.interval <-}\StringTok{ }\KeywordTok{paste0}\NormalTok{(}\KeywordTok{round}\NormalTok{(ci.lower,}\DecValTok{4}\NormalTok{), }\StringTok{"-"}\NormalTok{, }\KeywordTok{round}\NormalTok{(ci.upper,}\DecValTok{4}\NormalTok{))}
+  \KeywordTok{message}\NormalTok{(}\StringTok{"Misclassifiction Error for current predictions:"}\NormalTok{)}
+  \KeywordTok{message}\NormalTok{(}\KeywordTok{round}\NormalTok{(misclError,}\DecValTok{4}\NormalTok{))}
+  \KeywordTok{return}\NormalTok{(}\KeywordTok{data.frame}\NormalTok{(}\DataTypeTok{MisclassificationError =} \KeywordTok{round}\NormalTok{(misclError,}\DecValTok{4}\NormalTok{), }\DataTypeTok{CI =}\NormalTok{ ci.interval))}
+\NormalTok{\}}
+
+\CommentTok{## make resulttable more beautiful}
+
+\NormalTok{helper <-}\StringTok{ }\NormalTok{evaluationResults[}\DecValTok{8}\OperatorTok{:}\DecValTok{14}\NormalTok{,]}
+\NormalTok{parameters <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"RF 200 Trees"}\NormalTok{, }
+                \StringTok{"RF 500 Trees"}\NormalTok{, }
+                \StringTok{"RF 1000 Trees"}\NormalTok{, }
+                \StringTok{"SVM Radial Kernel"}\NormalTok{,}
+                \StringTok{"SVM Linear Kernel"}\NormalTok{,}
+                \StringTok{"SVM Ploynomial Kernel"}\NormalTok{,}
+                \StringTok{"SVM Sigmoid Kernel"}\NormalTok{)}
+
+\NormalTok{evaluationResults <-}\StringTok{  }\NormalTok{evaluationResults[}\OperatorTok{-}\NormalTok{(}\DecValTok{8}\OperatorTok{:}\DecValTok{14}\NormalTok{),]}
+\NormalTok{evaluationResults <-}\StringTok{ }\KeywordTok{cbind}\NormalTok{(evaluationResults, helper)}
+\KeywordTok{rownames}\NormalTok{(evaluationResults) <-}\StringTok{ }\NormalTok{parameters}
+\KeywordTok{colnames}\NormalTok{(evaluationResults) <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"All Genes"}\NormalTok{,}
+                                 \StringTok{"95% CI"}\NormalTok{,}
+                                 \StringTok{"48 Selected Genes"}\NormalTok{,}
+                                 \StringTok{"95% CI"}\NormalTok{)}
+
+\KeywordTok{kable}\NormalTok{(evaluationResults)}
+\end{Highlighting}
+\end{Shaded}
+
+message(``Saving Image file'') message(paste(memImageFile))
+save.image(memImageFile);
+
+\hypertarget{interpretation}{%
+\subsection{Interpretation}\label{interpretation}}
+
+TODO
+
+\end{document}

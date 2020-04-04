@@ -73,7 +73,7 @@ knitr::opts_chunk$set(
   echo = TRUE, eval = TRUE, 
   warning = FALSE, message = FALSE, 
   results = TRUE, comment = "")
-
+load(memImageFile)
 
 ```
 ## Background
@@ -83,13 +83,39 @@ In the report however I am to use the data set to methodigaly explore which meth
 works best and how different parameters influence the classification. Precisly I use support vector machine (SVM) and random forest for classification. Additionally I use random forest for feature selection.
 
 ## Methods Theory
-Random forest is a widely used method for classification it works like bla bla
-it depends on trees mtry blabla. It is also widely used for feature selection bla bla masterarbeit
+Due to the scope of this work I will not be able to provide a in depth description of the methods.
+The aim is to only give a very short overview, so the reader undserstands the key terms of the methods.
+Random forest is a widely used method for classification. The base of a random forest model is 
+are decision trees. A decision tree consits of multiple nodes. At each node tree is splitted into 
+branches depending on the value of a indepented variable. In our case this would be the expression level
+of a particular gene. Which variable is used at a given split is random. However not all variables are available to sample from at each split. The number of variables available for splitting at each tree node is referred to as the mtry parameter . The end of a branch, the leaf, does not split anymore and represents the decision for a particlaur class. In our case that would be a cell type. 
+A random forest consists of multuple decision trees. Each tree gives a vote for the final decision of 
+the class. The class with the majority vote across all trees is the final class of a random forest.
+The number of trees used in a random forest is on interest in this report. I will investigate the 
+influence of the number of trees on the classification accuracy.
 
-SVM is another well estbalished method for classification it tries to seperate the data by 
-I relies on different kernels for dimension mappings in particular
+
+SVM is another well estbalished method for classification it tries to seperate the data by a hyperplane.
+The goal is that datapoints in different classes are as far away from the hyperplane as possible. The
+datapoints nearest to the hyperplan are called support vectors. Often times the datapoints are not seperatable in their original dimeninsion. Nevertheless it is always possible to seperate the data in a higher dimension. Therefore we need a way to map the datapoints to a higher dimension. The function used for this process is called Kernel function. There are different types of Kernels and I will investigate
+the influence of the Kernel function on the classification accuracy.
+
+In microarray studies it is common to have a high number of measurements in comparision to the number of
+patients. This is called a small n large p dataset and can lead to overfiting. Therefore, it can make
+sense to select only a subset of independend variables. Ideally the ones that contain the most information. In order to find these variables I also used random forest for feature selection. Precisely
+I used the impurity variable importance of the random forest.
 
 ## Methods Implementation
+Now that I covered the theoretical basics to understand this report, it is time to present the practical
+implementation of the above described methods. In order to test the classifaction accuracy I need to 
+split the data into a training data set and a validation data set. I order to have as many training and test patients as possible I decided to use leave one out cross validation as an approach. The standard way to do this would be to use the caret packages. I decided,
+however, to implement the functionality myself. The reason for this is that I also wanted to use
+the LOOCV approach for feature selection to avoid any bias. With my own implementation I could be sure
+that I used the exact same method for feature selection and the training of the model. For my Implementation I used the foreach package for parallelization, which is highly optimized. Thus,
+my implementation is also highly performant. The logic of my function is structured as follows.
+I have a base function that performs the acutal task, e.g feature selection or classification and another function that implements the LOOCV logic that calls the base function in each iteration.
+This makes the code easy to extend, since I  only need to write a new base function for a new classification method and can use my existing function for the LOOCV logic.
+The base function for calssification take theAll the code can be found in the Appendix section.
 
 ## Results
 
@@ -113,6 +139,9 @@ library(foreach)
 library(doMC)
 library(e1071)
 library(pROC)
+#library(ggplot2)
+library(grid)
+library(gridExtra)
 
 ## register a paralell backend and define number of Threads
 ## Note the the numberThreads variable gets passed later to the ranger function
@@ -249,11 +278,7 @@ colnames(exprTableTransposed) <- make.names(colnames(exprTableTransposed))
 
 
 ## Functions for Feature Selection and Classification
-I order to have as many training and test patients as possible I decided to use leave one out cross validation as an approach. The standard way to do this would be to use the caret packages. I decided,
-however, to implement the functionality myself. The reason for this is that I also wanted to use
-the LOOCV approach for feature selection to avoid any bias. With my own implementation I could be sure
-that I used the exact same method for feature selection and the training of the model. For my Implementation I used the foreach package for parallelization, which is highly optimized. Thus,
-my implementation is also highly performant.
+
 
 My functions are structured as follows: I have one function "SelectFeaturesWithWu
 
@@ -542,8 +567,34 @@ colnames(evaluationResults) <- c("All Genes",
                                  "95% CI", "AUC ROC")
 
 kable(evaluationResults)
-```
+cm <- confusionMatrix(res, response)
+# extract the confusion matrix values as data.frame
+cm_d <- as.data.frame(cm$table)
+# confusion matrix statistics as data.frame
+cm_st <-data.frame(cm$overall)
+# round the values
+cm_st$cm.overall <- round(cm_st$cm.overall,2)
 
+# here we also have the rounded percentage values
+cm_p <- as.data.frame(prop.table(cm$table))
+cm_d$Perc <- round(cm_p$Freq*100,2)
+cm_d_p <-  ggplot(data = cm_d, aes(x = Prediction , y =  Reference, fill = Freq))+
+  geom_tile() +
+  geom_text(aes(label = paste("",Freq,",",Perc,"%")), color = 'red', size = 3) +
+  theme_light() +
+  guides(fill=FALSE) 
+
+# plotting the stats
+cm_st_p <-  tableGrob(cm_st)
+
+# all together
+grid.arrange(cm_d_p, cm_st_p,nrow = 1, ncol = 2, 
+             top=textGrob("Confusion Matrix and Statistics",gp=gpar(fontsize=25,font=1)))
+
+```
+rs <- auc[['rocs']]
+plot.roc(rs[[1]])
+sapply(2:length(rs),function(i) lines.roc(rs[[i]],col=i))
 
 message("Saving Image file")
 message(paste(memImageFile))

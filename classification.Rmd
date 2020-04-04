@@ -2,7 +2,7 @@
 title: "Final Report Statistics for Biology 2"
 author: "Maximilian Joas"
 date: "`r Sys.Date()`"
-bibliography: lib.bib
+#bibliography: "lib.bib"
 output:
   html_document:
     code_folding: hide
@@ -112,10 +112,14 @@ split the data into a training data set and a validation data set. I order to ha
 however, to implement the functionality myself. The reason for this is that I also wanted to use
 the LOOCV approach for feature selection to avoid any bias. With my own implementation I could be sure
 that I used the exact same method for feature selection and the training of the model. For my Implementation I used the foreach package for parallelization, which is highly optimized. Thus,
-my implementation is also highly performant. The logic of my function is structured as follows.
-I have a base function that performs the acutal task, e.g feature selection or classification and another function that implements the LOOCV logic that calls the base function in each iteration.
+my implementation is also highly performant. The logic of my function is structured as follows:
+I have a base function that performs the actual task, e.g feature selection or classification and another function that implements the LOOCV logic that calls the base function in each iteration.
 This makes the code easy to extend, since I  only need to write a new base function for a new classification method and can use my existing function for the LOOCV logic.
-The base function for calssification take theAll the code can be found in the Appendix section.
+The base function for calssification take the parameters for the corresponding method, e.g. number of trees for random forest and the Kernel method for SVM.
+
+For the feature selection I applied the same principles I hade one function that did the actual feature selection and one function that implements the LOOCV logic and calls the feature selection function. I is also possible to specifiy how many feature shoud be selected. However I did not want to chose the number of features arbitraly. So I sorted the variable importance of all covariates and plotted it. Subsequently, I smoothed the plot in order to make it differentiable. The goal was to find the point where the variable importance drops the steepest. This point I used as a cutoff for the number of features that I selected. In order to find the point I took the highest value of the second derivative
+of the smoothed line.
+All the code can be found in the Appendix section.
 
 ## Results
 
@@ -130,7 +134,7 @@ The main difference in this section is that I registered a prallel backend for m
 I stored the class Variable "sample.labels" in an extra variable to make the code more reusable in case
 we use a different dataset where the class variable has another name, we just need to change this variable once.
 
-```{r loading_library}
+```{r loading_library, eval=FALSE}
 library(knitr)
 library(gdata)
 library(ranger)
@@ -480,10 +484,9 @@ tunedMtryFeatureSelection <- rf_random$finalModel$mtry
 ```
 
 
-## Classification Execution
-TODO
+# To DO
 
-```{r, eval=FALSE}
+```{r execution_two, eval=FALSE}
 
 numberOfTrees <- c(200, 500, 1000)
 kernels <- c("radial", "linear", "polynomial", "sigmoid")
@@ -546,7 +549,7 @@ evaluationResults <- foreach(res = resultList, .combine = 'rbind') %do% {
   return(data.frame(MisclassificationError = round(misclError,4), CI = ci.interval,
          AUC = auc$auc))
 }
-evaluationResults
+
 ## make resulttable more beautiful
 
 helper <- evaluationResults[8:14,]
@@ -590,19 +593,15 @@ cm_st_p <-  tableGrob(cm_st)
 # all together
 grid.arrange(cm_d_p, cm_st_p,nrow = 1, ncol = 2, 
              top=textGrob("Confusion Matrix and Statistics",gp=gpar(fontsize=25,font=1)))
-
-```
-rs <- auc[['rocs']]
-plot.roc(rs[[1]])
-sapply(2:length(rs),function(i) lines.roc(rs[[i]],col=i))
-
 message("Saving Image file")
 message(paste(memImageFile))
-save.image(memImageFile);
+save.image(memImageFile)
+
+```
 
 
-## Interpretation
-TODO
+
+
 
 
 

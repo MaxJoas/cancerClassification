@@ -79,35 +79,35 @@ load(memImageFile)
 ## Background
 This report is based on a 2009 study by Den Boer et al. The goal of this study was to TODO
 Genetic subtypes of acute lymphoblastic leukaemia (ALL) are used to determine risk and treatment in children. 25% of precursor B-ALL cases are genetically unclassified and have intermediate prognosis. We aimed to use a genome-wide study to improve prognostic classification of ALL in children. TODO
-In the report however I am to use the data set to methodigaly explore which methods for classificatoin 
-works best and how different parameters influence the classification. Precisly I use support vector machine (SVM) and random forest for classification. Additionally I use random forest for feature selection.
+In the report however I am to use the data set to methodically explore which methods for classification 
+works best and how different parameters influence the classification. Precisely I use support vector machine (SVM) and random forest for classification. Additionally I use random forest for feature selection.
 
 ## Methods Theory
 Due to the scope of this work I will not be able to provide a in depth description of the methods.
-The aim is to only give a very short overview, so the reader undserstands the key terms of the methods.
+The aim is to only give a very short overview, so the reader understands the key terms of the methods.
 Random forest is a widely used method for classification. The base of a random forest model is 
-are decision trees. A decision tree consits of multiple nodes. At each node tree is splitted into 
-branches depending on the value of a indepented variable. In our case this would be the expression level
-of a particular gene. Which variable is used at a given split is random. However not all variables are available to sample from at each split. The number of variables available for splitting at each tree node is referred to as the mtry parameter . The end of a branch, the leaf, does not split anymore and represents the decision for a particlaur class. In our case that would be a cell type. 
-A random forest consists of multuple decision trees. Each tree gives a vote for the final decision of 
+are decision trees. A decision tree consists of multiple nodes. At each node tree is splitted into 
+branches depending on the value of a independent variable. In our case this would be the expression level
+of a particular gene. Which variable is used at a given split is random. However not all variables are available to sample from at each split. The number of variables available for splitting at each tree node is referred to as the mtry parameter . The end of a branch, the leaf, does not split anymore and represents the decision for a particular class. In our case that would be a cell type. 
+A random forest consists of multiple decision trees. Each tree gives a vote for the final decision of 
 the class. The class with the majority vote across all trees is the final class of a random forest.
 The number of trees used in a random forest is on interest in this report. I will investigate the 
 influence of the number of trees on the classification accuracy.
 
 
-SVM is another well estbalished method for classification it tries to seperate the data by a hyperplane.
-The goal is that datapoints in different classes are as far away from the hyperplane as possible. The
-datapoints nearest to the hyperplan are called support vectors. Often times the datapoints are not seperatable in their original dimeninsion. Nevertheless it is always possible to seperate the data in a higher dimension. Therefore we need a way to map the datapoints to a higher dimension. The function used for this process is called Kernel function. There are different types of Kernels and I will investigate
+SVM is another well established method for classification it tries to separate the data by a hyperplane.
+The goal is that data points in different classes are as far away from the hyperplane as possible. The
+data points nearest to the hyperplane are called support vectors. Often times the data points are not separable in their original dimension. Nevertheless it is always possible to separate the data in a higher dimension. Therefore we need a way to map the data points to a higher dimension. The function used for this process is called Kernel function. There are different types of Kernels and I will investigate
 the influence of the Kernel function on the classification accuracy.
 
-In microarray studies it is common to have a high number of measurements in comparision to the number of
-patients. This is called a small n large p dataset and can lead to overfiting. Therefore, it can make
-sense to select only a subset of independend variables. Ideally the ones that contain the most information. In order to find these variables I also used random forest for feature selection. Precisely
+In microarray studies it is common to have a high number of measurements in comparison to the number of
+patients. This is called a small n large p dataset and can lead to overfitting. Therefore, it can make
+sense to select only a subset of independent variables. Ideally the ones that contain the most information. In order to find these variables I also used random forest for feature selection. Precisely
 I used the impurity variable importance of the random forest.
 
 ## Methods Implementation
 Now that I covered the theoretical basics to understand this report, it is time to present the practical
-implementation of the above described methods. In order to test the classifaction accuracy I need to 
+implementation of the above described methods. In order to test the classification accuracy I need to 
 split the data into a training data set and a validation data set. I order to have as many training and test patients as possible I decided to use leave one out cross validation as an approach. The standard way to do this would be to use the caret packages. I decided,
 however, to implement the functionality myself. The reason for this is that I also wanted to use
 the LOOCV approach for feature selection to avoid any bias. With my own implementation I could be sure
@@ -115,24 +115,50 @@ that I used the exact same method for feature selection and the training of the 
 my implementation is also highly performant. The logic of my function is structured as follows:
 I have a base function that performs the actual task, e.g feature selection or classification and another function that implements the LOOCV logic that calls the base function in each iteration.
 This makes the code easy to extend, since I  only need to write a new base function for a new classification method and can use my existing function for the LOOCV logic.
-The base function for calssification take the parameters for the corresponding method, e.g. number of trees for random forest and the Kernel method for SVM.
+The base function for classification take the parameters for the corresponding method, e.g. number of trees for random forest and the Kernel method for SVM.
 
-For the feature selection I applied the same principles I hade one function that did the actual feature selection and one function that implements the LOOCV logic and calls the feature selection function. I is also possible to specifiy how many feature shoud be selected. However I did not want to chose the number of features arbitraly. So I sorted the variable importance of all covariates and plotted it. Subsequently, I smoothed the plot in order to make it differentiable. The goal was to find the point where the variable importance drops the steepest. This point I used as a cutoff for the number of features that I selected. In order to find the point I took the highest value of the second derivative
-of the smoothed line.
+For the feature selection I applied the same principles I had one function that did the actual feature selection and one function that implements the LOOCV logic and calls the feature selection function. I is also possible to specify how many feature should be selected. However I did not want to chose the number of features arbitrary. So I sorted the variable importance of all covariates and plotted it. Subsequently, I smoothed the plot in order to make it differentiable. The goal was to find the point where the variable importance drops the steepest. This point I used as a cutoff for the number of features that I selected. In order to find the point I took the highest value of the second derivative
+of the smoothed line. This process is a highly reuasable ant automated process to find the number of 
+variables to select.
 All the code can be found in the Appendix section.
 
 ## Results
+
+```{r feature_selection, eval=FALSE}
+## now we select how many covariates we want to select
+x <- SelectFeaturesWithRandomForest(c(1:nrow(exprTableTransposed)),
+                                    ncol(exprTableTransposed))
+plot(sort(x, na.last = TRUE, decreasing = TRUE), ylab = "Variable Importance")
+lo <- loess(x ~ c(1:nrow(exprTableTransposed)))
+out = predict(lo)
+secondDer <- diff(diff(out))
+maximalChangePoint <- max(secondDer)
+maximalChangeIndex <- match(maximalChangePoint, secondDer)
+pointHelper <- (1:nrow(phenoTable) == maximalChangeIndex)
+lines(out, col = 'red', lwd = 2)
+abline(v =maximalChangeIndex)
+points(out[pointHelper], x = maximalChangeIndex, col = "red", pch = 22, cex = 2)
+numberFeatures <- maximalChangeIndex
+
+
+
+## finally we can perform the acutal selection
+loocvSelections <- SelectRandomForestLOOCV(numberFeatures)
+write.csv(loocvSelections, 'loocvSelections.csv')
+```
 
 ## Interpretation
 
 
 
 ## Data Loading and Preparation
-I will not go into detail in this part[@den2009subtype], since it is basiacally the same code that we did @den2009subtype
+I will not go into detail in this part[@den2009subtype], since it is basically the same code that we did @den2009subtype
 together in class. I will only comment on things that I have changed in comparison to the work in class.
-The main difference in this section is that I registered a prallel backend for multithreading and that 
+The main difference in this section is that I registered a parallel backend for multithreading and that 
 I stored the class Variable "sample.labels" in an extra variable to make the code more reusable in case
 we use a different dataset where the class variable has another name, we just need to change this variable once.
+
+
 
 ```{r loading_library, eval=FALSE}
 library(knitr)
@@ -281,10 +307,7 @@ colnames(exprTableTransposed) <- make.names(colnames(exprTableTransposed))
 ```
 
 
-## Functions for Feature Selection and Classification
 
-
-My functions are structured as follows: I have one function "SelectFeaturesWithWu
 
 ```{r functions, eval=FALSE}
 
@@ -467,8 +490,7 @@ loocvSelections <- SelectRandomForestLOOCV(numberFeatures)
 write.csv(loocvSelections, 'loocvSelections.csv')
 ```
 
-## Tune Mtry after the Feature Selection
-TOD
+
 ```{r tuned_mtry2, eval= FALSE}
 control <- trainControl(method = 'repeatedcv',
                         number = 10,
@@ -484,7 +506,6 @@ tunedMtryFeatureSelection <- rf_random$finalModel$mtry
 ```
 
 
-# To DO
 
 ```{r execution_two, eval=FALSE}
 
@@ -527,8 +548,6 @@ resultList <- foreach(selection = names(selections), .combine = "c") %do% {
 }
 ```
 
-## Evaluation
-TODO
 
 ```{r evaluation, eval=FALSE}
 response <- phenoTable[, classVariable]

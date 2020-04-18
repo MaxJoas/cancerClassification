@@ -58,7 +58,7 @@ font-import: http://fonts.googleapis.com/css?family=Risque
 subtitle: "Random Forest and SVM for Cancer Classification"
 font-family: Garamond
 transition: linear
-editor_options: 
+editor_options:
   chunk_output_type: console
 ---
 
@@ -66,12 +66,12 @@ editor_options:
 library(knitr)
 options(width = 300)
 knitr::opts_chunk$set(
-  fig.width = 7, fig.height = 5, 
+  fig.width = 7, fig.height = 5,
   fig.path = 'figures/02_combinatorix_',
-  fig.align = "center", 
-  size = "tiny", 
-  echo = TRUE, eval = TRUE, 
-  warning = FALSE, message = FALSE, 
+  fig.align = "center",
+  size = "tiny",
+  echo = TRUE, eval = TRUE,
+  warning = FALSE, message = FALSE,
   results = TRUE, comment = "")
 
 
@@ -80,37 +80,37 @@ knitr::opts_chunk$set(
 
 
 ## Background
-This report is based on a 2009 study by Den Boer et al. The goal of this study was to TODO
+This report is based on a 2009 study by Den Boer et al. The goal of this study was to TODO[[@den2009subtype]]
 Genetic subtypes of acute lymphoblastic leukaemia (ALL) are used to determine risk and treatment in children. 25% of precursor B-ALL cases are genetically unclassified and have intermediate prognosis. We aimed to use a genome-wide study to improve prognostic classification of ALL in children. TODO
-In the report however I am to use the data set to methodically explore which methods for classification 
+In the report however I am to use the data set to methodically explore which methods for classification
 works best and how different parameters influence the classification. Precisely I use support vector machine (SVM) and random forest for classification. Additionally I use random forest for feature selection.
 
 ## Methods Theory
 Due to the scope of this work I will not be able to provide a in depth description of the methods.
 The aim is to only give a very short overview, so the reader understands the key terms of the methods.
-Random forest is a widely used method for classification. The base of a random forest model is 
-are decision trees. A decision tree consists of multiple nodes. At each node tree is splitted into 
-branches depending on the value of a independent variable. In our case this would be the expression level
-of a particular gene. Which variable is used at a given split is random. However not all variables are available to sample from at each split. The number of variables available for splitting at each tree node is referred to as the mtry parameter . The end of a branch, the leaf, does not split anymore and represents the decision for a particular class. In our case that would be a cell type. 
-A random forest consists of multiple decision trees. Each tree gives a vote for the final decision of 
+
+Random forest is a widely used method for classification [@diaz2006gene]. The base of a random forest model
+are decision trees. A decision tree consists of multiple nodes. At each node tree is splitted into
+branches depending on the value of a independent variable [@es]. In our case this would be the expression level
+of a particular gene. Which variable is used at a given split is random. However not all variables are available to sample from at each split. The number of variables available for splitting at each tree node is referred to as the mtry parameter. The end of a branch, the leaf, does not split anymore and represents the decision for a particular class. In our case that would be a cell type.
+A random forest consists of multiple decision trees. Each tree gives a vote for the final decision of
 the class. The class with the majority vote across all trees is the final class of a random forest.
-The number of trees used in a random forest is on interest in this report. I will investigate the 
+This number of trees used in a random forest is on interest in this report. I will investigate the
 influence of the number of trees on the classification accuracy.
 
 
 SVM is another well established method for classification it tries to separate the data by a hyperplane.
 The goal is that data points in different classes are as far away from the hyperplane as possible. The
-data points nearest to the hyperplane are called support vectors. Often times the data points are not separable in their original dimension. Nevertheless it is always possible to separate the data in a higher dimension. Therefore we need a way to map the data points to a higher dimension. The function used for this process is called Kernel function. There are different types of Kernels and I will investigate
+data points nearest to the hyperplane are called support vectors [@es]. Often times the data points are not separable in their original dimension. Nevertheless it is always possible to separate the data in a higher dimension [@hofmann2006support]. Therefore we need a way to map the data points to a higher dimension. The function used for this process is called Kernel function. There are different types of Kernels and I will investigate
 the influence of the Kernel function on the classification accuracy.
 
 In microarray studies it is common to have a high number of measurements in comparison to the number of
-patients. This is called a small n large p dataset and can lead to overfitting. Therefore, it can make
-sense to select only a subset of independent variables. Ideally the ones that contain the most information. In order to find these variables I also used random forest for feature selection. Precisely
+patients [@smallnlargep]. This is called a small n large p dataset and can lead to overfitting [@johnstone2009statistical]. Therefore, it be benifical to select only a subset of independent variables. Ideally the ones that contain the most information. In order to find these variables I also used random forest for feature selection. Precisely
 I used the impurity variable importance of the random forest.
 
 ## Methods Implementation
 Now that I covered the theoretical basics to understand this report, it is time to present the practical
-implementation of the above described methods. In order to test the classification accuracy I need to 
+implementation of the above described methods. In order to test the classification accuracy I need to
 split the data into a training data set and a validation data set. I order to have as many training and test patients as possible I decided to use leave one out cross validation as an approach. The standard way to do this would be to use the caret packages. I decided,
 however, to implement the functionality myself. The reason for this is that I also wanted to use
 the LOOCV approach for feature selection to avoid any bias. With my own implementation I could be sure
@@ -121,9 +121,9 @@ This makes the code easy to extend, since I  only need to write a new base funct
 The base function for classification take the parameters for the corresponding method, e.g. number of trees for random forest and the Kernel method for SVM.
 
 For the feature selection I applied the same principles I had one function that did the actual feature selection and one function that implements the LOOCV logic and calls the feature selection function. I is also possible to specify how many feature should be selected. However I did not want to chose the number of features arbitrary. So I sorted the variable importance of all covariates and plotted it. Subsequently, I smoothed the plot in order to make it differentiable. The goal was to find the point where the variable importance drops the steepest. This point I used as a cutoff for the number of features that I selected. In order to find the point I took the highest value of the second derivative
-of the smoothed line. This process is a highly reuasable ant automated process to find the number of 
+of the smoothed line. This process is a highly reuasable ant automated process to find the number of
 variables to select.
-All the code can be found in the Appendix section.
+All the code can be found in the Appendix section
 
 ## Results and Interpretation
 1. class Filtering > methoden teil
@@ -134,6 +134,27 @@ All the code can be found in the Appendix section.
 5. RF results und plots
 6. SVM results und plots
 7. compare svm results and rf (table)
+
+```{r echo=FALSE}
+
+read_chunk('./classification.R')
+
+```
+```{r loading, eval=TRUE}
+
+```
+
+```{r filter,eval=TRUE}
+
+```
+
+```{r prepareSelect,eval=TRUE}
+
+```
+
+
+
+
 
 
 

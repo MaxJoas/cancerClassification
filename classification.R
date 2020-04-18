@@ -1,24 +1,13 @@
-library(knitr)
-library(gdata)
-library(ranger)
-library(caret)
-library(foreach)
-library(doMC)
-library(e1071)
-library(pROC)
-library(grid)
-library(gridExtra)
+## @knitr loading
+## done in class, loads all the input data
+load("DenBoerData_loaded.Rdata")
 
-
-## @knitr test
 ## register a paralell backend and define number of Threads
 ## Note the the numberThreads variable gets passed later to the ranger function
-## this is neccessary, because ranger uses all available threads as a default and I 
+## this is neccessary, because ranger uses all available threads as a default and I
 ## did not intend to overload the cluster.
 numberThreads <- 4
-doMC::registerDoMC(8)
-print('t')
-## @knitr
+doMC::registerDoMC(numberThreads)
 ## Here I store all the different parameters we want to use for the different
 ## classification methods
 numberOfTrees <- c(200, 500, 1000)
@@ -28,12 +17,12 @@ kernels <- c("radial", "linear", "polynomial", "sigmoid")
 classVariable <- "sample.labels"
 minNumberofCasesPerClass <- 30
 preFiltered <- 200
-parameters <- c("RF 200 Trees all Genes", 
-                "RF 500 Trees all Genes", 
-                "RF 1000 Trees all Genes", 
-                "RF 200 Trees Feature Selection", 
-                "RF 500 Trees Feature Selection", 
-                "RF 1000 Trees Feature Selection", 
+parameters <- c("RF 200 Trees all Genes",
+                "RF 500 Trees all Genes",
+                "RF 1000 Trees all Genes",
+                "RF 200 Trees Feature Selection",
+                "RF 500 Trees Feature Selection",
+                "RF 1000 Trees Feature Selection",
                 "SVM Radial Kernel all Genes",
                 "SVM Linear Kernel all Genes",
                 "SVM Ploynomial Kernel all Genes",
@@ -64,71 +53,6 @@ message("Local data dir: ", destDir)
 resultDir <- file.path(mainDir, "resultDir")
 message("Result direcotry", resultDir)
 
-
-#### Define variables for the location and name of the input files ####
-## URL fo the folder containing the data fle
-## Maybe refactor and pass via command line arguments later
-dataURL <- "https://github.com/jvanheld/stat1/raw/master/data/DenBoer_2009/"
-
-files <- c(
-  expr = "GSE13425_Norm_Whole.tsv.gz",
-  pheno = "phenoData_GSE13425.tsv.gz",
-  groups = "GSE13425_group_descriptions.tsv.gz"
-)
-
-
-## Function that downloads input files in case they don"t exist locally yet
-DownloadMyFiles <- function(files,
-                            dataURL,
-                            destDir) {
-  
-  dir.create(destDir, recursive = TRUE, showWarnings = FALSE)
-  
-  for (f in files) {
-    destFile <- file.path(destDir, f)
-    if (file.exists(destFile)) {
-      message("skipping download because file exists: \n", destFile)
-    } else {
-      sourceURL <- file.path(dataURL, f)
-      download.file(url = sourceURL, destfile = destFile)
-    }
-  }
-}
-
-
-## Call the function to download the files
-DownloadMyFiles(files = files, dataURL = dataURL, destDir = destDir)
-
-kable(data.frame(list.files(destDir)),
-      caption = "Content of the destination directory after file download. ")
-
-
-
-## ---------------------------------------------------------------------
-#### Load data tables ####
-
-## Load expression table
-exprTable <- read.table(file.path(destDir, files["expr"]),
-                        sep = "\t",
-                        header = TRUE,
-                        quote = "",
-                        row.names = 1)
-
-## Load metadescriptions (pheno table)
-phenoTable <- read.table(file.path(destDir, files["pheno"]),
-                         sep = "\t",
-                         header = TRUE,
-                         quote = "",
-                         row.names = 1
-)
-## Load group descriptions
-groupDescriptions <- read.table(file.path(destDir, files["groups"]),
-                                sep = "\t",
-                                header = TRUE,
-                                quote = "",
-                                row.names = 1)
-
-#### Prepare data for classification task ####
 ## check if pheno data and expression data have same order of patients
 check <- colnames(exprTable) == rownames(phenoTable)
 message("Do Pheno and Expressiondata have the same order of patients")
@@ -141,10 +65,8 @@ exprTableTransposed <- t(exprTable)
 colnames(exprTableTransposed) <- make.names(colnames(exprTableTransposed))
 
 
-
-#### FUNCTIONS ####
-## ----------------------------------------------------------------------------
-
+## @knitr filter
+## first we filter the classes and include only classes with more than 30 patients
 # Function for class filtering
 FilterClass <- function(minimumNumberofCases){
   releventClasses <- names(which(table(
@@ -153,15 +75,44 @@ FilterClass <- function(minimumNumberofCases){
   return(helper)
 }
 
+relevantPatients <- FilterClass(minNumberofCasesPerClass)
+phenoTable <- phenoTable[relevantPatients, ]
+#remove unused factors
+phenoTable[,classVariable] <- factor(phenoTable[,classVariable])
+exprTableTransposed <- exprTableTransposed[relevantPatients, ]
+classesAfterFilerd <- table(phenoTable[, classVariable])
+grid.arrange(tableGrob(as.data.frame(classesAfterFilerd)))
 
 
-#### Feature Selection ####
+## @knitr prepareSelect
+## Function that tunes the mytry parameter of RF
+
+tuneMtry <- function(relevantGenes) {
+  ## first we tune the mtry parameter of the random forest model with caret
+  ## 10 folds repeat 3 times
+  control <- trainControl(method = 'repeatedcv',
+                          number = 10,
+                          repeats = 3,
+                          search = 'random')
+  set.seed(123)
+  rf.random <- train(y = phenoTable[,classVariable],
+                     x = exprTableTransposed[, relevantGenes],
+                     method = "ranger",
+                     metric = "Accuracy",
+                     trControl = control)
+
+  tunedMtry <- rf.random$finalModel$mtry
+  return (tunedMtry)
+}
+
+
+tunedMtryAllFeatures <- tuneMtry(colnames(exprTableTransposed))
+tunedMtry <- tunedMtryAllFeatures
 ## Function that selects genes based on the random forest variable importance
 ## It takes a vector as index variable that indicates which patients should be used
 SelectFeaturesWithRandomForest <- function(trainIndex,
                                            numFeatures,
-                                           verbose = TRUE
-) {
+                                           verbose = TRUE) {
   if(verbose) message("Fitting a Random Forest for feature selection")
   fit <- ranger(y = phenoTable[trainIndex, classVariable],
                 x = exprTableTransposed[trainIndex,],
@@ -169,7 +120,67 @@ SelectFeaturesWithRandomForest <- function(trainIndex,
                 mtry = tunedMtry,
                 num.threads = numberThreads,
   )
-  
+
+  if(verbose) message("Finished fitting, now extracting variable importance")
+  varImportance <- fit$variable.importance
+  selectedGenes <- sort(varImportance, na.last = TRUE, decreasing = TRUE)
+  return(selectedGenes[1:numFeatures])
+}
+## get number of features
+getNumberofFeatures <- function() {
+  selectedGenes <- SelectFeaturesWithRandomForest(c(1:nrow(exprTableTransposed)),
+                                                    ncol(exprTableTransposed))
+
+  lo <- loess(selectedGenes[1:preFiltered] ~ c(1:200))
+  smoothed = predict(lo)
+  secondDer <- diff(diff(smoothed))
+  maximalChangePoint <- max(secondDer)
+  maximalChangeIndex <- match(maximalChangePoint, secondDer)
+  numberFeatures <- maximalChangeIndex
+  return(list(numberFeatures = numberFeatures,
+           smoothedLine = smoothed,
+           genes = selectedGenes))
+}
+
+
+helper <- getNumberofFeatures()
+numberFeatures <- helper[["numberFeatures"]]
+
+plotVariableImportance <- function(smoothed, selectedGenes) {
+  plotData <- data.frame(`Variable Importance` = selectedGenes[1:preFiltered],
+                         Index = c(1:preFiltered),
+                         Smoothed = out,
+                         check.names = FALSE)
+  colors <- c("Sepal Width" = "blue", "Petal Length" = "red",
+              "Petal Width" = "orange")
+  ggplot(plotData,
+         aes(x = Index)) +
+  geom_point(aes(y = `Variable Importance`, color = "Empiric")) +
+  geom_line(aes(y = smoothed, color = "smoothed"))  +
+  geom_vline(aes(xintercept = maximalChangeIndex, color= "Turning Point"),
+             size = 1.5)
+}
+
+
+plotVariableImportance(helper[["smoothedLine"]], helper[["genes"]])
+
+
+
+## @knitr select
+#### Feature Selection ####
+## Function that selects genes based on the random forest variable importance
+## It takes a vector as index variable that indicates which patients should be used
+SelectFeaturesWithRandomForest <- function(trainIndex,
+                                           numFeatures,
+                                           verbose = TRUE) {
+  if(verbose) message("Fitting a Random Forest for feature selection")
+  fit <- ranger(y = phenoTable[trainIndex, classVariable],
+                x = exprTableTransposed[trainIndex,],
+                importance = "impurity",
+                mtry = tunedMtry,
+                num.threads = numberThreads,
+  )
+
   if(verbose) message("Finished fitting, now extracting variable importance")
   varImportance <- fit$variable.importance
   selectedGenes <- sort(varImportance, na.last = TRUE, decreasing = TRUE)
@@ -186,42 +197,10 @@ SelectRandomForestLOOCV <- function(numFeatures,
                                                    numFeatures,
                                                    verbose)
     return(curVariables)
-    
+
   }
   names(res) <- rownames(phenoTable)
   return(res)
-}
-
-## get number of features
-getNumberofFeatures <- function() {
-  selectedGenes <- SelectFeaturesWithRandomForest(c(1:nrow(exprTableTransposed)),
-                                                    ncol(exprTableTransposed))
-  
-  lo <- loess(selectedGenes[1:preFiltered] ~ c(1:200))
-  smoothed = predict(lo)
-  secondDer <- diff(diff(out))
-  maximalChangePoint <- max(secondDer)
-  maximalChangeIndex <- match(maximalChangePoint, secondDer)
-  numberFeatures <- maximalChangeIndex
-  return(list(numberFeatures = numberFeatures,
-           smoothedLine = smoothed,
-           genes = selectedGenes))
-}
-
-
-
-plotVariableImportance <- function(smoothed, selectedGenes) {
-  plotData <- data.frame(`Variable Importance` = selectedGenes[1:preFiltered],
-                         Index = c(1:preFiltered),
-                         Smoothed = out,
-                         check.names = FALSE)
-  colors <- c("Sepal Width" = "blue", "Petal Length" = "red", "Petal Width" = "orange")
-  ggplot(plotData,
-         aes(x = Index)) + 
-  geom_point(aes(y = `Variable Importance`, color = "Empiric")) + 
-  geom_line(aes(y = smoothed, color = "smoothed"))  +
-  geom_vline(aes(xintercept = maximalChangeIndex, color= "Turning Point"),
-             size = 1.5) 
 }
 
 
@@ -240,7 +219,7 @@ RandomForestClassifier <- function(numberTrees,
                    num.trees = numberTrees,
                    num.threads = numberThreads,
                    mtry = tunedMtry)
-  
+
   testData <- t(as.data.frame(exprTableTransposed[testIndex,
                                                   selectedCovariates]))
   if(length(testIndex) !=1) {
@@ -254,25 +233,6 @@ RandomForestClassifier <- function(numberTrees,
 }
 
 
-
-## Function that tunes the mytry parameter of RF
-tuneMtry <- function(relevantGenes) {
-  ## first we tune the mtry parameter of the random forest model with caret
-  ## 10 folds repeat 3 times
-  control <- trainControl(method = 'repeatedcv',
-                          number = 10,
-                          repeats = 3,
-                          search = 'random')
-  set.seed(123)
-  rf.random <- train(y = phenoTable[,classVariable],
-                     x = exprTableTransposed[, relevantGenes],
-                     method = "ranger",
-                     metric = "Accuracy",
-                     trControl = control)
-  
-  tunedMtry <- rf.random$finalModel$mtry
-  return (tunedMtry)
-}
 
 
 
@@ -342,7 +302,7 @@ getResultOverview <- function (results) {
     errors <- sum(cm.table) - hits
     misclError <-  errors / sum(cm.table)
     accuracy <- 1 - misclError
-    ci.upper <- accuracy + 1.96 * 
+    ci.upper <- accuracy + 1.96 *
       sqrt( (accuracy * (1 - accuracy)) / nrow(exprTableTransposed))
     ci.lower <- accuracy - 1.96 *
       sqrt( (accuracy * (1 - accuracy)) / nrow(exprTableTransposed))
@@ -367,18 +327,18 @@ plotResults <- function(res, response, title) {
   cm.stats$Statistics <- round(cm.stats$Statistics,2)
   cm.percentage <- as.data.frame(prop.table(cm$table))
   cm.table$Perc <- round(cm.percentage$Freq*100,2)
-  
-  cm.plot <- ggplot(data = cm.table, aes(x = Prediction , y =  Reference, fill = Freq)) + 
+
+  cm.plot <- ggplot(data = cm.table, aes(x = Prediction , y =  Reference, fill = Freq)) +
              geom_raster(aes(fill = Freq)) +
              geom_text(aes(label = paste("",Freq,",",Perc,"%")),
              color = 'white', size = 3, fontface = "bold") +
              theme_light()
-            
+
   cm.statsTable <-  tableGrob(cm.stats)
- 
-  grid.arrange(cm.plot, cm.statsTable,nrow = 1, ncol = 2, 
+
+  grid.arrange(cm.plot, cm.statsTable,nrow = 1, ncol = 2,
   top = textGrob(paste0("Confusion Table Heatmap \n",title), gp = gpar(fontsize=20,font=1)))
- 
+
 }
 
 
@@ -387,34 +347,21 @@ plotResults <- function(res, response, title) {
 #### EXECUTION ####
 ## ----------------------------------------------------------------------------
 
-## first we filter the classes and include only classes with more than 30 patients
-relevantPatients <- FilterClass(minNumberofCasesPerClass)
-phenoTable <- phenoTable[relevantPatients, ]
-exprTableTransposed <- exprTableTransposed[relevantPatients, ]
-#remove unused factors
-phenoTable[,classVariable] <- factor(phenoTable[,classVariable])
-
-## tune mtry parameter before the feeature selection
-tunedMtryAllFeatures <- tuneMtry(colnames(exprTableTransposed))
-helper <- getNumberofFeatures()
-numberFeatures <- helper[["numberFeatures"]]
-plotVariableImportance(helper[["smoothedLine"]], helper[["genes"]])
-
+## @knitr execution
 ## finally we can perform the acutal selection
 loocvSelections <- SelectRandomForestLOOCV(numberFeatures)
 write.csv(loocvSelections, 'loocvSelections.csv')
 
-tunedMtryFeatureSelection <- tuneMtry(names(selectedGenes))
 
 allGenesSelected <- rep(list(selectedGenes), nrow(exprTableTransposed))
 names(allGenesSelected) <- rownames(exprTableTransposed)
 selections <- list(allGenes = allGenesSelected,
                    rfSelection = loocvSelections)
-tunedMtry = tunedMtryAllFeatures 
+tunedMtry = tunedMtryAllFeatures
 resultVector <- foreach(selection = names(selections), .combine = "c") %do% {
   if(selection == "rfSelection"){
-    tunedMtry = tunedMtryFeatureSelection 
-  } 
+    tunedMtry = tunedMtryFeatureSelection
+  }
   message(tunedMtry)
   selData <- selections[[selection]]
   rf.comb <- foreach(numTree = numberOfTrees, .combine = "c") %do% {
@@ -443,6 +390,9 @@ resultVector <- foreach(selection = names(selections), .combine = "c") %do% {
   names(res) <- paste0(selection, names(res))
   return(res)
 }
+
+
+## @knitr evaluation
 ## Reordering the results to have the same methods together
 index <- c(1,2,3,8,9,10,4,5,6,7,11,12,13,14)
 resultVector <- resultVector[order(index)]

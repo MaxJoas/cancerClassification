@@ -9,12 +9,18 @@ library(pROC)
 library(grid)
 library(gridExtra)
 
+
+## @knitr test
 ## register a paralell backend and define number of Threads
 ## Note the the numberThreads variable gets passed later to the ranger function
 ## this is neccessary, because ranger uses all available threads as a default and I 
 ## did not intend to overload the cluster.
 numberThreads <- 4
 doMC::registerDoMC(8)
+print('t')
+## @knitr
+## Here I store all the different parameters we want to use for the different
+## classification methods
 numberOfTrees <- c(200, 500, 1000)
 kernels <- c("radial", "linear", "polynomial", "sigmoid")
 ## for reusability provide the name of the class variable for this dataset
@@ -146,6 +152,9 @@ FilterClass <- function(minimumNumberofCases){
   helper <- phenoTable[, classVariable] %in% releventClasses
   return(helper)
 }
+
+
+
 #### Feature Selection ####
 ## Function that selects genes based on the random forest variable importance
 ## It takes a vector as index variable that indicates which patients should be used
@@ -186,7 +195,7 @@ SelectRandomForestLOOCV <- function(numFeatures,
 ## get number of features
 getNumberofFeatures <- function() {
   selectedGenes <- SelectFeaturesWithRandomForest(c(1:nrow(exprTableTransposed)),
-                                                  ncol(exprTableTransposed))
+                                                    ncol(exprTableTransposed))
   
   lo <- loess(selectedGenes[1:preFiltered] ~ c(1:200))
   smoothed = predict(lo)
@@ -218,7 +227,6 @@ plotVariableImportance <- function(smoothed, selectedGenes) {
 
 #### Classifier Functions ####
 ## ----------------------------------------------------------------------------
-
 ## Function that classifies patients with random forest
 RandomForestClassifier <- function(numberTrees,
                                    testIndex,
@@ -245,6 +253,8 @@ RandomForestClassifier <- function(numberTrees,
   return(predicted$predictions)
 }
 
+
+
 ## Function that tunes the mytry parameter of RF
 tuneMtry <- function(relevantGenes) {
   ## first we tune the mtry parameter of the random forest model with caret
@@ -263,6 +273,7 @@ tuneMtry <- function(relevantGenes) {
   tunedMtry <- rf.random$finalModel$mtry
   return (tunedMtry)
 }
+
 
 
 ## Function that classifies patients with SVM
@@ -292,7 +303,6 @@ SvmClassifier <- function(myKernel,
 
 #### Function for LOOCV ####
 ## ----------------------------------------------------------------------------
-
 LOOCV <- function(FUN,
                   parameter,
                   selection,
@@ -340,7 +350,7 @@ getResultOverview <- function (results) {
     message("Misclassifiction Error for current predictions:")
     message(round(misclError,4))
     return(data.frame(MER = round(misclError,4),
-                      Accuracy = round(accuracy,4 ),
+                      Accuracy = round(accuracy,4),
                       CI = ci.interval))
   }
   rownames(evaluationResults) <- names(results)
@@ -358,32 +368,32 @@ plotResults <- function(res, response, title) {
   cm.percentage <- as.data.frame(prop.table(cm$table))
   cm.table$Perc <- round(cm.percentage$Freq*100,2)
   
-  ggplot(data = cm.table, aes(x = Prediction , y =  Reference, fill = Freq)) +
-  geom_tile() +
-  geom_text(aes(label = paste("",Freq,",",Perc,"%")),
-            color = 'white', size = 4, fontface = "bold") +
-  theme_light() +
-  guides(fill = FALSE) 
-  
-  # plotting the stats
+  cm.plot <- ggplot(data = cm.table, aes(x = Prediction , y =  Reference, fill = Freq)) + 
+             geom_raster(aes(fill = Freq)) +
+             geom_text(aes(label = paste("",Freq,",",Perc,"%")),
+             color = 'white', size = 3, fontface = "bold") +
+             theme_light()
+            
   cm.statsTable <-  tableGrob(cm.stats)
-  
-  # all together
+ 
   grid.arrange(cm.plot, cm.statsTable,nrow = 1, ncol = 2, 
-  bottom = textGrob(title, gp = gpar(fontsize=20,font=1)))
+  top = textGrob(paste0("Confusion Table Heatmap \n",title), gp = gpar(fontsize=20,font=1)))
+ 
 }
 
 
 
 
 #### EXECUTION ####
-## --------------------------------------------------------------------
+## ----------------------------------------------------------------------------
 
 ## first we filter the classes and include only classes with more than 30 patients
 relevantPatients <- FilterClass(minNumberofCasesPerClass)
+phenoTable <- phenoTable[relevantPatients, ]
+exprTableTransposed <- exprTableTransposed[relevantPatients, ]
 #remove unused factors
 phenoTable[,classVariable] <- factor(phenoTable[,classVariable])
-exprTableTransposed <- exprTableTransposed[relevantPatients, ]
+
 ## tune mtry parameter before the feeature selection
 tunedMtryAllFeatures <- tuneMtry(colnames(exprTableTransposed))
 helper <- getNumberofFeatures()
@@ -443,21 +453,21 @@ response <- factor(response, levels = rev(levels(response)))
 names(response) <- rownames(phenoTable)
 resultTable <- getResultOverview(resultVector)
 
-plotResults(res, response, "titel")
-plotResults(res, response, "titel")
-plotResults(res, response, "titel")
-plotResults(res, response, "titel")
-plotResults(res, response, "titel")
-plotResults(res, response, "titel")
-plotResults(res, response, "titel")
-plotResults(res, response, "titel")
-plotResults(res, response, "titel")
-plotResults(res, response, "titel")
-plotResults(res, response, "titel")
-plotResults(res, response, "titel")
-plotResults(res, response, "titel")
-plotResults(res, response, "titel")
-plotResults(res, response, "titel")
+plotResults(resultVector[[1]], response, names(resultVector)[1])
+plotResults(resultVector[[2]], response, names(resultVector)[2])
+plotResults(resultVector[[3]], response, names(resultVector)[3])
+plotResults(resultVector[[4]], response, names(resultVector)[4])
+plotResults(resultVector[[5]], response, names(resultVector)[5])
+plotResults(resultVector[[6]], response, names(resultVector)[6])
+plotResults(resultVector[[7]], response, names(resultVector)[7])
+plotResults(resultVector[[8]], response, names(resultVector)[8])
+plotResults(resultVector[[9]], response, names(resultVector)[9])
+plotResults(resultVector[[10]], response, names(resultVector)[10])
+plotResults(resultVector[[11]], response, names(resultVector)[11])
+plotResults(resultVector[[12]], response, names(resultVector)[12])
+plotResults(resultVector[[13]], response, names(resultVector)[13])
+plotResults(resultVector[[14]], response, names(resultVector)[14])
+
 
 #### Saving the image file
 ## ----------------------------------------------------------------------------

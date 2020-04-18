@@ -1,5 +1,5 @@
 ---
-title: "Final Report Statistics for Biology 2"
+title: "Random Forest and SVM for Cancer Classification"
 author: "Maximilian Joas"
 date: "`r Sys.Date()`"
 bibliography: "lib.bib"
@@ -75,8 +75,16 @@ knitr::opts_chunk$set(
   results = TRUE, comment = "")
 #load(memImageFile) error attemtp to use zero length variable name
 
+<<<<<<< HEAD
 ```
 
+=======
+
+```
+
+
+
+>>>>>>> ef19f99f1e6801034a495fddc2c111f97db09766
 ## Background
 This report is based on a 2009 study by Den Boer et al. The goal of this study was to TODO
 Genetic subtypes of acute lymphoblastic leukaemia (ALL) are used to determine risk and treatment in children. 25% of precursor B-ALL cases are genetically unclassified and have intermediate prognosis. We aimed to use a genome-wide study to improve prognostic classification of ALL in children. TODO
@@ -132,6 +140,7 @@ All the code can be found in the Appendix section.
 5. RF results und plots
 6. SVM results und plots
 7. compare svm results and rf (table)
+<<<<<<< HEAD
 
 ## Conclusion
 
@@ -150,6 +159,8 @@ read_chunk("/shared/home/mjoas/maximilian.joas/cancerClassification/classificati
 
 
 
+=======
+>>>>>>> ef19f99f1e6801034a495fddc2c111f97db09766
 
 
 

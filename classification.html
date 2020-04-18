@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Maximilian Joas" />
+
+<meta name="date" content="2020-04-18" />
+
+<title>Random Forest and SVM for Cancer Classification</title>
+
+<script src="classification_files/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="classification_files/bootstrap-3.3.5/css/cerulean.min.css" rel="stylesheet" />
+<script src="classification_files/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="classification_files/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="classification_files/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="classification_files/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="classification_files/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="classification_files/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="classification_files/navigation-1.1/tabsets.js"></script>
+<script src="classification_files/navigation-1.1/codefolding.js"></script>
+
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="fluid-row" id="header">
+
+<div class="btn-group pull-right">
+<button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Random Forest and SVM for Cancer Classification</h1>
+<h3 class="subtitle">Random Forest and SVM for Cancer Classification</h3>
+<h4 class="author">Maximilian Joas</h4>
+<h4 class="date">2020-04-18</h4>
+
+</div>
+
+
+<div id="background" class="section level2">
+<h2>Background</h2>
+<p>This report is based on a 2009 study by Den Boer et al. The goal of this study was to TODO Genetic subtypes of acute lymphoblastic leukaemia (ALL) are used to determine risk and treatment in children. 25% of precursor B-ALL cases are genetically unclassified and have intermediate prognosis. We aimed to use a genome-wide study to improve prognostic classification of ALL in children. TODO In the report however I am to use the data set to methodically explore which methods for classification works best and how different parameters influence the classification. Precisely I use support vector machine (SVM) and random forest for classification. Additionally I use random forest for feature selection.</p>
+</div>
+<div id="methods-theory" class="section level2">
+<h2>Methods Theory</h2>
+<p>Due to the scope of this work I will not be able to provide a in depth description of the methods. The aim is to only give a very short overview, so the reader understands the key terms of the methods. Random forest is a widely used method for classification. The base of a random forest model is are decision trees. A decision tree consists of multiple nodes. At each node tree is splitted into branches depending on the value of a independent variable. In our case this would be the expression level of a particular gene. Which variable is used at a given split is random. However not all variables are available to sample from at each split. The number of variables available for splitting at each tree node is referred to as the mtry parameter . The end of a branch, the leaf, does not split anymore and represents the decision for a particular class. In our case that would be a cell type. A random forest consists of multiple decision trees. Each tree gives a vote for the final decision of the class. The class with the majority vote across all trees is the final class of a random forest. The number of trees used in a random forest is on interest in this report. I will investigate the influence of the number of trees on the classification accuracy.</p>
+<p>SVM is another well established method for classification it tries to separate the data by a hyperplane. The goal is that data points in different classes are as far away from the hyperplane as possible. The data points nearest to the hyperplane are called support vectors. Often times the data points are not separable in their original dimension. Nevertheless it is always possible to separate the data in a higher dimension. Therefore we need a way to map the data points to a higher dimension. The function used for this process is called Kernel function. There are different types of Kernels and I will investigate the influence of the Kernel function on the classification accuracy.</p>
+<p>In microarray studies it is common to have a high number of measurements in comparison to the number of patients. This is called a small n large p dataset and can lead to overfitting. Therefore, it can make sense to select only a subset of independent variables. Ideally the ones that contain the most information. In order to find these variables I also used random forest for feature selection. Precisely I used the impurity variable importance of the random forest.</p>
+</div>
+<div id="methods-implementation" class="section level2">
+<h2>Methods Implementation</h2>
+<p>Now that I covered the theoretical basics to understand this report, it is time to present the practical implementation of the above described methods. In order to test the classification accuracy I need to split the data into a training data set and a validation data set. I order to have as many training and test patients as possible I decided to use leave one out cross validation as an approach. The standard way to do this would be to use the caret packages. I decided, however, to implement the functionality myself. The reason for this is that I also wanted to use the LOOCV approach for feature selection to avoid any bias. With my own implementation I could be sure that I used the exact same method for feature selection and the training of the model. For my Implementation I used the foreach package for parallelization, which is highly optimized. Thus, my implementation is also highly performant. The logic of my function is structured as follows: I have a base function that performs the actual task, e.g feature selection or classification and another function that implements the LOOCV logic that calls the base function in each iteration. This makes the code easy to extend, since I only need to write a new base function for a new classification method and can use my existing function for the LOOCV logic. The base function for classification take the parameters for the corresponding method, e.g. number of trees for random forest and the Kernel method for SVM.</p>
+<p>For the feature selection I applied the same principles I had one function that did the actual feature selection and one function that implements the LOOCV logic and calls the feature selection function. I is also possible to specify how many feature should be selected. However I did not want to chose the number of features arbitrary. So I sorted the variable importance of all covariates and plotted it. Subsequently, I smoothed the plot in order to make it differentiable. The goal was to find the point where the variable importance drops the steepest. This point I used as a cutoff for the number of features that I selected. In order to find the point I took the highest value of the second derivative of the smoothed line. This process is a highly reuasable ant automated process to find the number of variables to select. All the code can be found in the Appendix section.</p>
+</div>
+<div id="results-and-interpretation" class="section level2">
+<h2>Results and Interpretation</h2>
+<ol style="list-style-type: decimal">
+<li>class Filtering &gt; methoden teil</li>
+<li>mtry tuning</li>
+<li>selection 3.1 number of features + plot</li>
+<li>no mtry tuning (2) in Methoden Teil</li>
+<li>RF results und plots</li>
+<li>SVM results und plots</li>
+<li>compare svm results and rf (table)</li>
+</ol>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

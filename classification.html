@@ -788,8 +788,8 @@ div.tocify {
 <a class="sourceLine" id="cb8-16" data-line-number="16"></a>
 <a class="sourceLine" id="cb8-17" data-line-number="17">  cm.statsTable &lt;-<span class="st">  </span><span class="kw">tableGrob</span>(cm.stats)</a>
 <a class="sourceLine" id="cb8-18" data-line-number="18"></a>
-<a class="sourceLine" id="cb8-19" data-line-number="19">  <span class="kw">grid.arrange</span>(cm.plot, cm.statsTable,<span class="dt">nrow =</span> <span class="dv">1</span>, <span class="dt">ncol =</span> <span class="dv">2</span>, <span class="dt">widths=</span><span class="kw">c</span>(<span class="fl">0.8</span>, <span class="fl">0.2</span>),</a>
-<a class="sourceLine" id="cb8-20" data-line-number="20">  <span class="dt">top =</span> <span class="kw">textGrob</span>(<span class="kw">paste0</span>(<span class="st">&quot;Confusion Table Heatmap </span><span class="ch">\n</span><span class="st">&quot;</span>,title), <span class="dt">gp =</span> <span class="kw">gpar</span>(<span class="dt">fontsize=</span><span class="dv">20</span>,<span class="dt">font=</span><span class="dv">1</span>)))</a>
+<a class="sourceLine" id="cb8-19" data-line-number="19">  <span class="kw">grid.arrange</span>(cm.plot, cm.statsTable,<span class="dt">nrow =</span> <span class="dv">1</span>, <span class="dt">ncol =</span> <span class="dv">2</span>, <span class="dt">widths=</span><span class="kw">c</span>(<span class="fl">0.7</span>, <span class="fl">0.3</span>))</a>
+<a class="sourceLine" id="cb8-20" data-line-number="20">  <span class="co">#top = textGrob(paste0(&quot;Confusion Table Heatmap \n&quot;,title), gp = gpar(fontsize=20,font=1)))</span></a>
 <a class="sourceLine" id="cb8-21" data-line-number="21"></a>
 <a class="sourceLine" id="cb8-22" data-line-number="22">}</a>
 <a class="sourceLine" id="cb8-23" data-line-number="23"></a>
@@ -870,18 +870,17 @@ div.tocify {
 <p><img src="figures/02_combinatorix_displaySVM-2.png" width="672" style="display: block; margin: auto;" /></p>
 <p>TODO explain SVM in Depth “Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.”</p>
 <div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb13-1" data-line-number="1">cm.svmBest &lt;-<span class="st"> </span><span class="kw">t</span>(<span class="kw">confusionMatrix</span>(response, resultList[[<span class="dv">7</span>]])<span class="op">$</span>byClass)</a>
-<a class="sourceLine" id="cb13-2" data-line-number="2"><span class="kw">grid.arrange</span>(<span class="kw">tableGrob</span>(<span class="kw">round</span>(cm.svmBest,<span class="dv">4</span>)))</a></code></pre></div>
+<a class="sourceLine" id="cb13-2" data-line-number="2"><span class="co">#grid.arrange(tableGrob(round(cm.svmBest,4)))</span></a>
+<a class="sourceLine" id="cb13-3" data-line-number="3">cm.rfBest &lt;-<span class="st"> </span><span class="kw">t</span>(<span class="kw">confusionMatrix</span>(response, resultList[[<span class="dv">1</span>]])<span class="op">$</span>byClass)</a>
+<a class="sourceLine" id="cb13-4" data-line-number="4"><span class="kw">grid.arrange</span>(<span class="kw">tableGrob</span>(<span class="kw">round</span>(cm.rfBest, <span class="dv">4</span>)),</a>
+<a class="sourceLine" id="cb13-5" data-line-number="5">             <span class="kw">tableGrob</span>(<span class="kw">round</span>(cm.svmBest,<span class="dv">4</span>)), <span class="kw">textGrob</span>(<span class="st">&quot;A&quot;</span>), <span class="kw">textGrob</span>(<span class="st">&quot;B&quot;</span>),</a>
+<a class="sourceLine" id="cb13-6" data-line-number="6">             <span class="dt">nrow =</span> <span class="dv">2</span>, <span class="dt">ncol =</span> <span class="dv">2</span>)</a></code></pre></div>
 <p><img src="figures/02_combinatorix_inDepth-1.png" width="672" style="display: block; margin: auto;" /></p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb14-1" data-line-number="1">cm.rfBest &lt;-<span class="st"> </span><span class="kw">t</span>(<span class="kw">confusionMatrix</span>(response, resultList[[<span class="dv">1</span>]])<span class="op">$</span>byClass)</a>
-<a class="sourceLine" id="cb14-2" data-line-number="2"><span class="kw">grid.arrange</span>(<span class="kw">tableGrob</span>(<span class="kw">round</span>(cm.rfBest, <span class="dv">4</span>)),</a>
-<a class="sourceLine" id="cb14-3" data-line-number="3">             <span class="kw">tableGrob</span>(<span class="kw">round</span>(cm.svmBest,<span class="dv">4</span>)), <span class="kw">textGrob</span>(<span class="st">&quot;A&quot;</span>), <span class="kw">textGrob</span>(<span class="st">&quot;B&quot;</span>),</a>
-<a class="sourceLine" id="cb14-4" data-line-number="4">             <span class="dt">nrow =</span> <span class="dv">2</span>, <span class="dt">ncol =</span> <span class="dv">2</span>)</a></code></pre></div>
-<p><img src="figures/02_combinatorix_inDepth-2.png" width="672" style="display: block; margin: auto;" /></p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb15-1" data-line-number="1"> <span class="co">## @knitr saving</span></a>
-<a class="sourceLine" id="cb15-2" data-line-number="2"><span class="co">#### Saving the image file</span></a>
-<a class="sourceLine" id="cb15-3" data-line-number="3"><span class="kw">message</span>(<span class="st">&quot;Saving Image file&quot;</span>)</a>
-<a class="sourceLine" id="cb15-4" data-line-number="4"><span class="kw">message</span>(<span class="kw">paste</span>(memImageFile))</a>
-<a class="sourceLine" id="cb15-5" data-line-number="5"><span class="kw">save.image</span>(memImageFile)</a></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb14-1" data-line-number="1"> <span class="co">## @knitr saving</span></a>
+<a class="sourceLine" id="cb14-2" data-line-number="2"><span class="co">#### Saving the image file</span></a>
+<a class="sourceLine" id="cb14-3" data-line-number="3"><span class="kw">message</span>(<span class="st">&quot;Saving Image file&quot;</span>)</a>
+<a class="sourceLine" id="cb14-4" data-line-number="4"><span class="kw">message</span>(<span class="kw">paste</span>(memImageFile))</a>
+<a class="sourceLine" id="cb14-5" data-line-number="5"><span class="kw">save.image</span>(memImageFile)</a></code></pre></div>
 <p>TODO “Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.” ## Conclusion “Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.” ## References</p>
 <div id="refs" class="references">
 <div id="ref-den2009subtype">

@@ -375,8 +375,8 @@ plotResults <- function(res, response, title) {
 
   cm.statsTable <-  tableGrob(cm.stats)
 
-  grid.arrange(cm.plot, cm.statsTable,nrow = 1, ncol = 2, widths=c(0.8, 0.2),
-  top = textGrob(paste0("Confusion Table Heatmap \n",title), gp = gpar(fontsize=20,font=1)))
+  grid.arrange(cm.plot, cm.statsTable,nrow = 1, ncol = 2, widths=c(0.7, 0.3))
+  #top = textGrob(paste0("Confusion Table Heatmap \n",title), gp = gpar(fontsize=20,font=1)))
 
 }
 
@@ -441,7 +441,7 @@ kable(svmResultTable, caption = "SVM Results")
 
 ## @knitr inDepth
 cm.svmBest <- t(confusionMatrix(response, resultList[[7]])$byClass)
-grid.arrange(tableGrob(round(cm.svmBest,4)))
+#grid.arrange(tableGrob(round(cm.svmBest,4)))
 cm.rfBest <- t(confusionMatrix(response, resultList[[1]])$byClass)
 grid.arrange(tableGrob(round(cm.rfBest, 4)),
              tableGrob(round(cm.svmBest,4)), textGrob("A"), textGrob("B"),

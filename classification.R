@@ -375,7 +375,7 @@ plotResults <- function(res, response, title) {
 
   cm.statsTable <-  tableGrob(cm.stats)
 
-  grid.arrange(cm.plot, cm.statsTable,nrow = 1, ncol = 2,
+  grid.arrange(cm.plot, cm.statsTable,nrow = 1, ncol = 2, widths=c(0.8, 0.2),
   top = textGrob(paste0("Confusion Table Heatmap \n",title), gp = gpar(fontsize=20,font=1)))
 
 }
@@ -384,17 +384,20 @@ plotResults <- function(res, response, title) {
 plotResults(resultVector[[3]], response, names(resultVector)[3])
 plotResults(resultVector[[4]], response, names(resultVector)[4])
 
+## @knitr displaySVM
+plotResults(resultVector[[7]], response, names(resultVector)[7])
+plotResults(resultVector[[14]], response, names(resultVector)[14])
 ## @knitr appendix
 plotResults(resultVector[[5]], response, names(resultVector)[5])
 plotResults(resultVector[[6]], response, names(resultVector)[6])
-plotResults(resultVector[[7]], response, names(resultVector)[7])
+
 plotResults(resultVector[[8]], response, names(resultVector)[8])
 plotResults(resultVector[[9]], response, names(resultVector)[9])
 plotResults(resultVector[[10]], response, names(resultVector)[10])
 plotResults(resultVector[[11]], response, names(resultVector)[11])
 plotResults(resultVector[[12]], response, names(resultVector)[12])
 plotResults(resultVector[[13]], response, names(resultVector)[13])
-plotResults(resultVector[[14]], response, names(resultVector)[14])
+
 
 plotResults(resultVector[[1]], response, names(resultVector)[1])
 plotResults(resultVector[[2]], response, names(resultVector)[2])
@@ -412,9 +415,9 @@ getResultOverview <- function (results) {
     misclError <-  errors / sum(cm.table)
     accuracy <- 1 - misclError
     ci.upper <- accuracy + 1.96 *
-      sqrt( (accuracy * (1 - accuracy)) / nrow(exprTableTransposed))
+                sqrt( (accuracy * (1 - accuracy)) / nrow(exprTableTransposed))
     ci.lower <- accuracy - 1.96 *
-      sqrt( (accuracy * (1 - accuracy)) / nrow(exprTableTransposed))
+                sqrt( (accuracy * (1 - accuracy)) / nrow(exprTableTransposed))
     ci.interval <- paste0(round(ci.lower,4), "-", round(ci.upper,4))
     message("Misclassifiction Error for current predictions:")
     message(round(misclError,4))
@@ -432,10 +435,18 @@ rfResultTable <- resultTable[1:6, ]
 kable(rfResultTable)
 
 ## @knitr overviewResultsSVM
-svmResultTable <- resultTable[7,14, ]
+svmResultTable <- resultTable[7:14, ]
 kable(svmResultTable, caption = "SVM Results")
 
-## @knitr saving
+
+## @knitr inDepth
+cm.svmBest <- t(confusionMatrix(response, resultList[[7]])$byClass)
+grid.arrange(tableGrob(round(cm.svmBest,4)))
+cm.rfBest <- t(confusionMatrix(response, resultList[[1]])$byClass)
+grid.arrange(tableGrob(round(cm.rfBest, 4)),
+             tableGrob(round(cm.svmBest,4)), textGrob("A"), textGrob("B"),
+             nrow = 2, ncol = 2)
+ ## @knitr saving
 #### Saving the image file
 message("Saving Image file")
 message(paste(memImageFile))

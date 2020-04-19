@@ -636,9 +636,9 @@ div.tocify {
 <a class="sourceLine" id="cb6-11" data-line-number="11">    misclError &lt;-<span class="st">  </span>errors <span class="op">/</span><span class="st"> </span><span class="kw">sum</span>(cm.table)</a>
 <a class="sourceLine" id="cb6-12" data-line-number="12">    accuracy &lt;-<span class="st"> </span><span class="dv">1</span> <span class="op">-</span><span class="st"> </span>misclError</a>
 <a class="sourceLine" id="cb6-13" data-line-number="13">    ci.upper &lt;-<span class="st"> </span>accuracy <span class="op">+</span><span class="st"> </span><span class="fl">1.96</span> <span class="op">*</span></a>
-<a class="sourceLine" id="cb6-14" data-line-number="14"><span class="st">      </span><span class="kw">sqrt</span>( (accuracy <span class="op">*</span><span class="st"> </span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>accuracy)) <span class="op">/</span><span class="st"> </span><span class="kw">nrow</span>(exprTableTransposed))</a>
+<a class="sourceLine" id="cb6-14" data-line-number="14"><span class="st">                </span><span class="kw">sqrt</span>( (accuracy <span class="op">*</span><span class="st"> </span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>accuracy)) <span class="op">/</span><span class="st"> </span><span class="kw">nrow</span>(exprTableTransposed))</a>
 <a class="sourceLine" id="cb6-15" data-line-number="15">    ci.lower &lt;-<span class="st"> </span>accuracy <span class="op">-</span><span class="st"> </span><span class="fl">1.96</span> <span class="op">*</span></a>
-<a class="sourceLine" id="cb6-16" data-line-number="16"><span class="st">      </span><span class="kw">sqrt</span>( (accuracy <span class="op">*</span><span class="st"> </span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>accuracy)) <span class="op">/</span><span class="st"> </span><span class="kw">nrow</span>(exprTableTransposed))</a>
+<a class="sourceLine" id="cb6-16" data-line-number="16"><span class="st">                </span><span class="kw">sqrt</span>( (accuracy <span class="op">*</span><span class="st"> </span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>accuracy)) <span class="op">/</span><span class="st"> </span><span class="kw">nrow</span>(exprTableTransposed))</a>
 <a class="sourceLine" id="cb6-17" data-line-number="17">    ci.interval &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span class="kw">round</span>(ci.lower,<span class="dv">4</span>), <span class="st">&quot;-&quot;</span>, <span class="kw">round</span>(ci.upper,<span class="dv">4</span>))</a>
 <a class="sourceLine" id="cb6-18" data-line-number="18">    <span class="kw">message</span>(<span class="st">&quot;Misclassifiction Error for current predictions:&quot;</span>)</a>
 <a class="sourceLine" id="cb6-19" data-line-number="19">    <span class="kw">message</span>(<span class="kw">round</span>(misclError,<span class="dv">4</span>))</a>
@@ -788,7 +788,7 @@ div.tocify {
 <a class="sourceLine" id="cb8-16" data-line-number="16"></a>
 <a class="sourceLine" id="cb8-17" data-line-number="17">  cm.statsTable &lt;-<span class="st">  </span><span class="kw">tableGrob</span>(cm.stats)</a>
 <a class="sourceLine" id="cb8-18" data-line-number="18"></a>
-<a class="sourceLine" id="cb8-19" data-line-number="19">  <span class="kw">grid.arrange</span>(cm.plot, cm.statsTable,<span class="dt">nrow =</span> <span class="dv">1</span>, <span class="dt">ncol =</span> <span class="dv">2</span>,</a>
+<a class="sourceLine" id="cb8-19" data-line-number="19">  <span class="kw">grid.arrange</span>(cm.plot, cm.statsTable,<span class="dt">nrow =</span> <span class="dv">1</span>, <span class="dt">ncol =</span> <span class="dv">2</span>, <span class="dt">widths=</span><span class="kw">c</span>(<span class="fl">0.8</span>, <span class="fl">0.2</span>),</a>
 <a class="sourceLine" id="cb8-20" data-line-number="20">  <span class="dt">top =</span> <span class="kw">textGrob</span>(<span class="kw">paste0</span>(<span class="st">&quot;Confusion Table Heatmap </span><span class="ch">\n</span><span class="st">&quot;</span>,title), <span class="dt">gp =</span> <span class="kw">gpar</span>(<span class="dt">fontsize=</span><span class="dv">20</span>,<span class="dt">font=</span><span class="dv">1</span>)))</a>
 <a class="sourceLine" id="cb8-21" data-line-number="21"></a>
 <a class="sourceLine" id="cb8-22" data-line-number="22">}</a>
@@ -800,12 +800,88 @@ div.tocify {
 <p><img src="figures/02_combinatorix_displayResult-2.png" width="672" style="display: block; margin: auto;" /></p>
 <p>TODO epxlain result in depth</p>
 <p>The second method of interest in this work was the SVM for classification. Again I start with an overview and discuss more detail later on. For the SVM I used four different kernel methods, namely radial, linear, polynomial and simgmoidal. As done with the Random Forest Classifier I used one time all genes and one time 50 genes, selected via the Random Forest variable Importance, as described above.</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" data-line-number="1">svmResultTable &lt;-<span class="st"> </span>resultTable[<span class="dv">7</span>,<span class="dv">14</span>, ]</a>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" data-line-number="1">svmResultTable &lt;-<span class="st"> </span>resultTable[<span class="dv">7</span><span class="op">:</span><span class="dv">14</span>, ]</a>
 <a class="sourceLine" id="cb10-2" data-line-number="2"><span class="kw">kable</span>(svmResultTable, <span class="dt">caption =</span> <span class="st">&quot;SVM Results&quot;</span>)</a></code></pre></div>
-<p>Table: SVM Results</p>
-<p>|| || || ||</p>
+<table>
+<caption>SVM Results</caption>
+<thead>
+<tr class="header">
+<th></th>
+<th align="right">MER</th>
+<th align="right">Accuracy</th>
+<th align="left">X95..CI</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>SVM Radial Kernel all Genes</td>
+<td align="right">0.0599</td>
+<td align="right">0.9401</td>
+<td align="left">0.9041-0.9761</td>
+</tr>
+<tr class="even">
+<td>SVM Linear Kernel all Genes</td>
+<td align="right">0.0719</td>
+<td align="right">0.9281</td>
+<td align="left">0.889-0.9673</td>
+</tr>
+<tr class="odd">
+<td>SVM Ploynomial Kernel all Genes</td>
+<td align="right">0.0719</td>
+<td align="right">0.9281</td>
+<td align="left">0.889-0.9673</td>
+</tr>
+<tr class="even">
+<td>SVM Sigmoid Kernel all Genes</td>
+<td align="right">0.0838</td>
+<td align="right">0.9162</td>
+<td align="left">0.8741-0.9582</td>
+</tr>
+<tr class="odd">
+<td>SVM Radial Kernel Feature Selection</td>
+<td align="right">0.0838</td>
+<td align="right">0.9162</td>
+<td align="left">0.8741-0.9582</td>
+</tr>
+<tr class="even">
+<td>SVM Linear Kernel Feature Selection</td>
+<td align="right">0.0958</td>
+<td align="right">0.9042</td>
+<td align="left">0.8596-0.9488</td>
+</tr>
+<tr class="odd">
+<td>SVM Ploynomial Kernel Feature Selection</td>
+<td align="right">0.1078</td>
+<td align="right">0.8922</td>
+<td align="left">0.8452-0.9392</td>
+</tr>
+<tr class="even">
+<td>SVM Sigmoid Kernel Feature Selection</td>
+<td align="right">0.1377</td>
+<td align="right">0.8623</td>
+<td align="left">0.81-0.9145</td>
+</tr>
+</tbody>
+</table>
 <p>TODO explain SVM overview results - allgemein - feature selection - no feature selection - kernel influence</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb11-1" data-line-number="1"><span class="kw">plotResults</span>(resultVector[[<span class="dv">7</span>]], response, <span class="kw">names</span>(resultVector)[<span class="dv">7</span>])</a></code></pre></div>
+<p><img src="figures/02_combinatorix_displaySVM-1.png" width="672" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb12-1" data-line-number="1"><span class="kw">plotResults</span>(resultVector[[<span class="dv">14</span>]], response, <span class="kw">names</span>(resultVector)[<span class="dv">14</span>])</a></code></pre></div>
+<p><img src="figures/02_combinatorix_displaySVM-2.png" width="672" style="display: block; margin: auto;" /></p>
 <p>TODO explain SVM in Depth “Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.”</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb13-1" data-line-number="1">cm.svmBest &lt;-<span class="st"> </span><span class="kw">t</span>(<span class="kw">confusionMatrix</span>(response, resultList[[<span class="dv">7</span>]])<span class="op">$</span>byClass)</a>
+<a class="sourceLine" id="cb13-2" data-line-number="2"><span class="kw">grid.arrange</span>(<span class="kw">tableGrob</span>(<span class="kw">round</span>(cm.svmBest,<span class="dv">4</span>)))</a></code></pre></div>
+<p><img src="figures/02_combinatorix_inDepth-1.png" width="672" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb14-1" data-line-number="1">cm.rfBest &lt;-<span class="st"> </span><span class="kw">t</span>(<span class="kw">confusionMatrix</span>(response, resultList[[<span class="dv">1</span>]])<span class="op">$</span>byClass)</a>
+<a class="sourceLine" id="cb14-2" data-line-number="2"><span class="kw">grid.arrange</span>(<span class="kw">tableGrob</span>(<span class="kw">round</span>(cm.rfBest, <span class="dv">4</span>)),</a>
+<a class="sourceLine" id="cb14-3" data-line-number="3">             <span class="kw">tableGrob</span>(<span class="kw">round</span>(cm.svmBest,<span class="dv">4</span>)), <span class="kw">textGrob</span>(<span class="st">&quot;A&quot;</span>), <span class="kw">textGrob</span>(<span class="st">&quot;B&quot;</span>),</a>
+<a class="sourceLine" id="cb14-4" data-line-number="4">             <span class="dt">nrow =</span> <span class="dv">2</span>, <span class="dt">ncol =</span> <span class="dv">2</span>)</a></code></pre></div>
+<p><img src="figures/02_combinatorix_inDepth-2.png" width="672" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb15-1" data-line-number="1"> <span class="co">## @knitr saving</span></a>
+<a class="sourceLine" id="cb15-2" data-line-number="2"><span class="co">#### Saving the image file</span></a>
+<a class="sourceLine" id="cb15-3" data-line-number="3"><span class="kw">message</span>(<span class="st">&quot;Saving Image file&quot;</span>)</a>
+<a class="sourceLine" id="cb15-4" data-line-number="4"><span class="kw">message</span>(<span class="kw">paste</span>(memImageFile))</a>
+<a class="sourceLine" id="cb15-5" data-line-number="5"><span class="kw">save.image</span>(memImageFile)</a></code></pre></div>
 <p>TODO “Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.” ## Conclusion “Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.” ## References</p>
 <div id="refs" class="references">
 <div id="ref-den2009subtype">

@@ -589,6 +589,244 @@ div.tocify {
 <a class="sourceLine" id="cb4-83" data-line-number="83">                       helper[[<span class="st">&quot;genes&quot;</span>]],</a>
 <a class="sourceLine" id="cb4-84" data-line-number="84">                       helper[[<span class="st">&quot;maximalChangeIndex&quot;</span>]])</a></code></pre></div>
 <p><img src="figures/02_combinatorix_prepareSelect-1.png" width="672" style="display: block; margin: auto;" /> Table shows the blba bla bla the result is 50 genes this 50 genes were balbal</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="co">#### Classifier Functions ####</span></a>
+<a class="sourceLine" id="cb5-2" data-line-number="2"><span class="co">## Function that classifies patients with random forest</span></a>
+<a class="sourceLine" id="cb5-3" data-line-number="3">RandomForestClassifier &lt;-<span class="st"> </span><span class="cf">function</span>(numberTrees,</a>
+<a class="sourceLine" id="cb5-4" data-line-number="4">                                   testIndex,</a>
+<a class="sourceLine" id="cb5-5" data-line-number="5">                                   trainIndex,</a>
+<a class="sourceLine" id="cb5-6" data-line-number="6">                                   selectedCovariates,</a>
+<a class="sourceLine" id="cb5-7" data-line-number="7">                                   <span class="dt">verbose =</span> <span class="ot">TRUE</span>) {</a>
+<a class="sourceLine" id="cb5-8" data-line-number="8">  <span class="cf">if</span>(verbose) <span class="kw">message</span>(<span class="st">&quot;Fitting the Random Forest&quot;</span>)</a>
+<a class="sourceLine" id="cb5-9" data-line-number="9">  <span class="cf">if</span>(verbose) <span class="kw">message</span>(<span class="kw">paste0</span>(<span class="st">&quot;Using &quot;</span>,numberTrees,<span class="st">&quot; trees&quot;</span>))</a>
+<a class="sourceLine" id="cb5-10" data-line-number="10">  rf.fit &lt;-<span class="st"> </span><span class="kw">ranger</span>(<span class="dt">y =</span> phenoTable[trainIndex, classVariable],</a>
+<a class="sourceLine" id="cb5-11" data-line-number="11">                   <span class="dt">x =</span> exprTableTransposed[trainIndex, selectedCovariates],</a>
+<a class="sourceLine" id="cb5-12" data-line-number="12">                   <span class="dt">num.trees =</span> numberTrees,</a>
+<a class="sourceLine" id="cb5-13" data-line-number="13">                   <span class="dt">num.threads =</span> numberThreads,</a>
+<a class="sourceLine" id="cb5-14" data-line-number="14">                   <span class="dt">mtry =</span> tunedMtry)</a>
+<a class="sourceLine" id="cb5-15" data-line-number="15"></a>
+<a class="sourceLine" id="cb5-16" data-line-number="16">  testData &lt;-<span class="st"> </span><span class="kw">t</span>(<span class="kw">as.data.frame</span>(exprTableTransposed[testIndex,</a>
+<a class="sourceLine" id="cb5-17" data-line-number="17">                                                  selectedCovariates]))</a>
+<a class="sourceLine" id="cb5-18" data-line-number="18">  <span class="cf">if</span>(<span class="kw">length</span>(testIndex) <span class="op">!=</span><span class="dv">1</span>) {</a>
+<a class="sourceLine" id="cb5-19" data-line-number="19">    testData &lt;-<span class="st"> </span>exprTableTransposed[testIndex, selectedCovariates]</a>
+<a class="sourceLine" id="cb5-20" data-line-number="20">  }</a>
+<a class="sourceLine" id="cb5-21" data-line-number="21">  <span class="cf">if</span>(verbose) <span class="kw">message</span>(<span class="st">&quot;Starting prediction based on the fitted model&quot;</span>)</a>
+<a class="sourceLine" id="cb5-22" data-line-number="22">  predicted &lt;-<span class="st"> </span><span class="kw">predict</span>(rf.fit, testData)</a>
+<a class="sourceLine" id="cb5-23" data-line-number="23">  <span class="cf">if</span>(verbose) <span class="kw">message</span>(<span class="st">&quot;Finished predicting, now returning the predictions&quot;</span>)</a>
+<a class="sourceLine" id="cb5-24" data-line-number="24">  predicted<span class="op">$</span>predictions</a>
+<a class="sourceLine" id="cb5-25" data-line-number="25">  <span class="kw">return</span>(predicted<span class="op">$</span>predictions)</a>
+<a class="sourceLine" id="cb5-26" data-line-number="26">}</a>
+<a class="sourceLine" id="cb5-27" data-line-number="27"></a>
+<a class="sourceLine" id="cb5-28" data-line-number="28"></a>
+<a class="sourceLine" id="cb5-29" data-line-number="29"></a>
+<a class="sourceLine" id="cb5-30" data-line-number="30"></a>
+<a class="sourceLine" id="cb5-31" data-line-number="31"></a>
+<a class="sourceLine" id="cb5-32" data-line-number="32"><span class="co">## Function that classifies patients with SVM</span></a>
+<a class="sourceLine" id="cb5-33" data-line-number="33">SvmClassifier &lt;-<span class="st"> </span><span class="cf">function</span>(myKernel,</a>
+<a class="sourceLine" id="cb5-34" data-line-number="34">                          testIndex,</a>
+<a class="sourceLine" id="cb5-35" data-line-number="35">                          trainIndex,</a>
+<a class="sourceLine" id="cb5-36" data-line-number="36">                          selectedCovariates,</a>
+<a class="sourceLine" id="cb5-37" data-line-number="37">                          <span class="dt">verbose =</span> <span class="ot">TRUE</span>) {</a>
+<a class="sourceLine" id="cb5-38" data-line-number="38">  <span class="cf">if</span>(verbose) <span class="kw">message</span>(<span class="st">&quot;Starting fitting a SVM Mode&quot;</span>)</a>
+<a class="sourceLine" id="cb5-39" data-line-number="39">  svm.fit &lt;-<span class="st"> </span><span class="kw">svm</span>(<span class="dt">y =</span> phenoTable[trainIndex, classVariable],</a>
+<a class="sourceLine" id="cb5-40" data-line-number="40">                 <span class="dt">x =</span> exprTableTransposed[trainIndex, selectedCovariates],</a>
+<a class="sourceLine" id="cb5-41" data-line-number="41">                 <span class="dt">kernel =</span> myKernel,</a>
+<a class="sourceLine" id="cb5-42" data-line-number="42">                 <span class="dt">gamma =</span> <span class="fl">0.1</span>,</a>
+<a class="sourceLine" id="cb5-43" data-line-number="43">                 <span class="dt">cost =</span> <span class="dv">10</span>,</a>
+<a class="sourceLine" id="cb5-44" data-line-number="44">                 <span class="dt">type =</span> <span class="st">&quot;C-classification&quot;</span>)</a>
+<a class="sourceLine" id="cb5-45" data-line-number="45">  <span class="co"># neccessary in case the test index has length one (loocv)</span></a>
+<a class="sourceLine" id="cb5-46" data-line-number="46">  testData &lt;-<span class="st"> </span><span class="kw">t</span>(<span class="kw">as.data.frame</span>(exprTableTransposed[testIndex,</a>
+<a class="sourceLine" id="cb5-47" data-line-number="47">                                                  selectedCovariates]))</a>
+<a class="sourceLine" id="cb5-48" data-line-number="48">  <span class="cf">if</span>(<span class="kw">length</span>(testIndex) <span class="op">!=</span><span class="dv">1</span>) {</a>
+<a class="sourceLine" id="cb5-49" data-line-number="49">    testData &lt;-<span class="st"> </span>exprTableTransposed[testIndex, selectedCovariates]</a>
+<a class="sourceLine" id="cb5-50" data-line-number="50">  }</a>
+<a class="sourceLine" id="cb5-51" data-line-number="51">  predicted &lt;-<span class="st"> </span><span class="kw">predict</span>(svm.fit, <span class="dt">newdata =</span> testData)</a>
+<a class="sourceLine" id="cb5-52" data-line-number="52">  <span class="kw">return</span>(predicted)</a>
+<a class="sourceLine" id="cb5-53" data-line-number="53">}</a>
+<a class="sourceLine" id="cb5-54" data-line-number="54"></a>
+<a class="sourceLine" id="cb5-55" data-line-number="55"></a>
+<a class="sourceLine" id="cb5-56" data-line-number="56"></a>
+<a class="sourceLine" id="cb5-57" data-line-number="57"><span class="co">#### Function for LOOCV ####</span></a></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" data-line-number="1"><span class="co">#### Functions for displaying the results ####</span></a>
+<a class="sourceLine" id="cb6-2" data-line-number="2"><span class="co">## Functions for plotting a heatmap of a confusion table</span></a>
+<a class="sourceLine" id="cb6-3" data-line-number="3">plotResults &lt;-<span class="st"> </span><span class="cf">function</span>(res, response, title) {</a>
+<a class="sourceLine" id="cb6-4" data-line-number="4">  cm &lt;-<span class="st"> </span><span class="kw">confusionMatrix</span>(res, response)</a>
+<a class="sourceLine" id="cb6-5" data-line-number="5">  cm.table &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(cm<span class="op">$</span>table)</a>
+<a class="sourceLine" id="cb6-6" data-line-number="6">  cm.stats &lt;-<span class="kw">data.frame</span>(<span class="dt">Statistics =</span> cm<span class="op">$</span>overall)</a>
+<a class="sourceLine" id="cb6-7" data-line-number="7">  cm.stats<span class="op">$</span>Statistics &lt;-<span class="st"> </span><span class="kw">round</span>(cm.stats<span class="op">$</span>Statistics,<span class="dv">2</span>)</a>
+<a class="sourceLine" id="cb6-8" data-line-number="8">  cm.percentage &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(<span class="kw">prop.table</span>(cm<span class="op">$</span>table))</a>
+<a class="sourceLine" id="cb6-9" data-line-number="9">  cm.table<span class="op">$</span>Perc &lt;-<span class="st"> </span><span class="kw">round</span>(cm.percentage<span class="op">$</span>Freq<span class="op">*</span><span class="dv">100</span>,<span class="dv">2</span>)</a>
+<a class="sourceLine" id="cb6-10" data-line-number="10"></a>
+<a class="sourceLine" id="cb6-11" data-line-number="11">  cm.plot &lt;-<span class="st"> </span><span class="kw">ggplot</span>(<span class="dt">data =</span> cm.table, <span class="kw">aes</span>(<span class="dt">x =</span> Prediction , <span class="dt">y =</span>  Reference, <span class="dt">fill =</span> Freq)) <span class="op">+</span></a>
+<a class="sourceLine" id="cb6-12" data-line-number="12"><span class="st">             </span><span class="kw">geom_raster</span>(<span class="kw">aes</span>(<span class="dt">fill =</span> Freq)) <span class="op">+</span></a>
+<a class="sourceLine" id="cb6-13" data-line-number="13"><span class="st">             </span><span class="kw">geom_text</span>(<span class="kw">aes</span>(<span class="dt">label =</span> <span class="kw">paste</span>(<span class="st">&quot;&quot;</span>,Freq,<span class="st">&quot;,&quot;</span>,Perc,<span class="st">&quot;%&quot;</span>)),</a>
+<a class="sourceLine" id="cb6-14" data-line-number="14">             <span class="dt">color =</span> <span class="st">&#39;white&#39;</span>, <span class="dt">size =</span> <span class="dv">3</span>, <span class="dt">fontface =</span> <span class="st">&quot;bold&quot;</span>) <span class="op">+</span></a>
+<a class="sourceLine" id="cb6-15" data-line-number="15"><span class="st">             </span><span class="kw">theme_light</span>()</a>
+<a class="sourceLine" id="cb6-16" data-line-number="16"></a>
+<a class="sourceLine" id="cb6-17" data-line-number="17">  cm.statsTable &lt;-<span class="st">  </span><span class="kw">tableGrob</span>(cm.stats)</a>
+<a class="sourceLine" id="cb6-18" data-line-number="18"></a>
+<a class="sourceLine" id="cb6-19" data-line-number="19">  <span class="kw">grid.arrange</span>(cm.plot, cm.statsTable,<span class="dt">nrow =</span> <span class="dv">1</span>, <span class="dt">ncol =</span> <span class="dv">2</span>,</a>
+<a class="sourceLine" id="cb6-20" data-line-number="20">  <span class="dt">top =</span> <span class="kw">textGrob</span>(<span class="kw">paste0</span>(<span class="st">&quot;Confusion Table Heatmap </span><span class="ch">\n</span><span class="st">&quot;</span>,title), <span class="dt">gp =</span> <span class="kw">gpar</span>(<span class="dt">fontsize=</span><span class="dv">20</span>,<span class="dt">font=</span><span class="dv">1</span>)))</a>
+<a class="sourceLine" id="cb6-21" data-line-number="21"></a>
+<a class="sourceLine" id="cb6-22" data-line-number="22">}</a>
+<a class="sourceLine" id="cb6-23" data-line-number="23"></a>
+<a class="sourceLine" id="cb6-24" data-line-number="24"><span class="kw">plotResults</span>(resultVector[[<span class="dv">1</span>]], response, <span class="kw">names</span>(resultVector)[<span class="dv">1</span>])</a></code></pre></div>
+<p><img src="figures/02_combinatorix_displayResult-1.png" width="672" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="kw">plotResults</span>(resultVector[[<span class="dv">2</span>]], response, <span class="kw">names</span>(resultVector)[<span class="dv">2</span>])</a></code></pre></div>
+<p><img src="figures/02_combinatorix_displayResult-2.png" width="672" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb8-1" data-line-number="1"><span class="kw">plotResults</span>(resultVector[[<span class="dv">3</span>]], response, <span class="kw">names</span>(resultVector)[<span class="dv">3</span>])</a></code></pre></div>
+<p><img src="figures/02_combinatorix_displayResult-3.png" width="672" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb9-1" data-line-number="1"><span class="kw">plotResults</span>(resultVector[[<span class="dv">4</span>]], response, <span class="kw">names</span>(resultVector)[<span class="dv">4</span>])</a></code></pre></div>
+<p><img src="figures/02_combinatorix_displayResult-4.png" width="672" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" data-line-number="1"><span class="kw">plotResults</span>(resultVector[[<span class="dv">5</span>]], response, <span class="kw">names</span>(resultVector)[<span class="dv">5</span>])</a></code></pre></div>
+<p><img src="figures/02_combinatorix_displayResult-5.png" width="672" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb11-1" data-line-number="1"><span class="kw">plotResults</span>(resultVector[[<span class="dv">6</span>]], response, <span class="kw">names</span>(resultVector)[<span class="dv">6</span>])</a></code></pre></div>
+<p><img src="figures/02_combinatorix_displayResult-6.png" width="672" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb12-1" data-line-number="1"><span class="kw">plotResults</span>(resultVector[[<span class="dv">7</span>]], response, <span class="kw">names</span>(resultVector)[<span class="dv">7</span>])</a></code></pre></div>
+<p><img src="figures/02_combinatorix_displayResult-7.png" width="672" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb13-1" data-line-number="1"><span class="kw">plotResults</span>(resultVector[[<span class="dv">8</span>]], response, <span class="kw">names</span>(resultVector)[<span class="dv">8</span>])</a></code></pre></div>
+<p><img src="figures/02_combinatorix_displayResult-8.png" width="672" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb14-1" data-line-number="1"><span class="kw">plotResults</span>(resultVector[[<span class="dv">9</span>]], response, <span class="kw">names</span>(resultVector)[<span class="dv">9</span>])</a></code></pre></div>
+<p><img src="figures/02_combinatorix_displayResult-9.png" width="672" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb15-1" data-line-number="1"><span class="kw">plotResults</span>(resultVector[[<span class="dv">10</span>]], response, <span class="kw">names</span>(resultVector)[<span class="dv">10</span>])</a></code></pre></div>
+<p><img src="figures/02_combinatorix_displayResult-10.png" width="672" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb16-1" data-line-number="1"><span class="kw">plotResults</span>(resultVector[[<span class="dv">11</span>]], response, <span class="kw">names</span>(resultVector)[<span class="dv">11</span>])</a></code></pre></div>
+<p><img src="figures/02_combinatorix_displayResult-11.png" width="672" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb17-1" data-line-number="1"><span class="kw">plotResults</span>(resultVector[[<span class="dv">12</span>]], response, <span class="kw">names</span>(resultVector)[<span class="dv">12</span>])</a></code></pre></div>
+<p><img src="figures/02_combinatorix_displayResult-12.png" width="672" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb18-1" data-line-number="1"><span class="kw">plotResults</span>(resultVector[[<span class="dv">13</span>]], response, <span class="kw">names</span>(resultVector)[<span class="dv">13</span>])</a></code></pre></div>
+<p><img src="figures/02_combinatorix_displayResult-13.png" width="672" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb19-1" data-line-number="1"><span class="kw">plotResults</span>(resultVector[[<span class="dv">14</span>]], response, <span class="kw">names</span>(resultVector)[<span class="dv">14</span>])</a></code></pre></div>
+<p><img src="figures/02_combinatorix_displayResult-14.png" width="672" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb20-1" data-line-number="1">getResultOverview &lt;-<span class="st"> </span><span class="cf">function</span> (results) {</a>
+<a class="sourceLine" id="cb20-2" data-line-number="2">  evaluationResults &lt;-<span class="st"> </span><span class="kw">foreach</span>(<span class="dt">i =</span> <span class="kw">c</span>(<span class="dv">1</span><span class="op">:</span><span class="kw">length</span>(results)), <span class="dt">.combine =</span> <span class="st">&#39;rbind&#39;</span>) <span class="op">%do%</span><span class="st"> </span>{</a>
+<a class="sourceLine" id="cb20-3" data-line-number="3">    res &lt;-<span class="st"> </span>results[[i]]</a>
+<a class="sourceLine" id="cb20-4" data-line-number="4">    cm &lt;-<span class="st"> </span><span class="kw">confusionMatrix</span>(res, response)</a>
+<a class="sourceLine" id="cb20-5" data-line-number="5">    check &lt;-<span class="st"> </span><span class="kw">names</span>(response) <span class="op">==</span><span class="st"> </span><span class="kw">names</span>(res)</a>
+<a class="sourceLine" id="cb20-6" data-line-number="6">    <span class="kw">message</span>(<span class="st">&quot;Patients in Same Order:&quot;</span>)</a>
+<a class="sourceLine" id="cb20-7" data-line-number="7">    <span class="kw">print</span>(<span class="kw">all</span>(check,<span class="ot">TRUE</span>))</a>
+<a class="sourceLine" id="cb20-8" data-line-number="8">    cm.table &lt;-<span class="st"> </span>cm<span class="op">$</span>table</a>
+<a class="sourceLine" id="cb20-9" data-line-number="9">    <span class="kw">print</span>(cm.table)</a>
+<a class="sourceLine" id="cb20-10" data-line-number="10">    hits &lt;-<span class="st"> </span><span class="kw">sum</span>(<span class="kw">diag</span>(cm.table))</a>
+<a class="sourceLine" id="cb20-11" data-line-number="11">    errors &lt;-<span class="st"> </span><span class="kw">sum</span>(cm.table) <span class="op">-</span><span class="st"> </span>hits</a>
+<a class="sourceLine" id="cb20-12" data-line-number="12">    misclError &lt;-<span class="st">  </span>errors <span class="op">/</span><span class="st"> </span><span class="kw">sum</span>(cm.table)</a>
+<a class="sourceLine" id="cb20-13" data-line-number="13">    accuracy &lt;-<span class="st"> </span><span class="dv">1</span> <span class="op">-</span><span class="st"> </span>misclError</a>
+<a class="sourceLine" id="cb20-14" data-line-number="14">    ci.upper &lt;-<span class="st"> </span>accuracy <span class="op">+</span><span class="st"> </span><span class="fl">1.96</span> <span class="op">*</span></a>
+<a class="sourceLine" id="cb20-15" data-line-number="15"><span class="st">      </span><span class="kw">sqrt</span>( (accuracy <span class="op">*</span><span class="st"> </span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>accuracy)) <span class="op">/</span><span class="st"> </span><span class="kw">nrow</span>(exprTableTransposed))</a>
+<a class="sourceLine" id="cb20-16" data-line-number="16">    ci.lower &lt;-<span class="st"> </span>accuracy <span class="op">-</span><span class="st"> </span><span class="fl">1.96</span> <span class="op">*</span></a>
+<a class="sourceLine" id="cb20-17" data-line-number="17"><span class="st">      </span><span class="kw">sqrt</span>( (accuracy <span class="op">*</span><span class="st"> </span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>accuracy)) <span class="op">/</span><span class="st"> </span><span class="kw">nrow</span>(exprTableTransposed))</a>
+<a class="sourceLine" id="cb20-18" data-line-number="18">    ci.interval &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span class="kw">round</span>(ci.lower,<span class="dv">4</span>), <span class="st">&quot;-&quot;</span>, <span class="kw">round</span>(ci.upper,<span class="dv">4</span>))</a>
+<a class="sourceLine" id="cb20-19" data-line-number="19">    <span class="kw">message</span>(<span class="st">&quot;Misclassifiction Error for current predictions:&quot;</span>)</a>
+<a class="sourceLine" id="cb20-20" data-line-number="20">    <span class="kw">message</span>(<span class="kw">round</span>(misclError,<span class="dv">4</span>))</a>
+<a class="sourceLine" id="cb20-21" data-line-number="21">    <span class="kw">return</span>(<span class="kw">data.frame</span>(<span class="dt">MER =</span> <span class="kw">round</span>(misclError,<span class="dv">4</span>),</a>
+<a class="sourceLine" id="cb20-22" data-line-number="22">                      <span class="dt">Accuracy =</span> <span class="kw">round</span>(accuracy,<span class="dv">4</span>),</a>
+<a class="sourceLine" id="cb20-23" data-line-number="23">                      <span class="dt">CI =</span> ci.interval))</a>
+<a class="sourceLine" id="cb20-24" data-line-number="24">  }</a>
+<a class="sourceLine" id="cb20-25" data-line-number="25">  <span class="kw">rownames</span>(evaluationResults) &lt;-<span class="st"> </span><span class="kw">names</span>(results)</a>
+<a class="sourceLine" id="cb20-26" data-line-number="26">  <span class="kw">return</span>(evaluationResults)</a>
+<a class="sourceLine" id="cb20-27" data-line-number="27">}</a>
+<a class="sourceLine" id="cb20-28" data-line-number="28"></a>
+<a class="sourceLine" id="cb20-29" data-line-number="29"></a>
+<a class="sourceLine" id="cb20-30" data-line-number="30">resultTable &lt;-<span class="st"> </span><span class="kw">getResultOverview</span>(resultVector)</a></code></pre></div>
+<pre><code>[1] TRUE
+          Reference
+Prediction  T Bt Bo Bh
+        T  36  0  0  0
+        Bt  0 43  4  0
+        Bo  0  0 36  2
+        Bh  0  0  4 42
+[1] TRUE
+          Reference
+Prediction  T Bt Bo Bh
+        T  36  0  0  0
+        Bt  0 43  4  0
+        Bo  0  0 36  2
+        Bh  0  0  4 42
+[1] TRUE
+          Reference
+Prediction  T Bt Bo Bh
+        T  36  0  0  0
+        Bt  0 43  4  0
+        Bo  0  0 36  2
+        Bh  0  0  4 42
+[1] TRUE
+          Reference
+Prediction  T Bt Bo Bh
+        T  36  0  0  1
+        Bt  0 35  7  0
+        Bo  0  8 32  6
+        Bh  0  0  5 37
+[1] TRUE
+          Reference
+Prediction  T Bt Bo Bh
+        T  36  0  0  0
+        Bt  0 43  4  0
+        Bo  0  0 36  2
+        Bh  0  0  4 42
+[1] TRUE
+          Reference
+Prediction  T Bt Bo Bh
+        T  36  0  0  0
+        Bt  0 43  4  0
+        Bo  0  0 36  2
+        Bh  0  0  4 42
+[1] TRUE
+          Reference
+Prediction  T Bt Bo Bh
+        T  36  0  0  0
+        Bt  0 43  4  0
+        Bo  0  0 36  2
+        Bh  0  0  4 42
+[1] TRUE
+          Reference
+Prediction  T Bt Bo Bh
+        T  36  0  0  0
+        Bt  0 43  5  0
+        Bo  0  0 35  3
+        Bh  0  0  4 41
+[1] TRUE
+          Reference
+Prediction  T Bt Bo Bh
+        T  36  0  0  0
+        Bt  0 42  4  0
+        Bo  0  1 37  4
+        Bh  0  0  3 40
+[1] TRUE
+          Reference
+Prediction  T Bt Bo Bh
+        T  36  0  0  0
+        Bt  0 40  4  0
+        Bo  0  3 37  4
+        Bh  0  0  3 40
+[1] TRUE
+          Reference
+Prediction  T Bt Bo Bh
+        T  34  0  0  0
+        Bt  2 43  5  0
+        Bo  0  0 35  3
+        Bh  0  0  4 41
+[1] TRUE
+          Reference
+Prediction  T Bt Bo Bh
+        T  36  0  0  0
+        Bt  0 41  4  0
+        Bo  0  2 34  4
+        Bh  0  0  6 40
+[1] TRUE
+          Reference
+Prediction  T Bt Bo Bh
+        T  34  0  0  0
+        Bt  0 40  4  0
+        Bo  2  3 36  5
+        Bh  0  0  4 39
+[1] TRUE
+          Reference
+Prediction  T Bt Bo Bh
+        T  36  0  0  1
+        Bt  0 40  8  0
+        Bo  0  3 31  6
+        Bh  0  0  5 37</code></pre>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb22-1" data-line-number="1">rfResultTable &lt;-<span class="st"> </span>resultTable[<span class="dv">1</span><span class="op">:</span><span class="dv">6</span>, ]</a>
+<a class="sourceLine" id="cb22-2" data-line-number="2">svmResultTable &lt;-<span class="st"> </span>resultTable[<span class="dv">7</span>,<span class="dv">14</span>, ]</a></code></pre></div>
 <div id="refs" class="references">
 <div id="ref-den2009subtype">
 <p>Den Boer, Monique L, Marjon van Slegtenhorst, Renée X De Menezes, Meyling H Cheok, Jessica GCAM Buijs-Gladdines, Susan TCJM Peters, Laura JCM Van Zutven, et al. 2009. “A Subtype of Childhood Acute Lymphoblastic Leukaemia with Poor Treatment Outcome: A Genome-Wide Classification Study.” <em>The Lancet Oncology</em> 10 (2). Elsevier: 125–34.</p>

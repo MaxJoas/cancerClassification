@@ -153,9 +153,22 @@ After the class filtering
 ```
 Table shows the blba bla bla the result is 50 genes this 50 genes were balbal
 
+```{r selectelect,eval=TRUE}
+
+```
+
+```{r execute,eval=TRUE}
+
+```
 
 
+```{r displayResult,eval=TRUE}
 
+```
+
+```{r overviewResults,eval=TRUE}
+
+```
 
 
 

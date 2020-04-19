@@ -380,10 +380,11 @@ plotResults <- function(res, response, title) {
 
 }
 
-plotResults(resultVector[[1]], response, names(resultVector)[1])
-plotResults(resultVector[[2]], response, names(resultVector)[2])
+
 plotResults(resultVector[[3]], response, names(resultVector)[3])
 plotResults(resultVector[[4]], response, names(resultVector)[4])
+
+## @knitr appendix
 plotResults(resultVector[[5]], response, names(resultVector)[5])
 plotResults(resultVector[[6]], response, names(resultVector)[6])
 plotResults(resultVector[[7]], response, names(resultVector)[7])
@@ -395,6 +396,8 @@ plotResults(resultVector[[12]], response, names(resultVector)[12])
 plotResults(resultVector[[13]], response, names(resultVector)[13])
 plotResults(resultVector[[14]], response, names(resultVector)[14])
 
+plotResults(resultVector[[1]], response, names(resultVector)[1])
+plotResults(resultVector[[2]], response, names(resultVector)[2])
 ## @knitr overviewResultsRF
 getResultOverview <- function (results) {
   evaluationResults <- foreach(i = c(1:length(results)), .combine = 'rbind') %do% {
@@ -430,7 +433,7 @@ kable(rfResultTable)
 
 ## @knitr overviewResultsSVM
 svmResultTable <- resultTable[7,14, ]
-
+kable(svmResultTable, caption = "SVM Results")
 
 ## @knitr saving
 #### Saving the image file

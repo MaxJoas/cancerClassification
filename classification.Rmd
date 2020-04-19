@@ -129,40 +129,33 @@ variables to select.
 
 
 ## Results and Interpretation
-The result section is structured as follows: Firstly I present the results of the feature selection process. Secondly I will give an overview of the results of the random forest classifier for different number of trees. Subsequently I will present the most meaningful results more in depth. I will do the same for the SVM classifier afterwards. Finally I will compare the best classifiers across the two methods in depth. Each presentation of result is followed by a short interpreation of it.
+The result section is structured as follows: Firstly I present the results of the feature selection process. Secondly I will give an overview of the results of the random forest classifier for different number of trees. Subsequently I will present the most meaningful results more in depth. I will do the same for the SVM classifier afterwards. Finally I will compare the best classifiers across the two methods in depth.
 
 
 
 ```{r echo=FALSE}
-
 read_chunk('./classification.R')
-
 ```
 ```{r loading, eval=TRUE}
-
 ```
 I included only classes that contained more than 30 patients. After the filtering four classes remained. Figure 1 gives an overview of the remaining classes and how many cases each class contains.
-```{r filter,eval=TRUE, fig.width=1.5, fig.height=1.5, fig.cap=" Figure 1: Remaining Classes after Class Filtering. T: T-cell acute lymphoblastic leukaemia, Bo: Acute B Lymphoblastic Leukemia, Bt: TEL-AML1 , Bh: hyperdiploid childhood acute lymphoblastic leukemia"}
-
+```{r filter,eval=TRUE, fig.width=1.5, fig.height=1.5, fig.cap="Figure 1: Remaining Classes after Class Filtering. T: T-cell acute lymphoblastic leukaemia, Bo: Acute B Lymphoblastic Leukemia, Bt: TEL-AML1 , Bh: hyperdiploid childhood acute lymphoblastic leukemia"}
 ```
 In order to find a number of genes to select I plotted the variable importance of the 200 most important genes according to the random forest variable importance. Figure 2 shows this plot together with a smoothed line of the variable importance and the point where the variable importance drops the steepest( according to the smoothed line).
 
-```{r prepareSelect, eval=TRUE}
-
+```{r prepareSelect, eval=TRUE, fig.cap="Figure 2: Plot of the development of the Random Forest variable importance of the 200 most important genes. The red dots show the actual value of the variable importance, the green line smoothes this values and the blue vertical line indicated the point where the smoothed line changes the most."}
 ```
 Accordinlgy to the plot I chose to use 50 genes, when performing the feature selection.
 For the comparison of the classifiers I used two sets of selected genes: One set where I selected 50 genes and one set where I included all genes.
 
 ```{r select, eval=TRUE}
-
 ```
 
-```{r overviewResultsRF, eval=TRUE}
-
-```
  Furthermore I used the following number of trees for the random forest: 200, 500 and 1000. Figure 3 shows an overview of the MER, Accuracy and its 95% confidence interval.
- ```{r execute, eval=TRUE}
+```{r overviewResultsRF, eval=TRUE}
+```
 
+ ```{r execute, eval=TRUE}
 ```
 The accuracy of when using all genes is with 94% very high. The 95% confidence interval is also reasonably small, which gives security about the result
 The number of trees seems to have no influence on the prediction accuracy when using all genes.
@@ -175,13 +168,13 @@ The number of trees seems to have no influence on the prediction accuracy when u
 - in depth rf 1000 exemplatory of rf all genes and rf 200 feature selection genes
 
 
-In the following I wil report on the detailled results of the Random Forest Classifier with 1000 trees and all genes (which yields the exact same results as the other Random Forest Classifiers expect one). Additionally, I report on the results of the Random Forest Classifier when trained with 50 genes and 200 trees.
+In the following I will report on the detailled results of the Random Forest Classifier with 1000 trees and all genes (which yields the exact same results as the other Random Forest Classifiers expect one). Additionally, I report on the results of the Random Forest Classifier when trained with 50 genes and 200 trees.
 
-```{r displayResult,eval=TRUE}
-
+```{r displayResult,eval=TRUE, fig.cap="Figure 1 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the Random Forest Classifier, when trained with 1000 trees and all genes"}
 ```
 
-
+```{r rfSecond, eval=TRUE, fig.cap="Figure 2 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the Random Forest Classifier, when trained with 200 trees and 50 selected genes."}
+```
 TODO epxlain result in depth
 
 The second method of interest in this work was the SVM for classification. Again I start with an overview and discuss more detail later on. For the SVM I used four different kernel methods, namely radial, linear, polynomial and simgmoidal. As done with the Random Forest Classifier I used one time all genes and one time 50 genes, selected via the Random Forest variable Importance, as described above.
@@ -189,23 +182,31 @@ The second method of interest in this work was the SVM for classification. Again
 ```{r overviewResultsSVM, eval=TRUE}
 ```
 
+
+
+
 TODO explain SVM overview results 
-- allgemein
+
 - feature selection
 - no feature selection
 - kernel influence
 
-```{r displaySVM, eval=TRUE}
+```{r displaySVM, eval=TRUE, ,fig.cap="Figure 3 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the SVM Classifier, when trained with the radial Kernel and all genes"}
 ```
 
+```{r displaySVM2, eval=TRUE, fig.cap="Figure 4 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the SVM Classifier, when trained with the Sigmoid Kernel and 50 selected genes"}
+```
 TODO explain SVM in Depth
-"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 ```{r inDepth, eval=TRUE}
 ```
 TODO 
-"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+## Interpretation
+
 ## Conclusion
-"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 ## References
 
 

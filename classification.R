@@ -12,7 +12,7 @@ library(gridExtra)
 
 
 ## done in class, loads all the input data
-load("DenBoerData_loaded.Rdata")
+load("maximilian.joas/cancerClassification/DenBoerData_loaded.Rdata")
 
 ## register a paralell backend and define number of Threads
 ## Note the the numberThreads variable gets passed later to the ranger function
@@ -91,9 +91,12 @@ relevantPatients <- FilterClass(minNumberofCasesPerClass)
 phenoTable <- phenoTable[relevantPatients, ]
 #remove unused factors
 phenoTable[,classVariable] <- factor(phenoTable[,classVariable])
+phenoTable$Sample.title <- factor(phenoTable$Sample.title)
 exprTableTransposed <- exprTableTransposed[relevantPatients, ]
-classesAfterFiltered <- table(phenoTable[, classVariable])
-kable(classesAfterFiltered, caption = "Table 1: Classes after Filtering")
+classesAfterFiltered <- as.data.frame(sort(table(phenoTable$Sample.title),
+                                           decreasing = TRUE))
+colnames(classesAfterFiltered) <- c("Class", "Freq")
+kable(classesAfterFiltered, caption = "Table 1: Class Sizes after Filtering")
 #grid.arrange(tableGrob(as.data.frame(classesAfterFiltered)))
 
 
@@ -362,7 +365,7 @@ names(response) <- rownames(phenoTable)
 plotResults <- function(res, response, title) {
   cm <- confusionMatrix(res, response)
   cm.table <- as.data.frame(cm$table)
-  cm.stats <-data.frame(Statistics = cm$overall)
+  cm.stats <-data.frame(Stats = cm$overall)
   cm.stats$Statistics <- round(cm.stats$Statistics,2)
   cm.percentage <- as.data.frame(prop.table(cm$table))
   cm.table$Perc <- round(cm.percentage$Freq*100,2)
@@ -382,10 +385,12 @@ plotResults <- function(res, response, title) {
 
 
 plotResults(resultVector[[3]], response, names(resultVector)[3])
+## @knitr rfSecond
 plotResults(resultVector[[4]], response, names(resultVector)[4])
 
 ## @knitr displaySVM
 plotResults(resultVector[[7]], response, names(resultVector)[7])
+## @knitr displaySVM2
 plotResults(resultVector[[14]], response, names(resultVector)[14])
 ## @knitr appendix
 plotResults(resultVector[[5]], response, names(resultVector)[5])
@@ -423,7 +428,8 @@ getResultOverview <- function (results) {
     message(round(misclError,4))
     return(data.frame(MER = round(misclError,4),
                       Accuracy = round(accuracy,4),
-                      `95% CI` = ci.interval))
+                      `95% CI` = ci.interval,
+                      check.names = FALSE))
   }
   rownames(evaluationResults) <- names(results)
   return(evaluationResults)
@@ -432,21 +438,23 @@ getResultOverview <- function (results) {
 
 resultTable <- getResultOverview(resultVector)
 rfResultTable <- resultTable[1:6, ]
-kable(rfResultTable)
+kable(rfResultTable, caption = "Table 2: Overview of the Random Forest Classifier Performance with different Parameters")
 
 ## @knitr overviewResultsSVM
 svmResultTable <- resultTable[7:14, ]
-kable(svmResultTable, caption = "SVM Results")
+kable(svmResultTable, caption = "Table 3: Overview of the SVM Classifier Performance with different Parameters")
 
 
 ## @knitr inDepth
 cm.svmBest <- t(confusionMatrix(response, resultList[[7]])$byClass)
+kable(cm.svmBest, caption = "Table 4: Classwise performance of the SVM Classifier when trained with the radial kernel and all genes")
 #grid.arrange(tableGrob(round(cm.svmBest,4)))
 cm.rfBest <- t(confusionMatrix(response, resultList[[1]])$byClass)
-grid.arrange(tableGrob(round(cm.rfBest, 4)),
-             tableGrob(round(cm.svmBest,4)), textGrob("A"), textGrob("B"),
-             nrow = 2, ncol = 2)
- ## @knitr saving
+kable(cm.rfBest, caption = "Table 5: Classwise performance of the Random Forest Classifier when trainied with 1000 trees and all genes")
+#grid.arrange(tableGrob(round(cm.rfBest, 4)),
+#             tableGrob(round(cm.svmBest,4)), textGrob("A"), textGrob("B"),
+ #            nrow = 2, ncol = 2)
+## @knitr saving
 #### Saving the image file
 message("Saving Image file")
 message(paste(memImageFile))

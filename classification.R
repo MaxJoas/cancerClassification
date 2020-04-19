@@ -395,16 +395,15 @@ plotResults(resultVector[[12]], response, names(resultVector)[12])
 plotResults(resultVector[[13]], response, names(resultVector)[13])
 plotResults(resultVector[[14]], response, names(resultVector)[14])
 
-## @knitr overviewResults
+## @knitr overviewResultsRF
 getResultOverview <- function (results) {
   evaluationResults <- foreach(i = c(1:length(results)), .combine = 'rbind') %do% {
     res <- results[[i]]
     cm <- confusionMatrix(res, response)
     check <- names(response) == names(res)
     message("Patients in Same Order:")
-    print(all(check,TRUE))
+    message(all(check,TRUE))
     cm.table <- cm$table
-    print(cm.table)
     hits <- sum(diag(cm.table))
     errors <- sum(cm.table) - hits
     misclError <-  errors / sum(cm.table)
@@ -418,7 +417,7 @@ getResultOverview <- function (results) {
     message(round(misclError,4))
     return(data.frame(MER = round(misclError,4),
                       Accuracy = round(accuracy,4),
-                      CI = ci.interval))
+                      `95% CI` = ci.interval))
   }
   rownames(evaluationResults) <- names(results)
   return(evaluationResults)
@@ -427,6 +426,9 @@ getResultOverview <- function (results) {
 
 resultTable <- getResultOverview(resultVector)
 rfResultTable <- resultTable[1:6, ]
+kable(rfResultTable)
+
+## @knitr overviewResultsSVM
 svmResultTable <- resultTable[7,14, ]
 
 

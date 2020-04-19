@@ -151,7 +151,10 @@ After the class filtering
 ```{r prepareSelect,eval=TRUE}
 
 ```
-Table
+Table shows the blba bla bla the result is 50 genes this 50 genes were balbal
+
+
+
 
 
 

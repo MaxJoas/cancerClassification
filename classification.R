@@ -92,8 +92,9 @@ phenoTable <- phenoTable[relevantPatients, ]
 #remove unused factors
 phenoTable[,classVariable] <- factor(phenoTable[,classVariable])
 exprTableTransposed <- exprTableTransposed[relevantPatients, ]
-classesAfterFilerd <- table(phenoTable[, classVariable])
-grid.arrange(tableGrob(as.data.frame(classesAfterFilerd)))
+classesAfterFiltered <- table(phenoTable[, classVariable])
+kable(classesAfterFiltered, caption = "Table 1: Classes after Filtering")
+#grid.arrange(tableGrob(as.data.frame(classesAfterFiltered)))
 
 
 ## @knitr prepareSelect
@@ -221,9 +222,11 @@ SelectRandomForestLOOCV <- function(numFeatures,
   return(res)
 }
 
+loocvSelections <- SelectRandomForestLOOCV(numberFeatures)
+write.csv(loocvSelections, 'loocvSelections.csv')
 
+## @knitr execute
 #### Classifier Functions ####
-## ----------------------------------------------------------------------------
 ## Function that classifies patients with random forest
 RandomForestClassifier <- function(numberTrees,
                                    testIndex,
@@ -305,72 +308,6 @@ LOOCV <- function(FUN,
 
 
 
-#### Functions for displaying the results ####
-## ----------------------------------------------------------------------------
-getResultOverview <- function (results) {
-  evaluationResults <- foreach(i = c(1:length(results)), .combine = 'rbind') %do% {
-    res <- results[[i]]
-    cm <- confusionMatrix(res, response)
-    check <- names(response) == names(res)
-    message("Patients in Same Order:")
-    print(all(check,TRUE))
-    cm.table <- cm$table
-    print(cm.table)
-    hits <- sum(diag(cm.table))
-    errors <- sum(cm.table) - hits
-    misclError <-  errors / sum(cm.table)
-    accuracy <- 1 - misclError
-    ci.upper <- accuracy + 1.96 *
-      sqrt( (accuracy * (1 - accuracy)) / nrow(exprTableTransposed))
-    ci.lower <- accuracy - 1.96 *
-      sqrt( (accuracy * (1 - accuracy)) / nrow(exprTableTransposed))
-    ci.interval <- paste0(round(ci.lower,4), "-", round(ci.upper,4))
-    message("Misclassifiction Error for current predictions:")
-    message(round(misclError,4))
-    return(data.frame(MER = round(misclError,4),
-                      Accuracy = round(accuracy,4),
-                      CI = ci.interval))
-  }
-  rownames(evaluationResults) <- names(results)
-  return(evaluationResults)
-}
-
-
-
-## Functions for plotting a heatmap of a confusion table
-plotResults <- function(res, response, title) {
-  cm <- confusionMatrix(res, response)
-  cm.table <- as.data.frame(cm$table)
-  cm.stats <-data.frame(Statistics = cm$overall)
-  cm.stats$Statistics <- round(cm.stats$Statistics,2)
-  cm.percentage <- as.data.frame(prop.table(cm$table))
-  cm.table$Perc <- round(cm.percentage$Freq*100,2)
-
-  cm.plot <- ggplot(data = cm.table, aes(x = Prediction , y =  Reference, fill = Freq)) +
-             geom_raster(aes(fill = Freq)) +
-             geom_text(aes(label = paste("",Freq,",",Perc,"%")),
-             color = 'white', size = 3, fontface = "bold") +
-             theme_light()
-
-  cm.statsTable <-  tableGrob(cm.stats)
-
-  grid.arrange(cm.plot, cm.statsTable,nrow = 1, ncol = 2,
-  top = textGrob(paste0("Confusion Table Heatmap \n",title), gp = gpar(fontsize=20,font=1)))
-
-}
-
-
-
-
-#### EXECUTION ####
-## ----------------------------------------------------------------------------
-
-## @knitr execution
-## finally we can perform the acutal selection
-loocvSelections <- SelectRandomForestLOOCV(numberFeatures)
-write.csv(loocvSelections, 'loocvSelections.csv')
-
-
 allGenesSelected <- rep(list(selectedGenes), nrow(exprTableTransposed))
 names(allGenesSelected) <- rownames(exprTableTransposed)
 selections <- list(allGenes = allGenesSelected,
@@ -408,9 +345,6 @@ resultVector <- foreach(selection = names(selections), .combine = "c") %do% {
   names(res) <- paste0(selection, names(res))
   return(res)
 }
-
-
-## @knitr evaluation
 ## Reordering the results to have the same methods together
 index <- c(1,2,3,8,9,10,4,5,6,7,11,12,13,14)
 resultVector <- resultVector[order(index)]
@@ -419,7 +353,32 @@ names(resultVector) <- parameters
 response <- phenoTable[, classVariable]
 response <- factor(response, levels = rev(levels(response)))
 names(response) <- rownames(phenoTable)
-resultTable <- getResultOverview(resultVector)
+
+
+
+## @knitr displayResult
+#### Functions for displaying the results ####
+## Functions for plotting a heatmap of a confusion table
+plotResults <- function(res, response, title) {
+  cm <- confusionMatrix(res, response)
+  cm.table <- as.data.frame(cm$table)
+  cm.stats <-data.frame(Statistics = cm$overall)
+  cm.stats$Statistics <- round(cm.stats$Statistics,2)
+  cm.percentage <- as.data.frame(prop.table(cm$table))
+  cm.table$Perc <- round(cm.percentage$Freq*100,2)
+
+  cm.plot <- ggplot(data = cm.table, aes(x = Prediction , y =  Reference, fill = Freq)) +
+             geom_raster(aes(fill = Freq)) +
+             geom_text(aes(label = paste("",Freq,",",Perc,"%")),
+             color = 'white', size = 3, fontface = "bold") +
+             theme_light()
+
+  cm.statsTable <-  tableGrob(cm.stats)
+
+  grid.arrange(cm.plot, cm.statsTable,nrow = 1, ncol = 2,
+  top = textGrob(paste0("Confusion Table Heatmap \n",title), gp = gpar(fontsize=20,font=1)))
+
+}
 
 plotResults(resultVector[[1]], response, names(resultVector)[1])
 plotResults(resultVector[[2]], response, names(resultVector)[2])
@@ -436,9 +395,43 @@ plotResults(resultVector[[12]], response, names(resultVector)[12])
 plotResults(resultVector[[13]], response, names(resultVector)[13])
 plotResults(resultVector[[14]], response, names(resultVector)[14])
 
+## @knitr overviewResults
+getResultOverview <- function (results) {
+  evaluationResults <- foreach(i = c(1:length(results)), .combine = 'rbind') %do% {
+    res <- results[[i]]
+    cm <- confusionMatrix(res, response)
+    check <- names(response) == names(res)
+    message("Patients in Same Order:")
+    print(all(check,TRUE))
+    cm.table <- cm$table
+    print(cm.table)
+    hits <- sum(diag(cm.table))
+    errors <- sum(cm.table) - hits
+    misclError <-  errors / sum(cm.table)
+    accuracy <- 1 - misclError
+    ci.upper <- accuracy + 1.96 *
+      sqrt( (accuracy * (1 - accuracy)) / nrow(exprTableTransposed))
+    ci.lower <- accuracy - 1.96 *
+      sqrt( (accuracy * (1 - accuracy)) / nrow(exprTableTransposed))
+    ci.interval <- paste0(round(ci.lower,4), "-", round(ci.upper,4))
+    message("Misclassifiction Error for current predictions:")
+    message(round(misclError,4))
+    return(data.frame(MER = round(misclError,4),
+                      Accuracy = round(accuracy,4),
+                      CI = ci.interval))
+  }
+  rownames(evaluationResults) <- names(results)
+  return(evaluationResults)
+}
 
+
+resultTable <- getResultOverview(resultVector)
+rfResultTable <- resultTable[1:6, ]
+svmResultTable <- resultTable[7,14, ]
+
+
+## @knitr saving
 #### Saving the image file
-## ----------------------------------------------------------------------------
 message("Saving Image file")
 message(paste(memImageFile))
 save.image(memImageFile)

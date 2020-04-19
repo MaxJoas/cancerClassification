@@ -366,7 +366,7 @@ plotResults <- function(res, response, title) {
   cm <- confusionMatrix(res, response)
   cm.table <- as.data.frame(cm$table)
   cm.stats <-data.frame(Stats = cm$overall)
-  cm.stats$Statistics <- round(cm.stats$Statistics,2)
+  cm.stats$Stats <- round(cm.stats$Stats,2)
   cm.percentage <- as.data.frame(prop.table(cm$table))
   cm.table$Perc <- round(cm.percentage$Freq*100,2)
 

@@ -12,7 +12,7 @@ library(gridExtra)
 
 
 ## done in class, loads all the input data
-load("maximilian.joas/cancerClassification/DenBoerData_loaded.Rdata")
+load("./DenBoerData_loaded.Rdata")
 
 ## register a paralell backend and define number of Threads
 ## Note the the numberThreads variable gets passed later to the ranger function

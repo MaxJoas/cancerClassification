@@ -123,7 +123,7 @@ The base function for classification take the parameters for the corresponding m
 For the feature selection I applied the same principles I had one function that did the actual feature selection and one function that implements the LOOCV logic and calls the feature selection function. I is also possible to specify how many feature should be selected. However I did not want to chose the number of features arbitrary. So I sorted the variable importance of all covariates and plotted it. Subsequently, I smoothed the plot in order to make it differentiable. The goal was to find the point where the variable importance drops the steepest. This point I used as a cutoff for the number of features that I selected. In order to find the point I took the highest value of the second derivative
 of the smoothed line. This process is a highly reuasable ant automated process to find the number of
 variables to select.
-All the code can be found in the Appendix section
+
 
 ## Results and Interpretation
 1. class Filtering > methoden teil
@@ -143,14 +143,16 @@ read_chunk('./classification.R')
 ```{r loading, eval=TRUE}
 
 ```
-
-```{r filter,eval=TRUE}
+After the class filtering
+```{r filter,eval=TRUE, fig.width=1.5, fig.height=1.5, fig.cap="Test"}
 
 ```
 
 ```{r prepareSelect,eval=TRUE}
 
 ```
+Table
+
 
 
 

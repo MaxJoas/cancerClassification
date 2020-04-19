@@ -1,4 +1,16 @@
 ## @knitr loading
+library(knitr)
+library(gdata)
+library(ranger)
+library(caret)
+library(foreach)
+library(doMC)
+library(e1071)
+library(pROC)
+library(grid)
+library(gridExtra)
+
+
 ## done in class, loads all the input data
 load("DenBoerData_loaded.Rdata")
 
@@ -139,17 +151,21 @@ getNumberofFeatures <- function() {
   numberFeatures <- maximalChangeIndex
   return(list(numberFeatures = numberFeatures,
            smoothedLine = smoothed,
-           genes = selectedGenes))
+           genes = selectedGenes,
+           maximalChangeIndex = maximalChangeIndex
+           ))
 }
 
 
 helper <- getNumberofFeatures()
 numberFeatures <- helper[["numberFeatures"]]
 
-plotVariableImportance <- function(smoothed, selectedGenes) {
+plotVariableImportance <- function(smoothed,
+                                   selectedGenes,
+                                   maximalChangeIndex) {
   plotData <- data.frame(`Variable Importance` = selectedGenes[1:preFiltered],
                          Index = c(1:preFiltered),
-                         Smoothed = out,
+                         Smoothed = smoothed,
                          check.names = FALSE)
   colors <- c("Sepal Width" = "blue", "Petal Length" = "red",
               "Petal Width" = "orange")
@@ -162,7 +178,9 @@ plotVariableImportance <- function(smoothed, selectedGenes) {
 }
 
 
-plotVariableImportance(helper[["smoothedLine"]], helper[["genes"]])
+plotVariableImportance(helper[["smoothedLine"]],
+                       helper[["genes"]],
+                       helper[["maximalChangeIndex"]])
 
 
 

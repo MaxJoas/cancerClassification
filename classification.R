@@ -75,8 +75,11 @@ exprTableTransposed <- t(exprTable)
 
 ## this prevents an error in the ranger function due to ilegal names
 colnames(exprTableTransposed) <- make.names(colnames(exprTableTransposed))
-
-
+## @knitr preFilter
+classesbeforeFiltered <- as.data.frame(sort(table(phenoTable$Sample.title),
+                                           decreasing = TRUE))
+colnames(classesbeforeFiltered) <- c("Class", "Freq")
+kable(classesbeforeFiltered, caption = "Table 1: Class Sizes before Filtering")
 ## @knitr filter
 ## first we filter the classes and include only classes with more than 30 patients
 # Function for class filtering
@@ -96,7 +99,7 @@ exprTableTransposed <- exprTableTransposed[relevantPatients, ]
 classesAfterFiltered <- as.data.frame(sort(table(phenoTable$Sample.title),
                                            decreasing = TRUE))
 colnames(classesAfterFiltered) <- c("Class", "Freq")
-kable(classesAfterFiltered, caption = "Table 1: Class Sizes after Filtering")
+kable(classesAfterFiltered, caption = "Table 2: Class Sizes after Filtering")
 #grid.arrange(tableGrob(as.data.frame(classesAfterFiltered)))
 
 
@@ -438,19 +441,19 @@ getResultOverview <- function (results) {
 
 resultTable <- getResultOverview(resultVector)
 rfResultTable <- resultTable[1:6, ]
-kable(rfResultTable, caption = "Table 2: Overview of the Random Forest Classifier Performance with different Parameters")
+kable(rfResultTable, caption = "Table 3: Overview of the Random Forest Classifier Performance with different Parameters")
 
 ## @knitr overviewResultsSVM
 svmResultTable <- resultTable[7:14, ]
-kable(svmResultTable, caption = "Table 3: Overview of the SVM Classifier Performance with different Parameters")
+kable(svmResultTable, caption = "Table 4: Overview of the SVM Classifier Performance with different Parameters")
 
 
 ## @knitr inDepth
 cm.svmBest <- t(confusionMatrix(response, resultList[[7]])$byClass)
-kable(cm.svmBest, caption = "Table 4: Classwise performance of the SVM Classifier when trained with the radial kernel and all genes")
+kable(round(cm.svmBest,4), caption = "Table 5: Classwise performance of the SVM Classifier when trained with the radial kernel and all genes")
 #grid.arrange(tableGrob(round(cm.svmBest,4)))
 cm.rfBest <- t(confusionMatrix(response, resultList[[1]])$byClass)
-kable(cm.rfBest, caption = "Table 5: Classwise performance of the Random Forest Classifier when trainied with 1000 trees and all genes")
+kable(round(cm.rfBest, 4), caption = "Table 6: Classwise performance of the Random Forest Classifier when trainied with 1000 trees and all genes")
 #grid.arrange(tableGrob(round(cm.rfBest, 4)),
 #             tableGrob(round(cm.svmBest,4)), textGrob("A"), textGrob("B"),
  #            nrow = 2, ncol = 2)

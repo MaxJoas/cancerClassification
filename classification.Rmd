@@ -80,19 +80,30 @@ knitr::opts_chunk$set(
 
 
 ## Background
-This report is based on a 2009 study by Den Boer et al. The goal of this study was to TODO[[@den2009subtype]]
-Genetic subtypes of acute lymphoblastic leukaemia (ALL) are used to determine risk and treatment in children. 25% of precursor B-ALL cases are genetically unclassified and have intermediate prognosis. We aimed to use a genome-wide study to improve prognostic classification of ALL in children. TODO
-In the report however I am to use the data set to methodically explore which methods for classification
-works best and how different parameters influence the classification. Precisely I use support vector machine (SVM) and random forest for classification. Additionally I use random forest for feature selection.
+This report is based on a 2009 study by Den Boer et al. [@den2009subtype]. The goal of this study was to improve prognostic classification of genetic subtypes of acute lymphoblastic leukaemia (ALL) in children. The kmowledge of these subtypes facilitate risk stratification and can thus be use to choose the appropriate treatment option.
+
+In this report however, I to use the  Den Boer data set to methodically explore which methods for classification works best and how different parameters influence the classification. Precisely I use support vector machine (SVM) and random forest for classification. Additionally I use random forest for feature selection. The aim of this report is to investigate the influence of the used kernel in the SVM Classifier and the influence of the number of trees in the Random Forest Classifier. Additionally, I investigate the influence of feature selection on these two classifiers.
+
+## Data 
+The used data consits of a datatable which store information about the gene expression. Gene expression was measured with microarrays. The data has been already pre-processed before I used it. This included: filtering of barely weakly expressed genes,
+log2 transformation to normalise the raw measurements,
+intersample standardisation. Additionally, I worked with a data table that stored the metadata of the samples belonging to the gene expression values. In our case the information of interest is the class of the subtype of the acute lymphoblastic leukemia. Table 1 shows the freqency of the different subtypes before filtering (filtering will be done in a later step).
+
+
+```{r echo=FALSE}
+read_chunk('./classification.R')
+```
+```{r loading, eval=TRUE}
+```
 
 ## Methods Theory
-Due to the scope of this work I will not be able to provide a in depth description of the methods.
+Due to the scope of this work, I will not be able to provide an in depth description of the methods.
 The aim is to only give a very short overview, so the reader understands the key terms of the methods.
 
 Random forest is a widely used method for classification [@diaz2006gene]. The base of a random forest model
 are decision trees. A decision tree consists of multiple nodes. At each node tree is splitted into
 branches depending on the value of a independent variable [@es]. In our case this would be the expression level
-of a particular gene. Which variable is used at a given split is random. However not all variables are available to sample from at each split. The number of variables available for splitting at each tree node is referred to as the mtry parameter. The end of a branch, the leaf, does not split anymore and represents the decision for a particular class. In our case that would be a cell type.
+of a particular gene. Which variable is used at a given split is random. However, not all variables are available to sample from at each split. The number of variables available for splitting at each tree node is referred to as the mtry parameter. The end of a branch, the leaf, does not split anymore and represents the decision for a particular class. In our case that would be a cell type.
 A random forest consists of multiple decision trees. Each tree gives a vote for the final decision of
 the class. The class with the majority vote across all trees is the final class of a random forest.
 This number of trees used in a random forest is on interest in this report. I will investigate the
@@ -106,8 +117,9 @@ the influence of the Kernel function on the classification accuracy.
 In order to validate the results I implemented leave one out cross validation (see section "Methods Implementation"). The evaluation criteria was the missclassification error (MER) respectively the Accuracy of the predictions. Since I was dealing with a multiclass classification task, looking at specificity and sensitivity is not too interesting. 
 
 In microarray studies it is common to have a high number of measurements in comparison to the number of
-patients [@smallnlargep]. This is called a small n large p dataset and can lead to overfitting [@johnstone2009statistical]. Therefore, it be benifical to select only a subset of independent variables. Ideally the ones that contain the most information. In order to find these variables I also used random forest for feature selection. Precisely
+patients [@smallnlargep]. This is called a small n large p dataset and can lead to overfitting [@johnstone2009statistical]. Therefore, it be benifical to select only a subset of independent variables. Ideally the ones that contain the most information. In order to find these variables I also used random forest for feature selection. Precisely,
 I used the impurity variable importance of the random forest. Before growing the random forest for the feature selection I tuned the mtry parameter.
+
 
 ## Methods Implementation
 Now that I covered the theoretical basics to understand this report, it is time to present the practical
@@ -125,20 +137,15 @@ For the feature selection I applied the same principles I had one function that 
 of the smoothed line. This process is a highly reuasable ant automated process to find the number of
 variables to select.
 
-## Data 
+
 
 
 ## Results and Interpretation
-The result section is structured as follows: Firstly I present the results of the feature selection process. Secondly I will give an overview of the results of the random forest classifier for different number of trees. Subsequently I will present the most meaningful results more in depth. I will do the same for the SVM classifier afterwards. Finally I will compare the best classifiers across the two methods in depth.
+The result section is structured as follows: Firstly, I present the results of the feature selection process. Secondly, I will give an overview of the results of the random forest classifier for different number of trees. Subsequently, I will present the most meaningful results more in depth. I will do the same for the SVM classifier afterwards. Finally, I will compare the best classifiers across the two methods in depth.
 
 
 
-```{r echo=FALSE}
-read_chunk('./classification.R')
-```
-```{r loading, eval=TRUE}
-```
-I included only classes that contained more than 30 patients. After the filtering four classes remained. Figure 1 gives an overview of the remaining classes and how many cases each class contains.
+I included only classes that contained more than 30 patients. After the filtering, four classes remained. Figure 1 gives an overview of the remaining classes and how many cases each class contains.
 ```{r filter,eval=TRUE, fig.width=1.5, fig.height=1.5, fig.cap="Figure 1: Remaining Classes after Class Filtering. T: T-cell acute lymphoblastic leukaemia, Bo: Acute B Lymphoblastic Leukemia, Bt: TEL-AML1 , Bh: hyperdiploid childhood acute lymphoblastic leukemia"}
 ```
 In order to find a number of genes to select I plotted the variable importance of the 200 most important genes according to the random forest variable importance. Figure 2 shows this plot together with a smoothed line of the variable importance and the point where the variable importance drops the steepest( according to the smoothed line).

@@ -169,7 +169,7 @@ The number of trees seems to have no influence on the prediction accuracy, when 
 
 It is a bit unexpected that the number of trees did not have a meaningful influence on the prediction accuracy. The used numbers of trees were all rather a and thud could be already considered as nearly optimal. The reason why I used many trees, is that the data set does contain over 20,000 genes. So using fewer trees could have lead to more differences in the predcion accuracies. The fact that feature selection did not have a meaningful impact on the Classifier is not unexpected. Firstly, Random Forests can deal with a large number of covariates [@breiman2001random]. This is due to the fact that it uses only a subset of covariates at each split. Secondly, I have already used a Random Forest to select the covariates. I will go into more detail about the practical meaning of MER and accuracy at the end of the section, when comparing the two best Classifiers of this report.
 
-In the following I will report on the detailled results of the Random Forest Classifier with 1000 trees and all genes (which yields the exact same results as the other Random Forest Classifiers expect one). Additionally, I report on the results of the Random Forest Classifier when trained with 50 genes and 200 trees. The statisitcs on the
+In the following I will report on the detailled results of the Random Forest Classifier with 1000 trees and all genes (which yields the exact same results as the other Random Forest Classifiers expect one). Additionally, I report on the results of the Random Forest Classifier when trained with 50 genes and 200 trees.
 
 
 ```{r displayResult,eval=TRUE, fig.cap="**bold** Figure 1 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the Random Forest Classifier, when trained with 1000 trees and all genes. Notes: T: T-ALL, Bt: TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid __bold__"}
@@ -181,10 +181,16 @@ In the following I will report on the detailled results of the Random Forest Cla
 
 Figures 1 and 2 display a heatmap of the confusion table of the classification together with statisitcs about the accurcay on the table on the right. The confusion table maps the predicted class to the actual class. Consequently, the diagonal of the table is representing correct classifcations. In each field of the table one can see the absoulute and relative frequency of the prediction of a certain subtype. Values outside of the diagonal represent a wrong prediction. In the case of Figure 1 the classifier predicted four patients to have the subtype TEL-AML1, whereas they had the type pre-B ALL in reality. Since we are deallilng with a multiclassifcation problem, False Positives and False Negatives are the same for the overall model. However I will discuss this statistics per class at the end of the section for two selected classifiers. The table on the right displays statistics of the accuracy. The accuracy is imple the percentage of correctly classified samples. Cohen's Kappa is a different measure of accuracy that accounts for the fact that correct classifications could occur by chance.
 
-The second method of interest in this work was the SVM for classification. Again I start with an overview and discuss more detail later on. For the SVM I used four different kernel methods, namely radial, linear, polynomial and simgmoidal. As done with the Random Forest Classifier I used one time all genes and one time 50 genes, selected via the Random Forest variable Importance, as described above. Table 4 shows an overview of the MER, Accuracy and its 95% confidence interval of the SVM Classifier with different kernels.
+The second method of interest in this work was the SVM for classification. Again I start with an overview and discuss more detail later on. For the SVM I used four different kernel methods, namely radial, linear, polynomial and simgmoid. As done with the Random Forest Classifier I used one time all genes and one time 50 genes, selected via the Random Forest variable Importance, as described above. Table 4 shows an overview of the MER, accuracy and its 95% confidence interval of the SVM Classifier with different kernels.
 
 ```{r overviewResultsSVM, eval=TRUE}
 ```
+In general the accuracy of the SVM Classifiers is high ranging from 0.86 to 0.94. The confidence intervals are also reasonable narrow.
+The overall difference between the accuracy of the classifier with different Kernels is small (under two and a half percentage points), when trained with all genes. Training the SVM Classifier with 50 selected genes yields in a difference of over five percentage points between different kernels. The predictions were slightly more accurate, when training the SVM with all genes. I would have expected this, since the SVM is highly robust against overfitting, since it allows missclassification with the incorporation of so calles slack variables. The ability to always map the feature space also helps to deal with high dimensional data.
+
+
+Given the small differences in accuracy between most of the kernels, it is hard to argue, why one kernel might be one percentage point more accurat. However, I try to compare shortly the most accurate kernel (radial) with the least accurate kernel (sigmoid).FIgure3 shows the heatmap of the confusion table of the SVM Classifier with the radial kernel, when trained with all genes. Figure 4 shows the same plot for the SVM Classifier with the sigmoid kernel, when trained with 50 selected genes.
+
 
 
 ```{r displaySVM, eval=TRUE, fig.cap="**bold**Figure 3 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the SVM Classifier, when trained with the radial Kernel and all. Notes: T: T-ALL, Bt:TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid __bold__"}
@@ -195,6 +201,7 @@ The second method of interest in this work was the SVM for classification. Again
 ```{r displaySVM2, eval=TRUE, fig.cap="**bold**Figure 3 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the SVM Classifier, when trained with the sigmoid Kernel and all. Notes: T: T-ALL, Bt:TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid __bold__"}
 ```
 
+Figure 3 and 4 follow the same principle as Figure 1 and 2, thus I do not explain the general strucutre of the figures a second time.
 TODO explain SVM in Depth
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 ```{r inDepth, eval=TRUE}

@@ -802,20 +802,20 @@ Figure 2: Plot of the development of the Random Forest variable importance of th
 <a class="sourceLine" id="cb8-24" data-line-number="24"></a>
 <a class="sourceLine" id="cb8-25" data-line-number="25"><span class="kw">plotResults</span>(resultVector[[<span class="dv">3</span>]], response, <span class="kw">names</span>(resultVector)[<span class="dv">3</span>])</a></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="figures/02_combinatorix_displayResult-1.png" alt="Figure 1 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the Random Forest Classifier, when trained with 1000 trees and all genes" width="672" />
+<img src="figures/02_combinatorix_displayResult-1.png" alt="**bold** Figure 1 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the Random Forest Classifier, when trained with 1000 trees and all genes. Notes: T: T-ALL, Bt: TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid __bold__" width="672" />
 <p class="caption">
-Figure 1 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the Random Forest Classifier, when trained with 1000 trees and all genes
+<strong>bold</strong> Figure 1 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the Random Forest Classifier, when trained with 1000 trees and all genes. Notes: T: T-ALL, Bt: TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid <strong>bold</strong>
 </p>
 </div>
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb9-1" data-line-number="1"><span class="kw">plotResults</span>(resultVector[[<span class="dv">4</span>]], response, <span class="kw">names</span>(resultVector)[<span class="dv">4</span>])</a></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="figures/02_combinatorix_rfSecond-1.png" alt="**bold**Figure 2 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the Random Forest Classifier, when trained with 200 trees and 50 selected genes.__bold__" width="672" />
+<img src="figures/02_combinatorix_rfSecond-1.png" alt="**bold**Figure 2 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the Random Forest Classifier, when trained with 200 trees and 50 selected genes. T: T-ALL, Bt: TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid __bold__" width="672" />
 <p class="caption">
-<strong>bold</strong>Figure 2 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the Random Forest Classifier, when trained with 200 trees and 50 selected genes.__bold__
+<strong>bold</strong>Figure 2 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the Random Forest Classifier, when trained with 200 trees and 50 selected genes. T: T-ALL, Bt: TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid <strong>bold</strong>
 </p>
 </div>
-<p>Figures 1 and 2 display a heatmap of the confusion table of the classification together with statisitcs about the accurcay on the table on the right. The confusion table maps the predicted class to the actual class. Consequently, the diagonal of the table is representing correct classifcations. In each field of the table one can see the absoulute and relative frequency of the prediction of a certain subtype</p>
-<p>The second method of interest in this work was the SVM for classification. Again I start with an overview and discuss more detail later on. For the SVM I used four different kernel methods, namely radial, linear, polynomial and simgmoidal. As done with the Random Forest Classifier I used one time all genes and one time 50 genes, selected via the Random Forest variable Importance, as described above.</p>
+<p>Figures 1 and 2 display a heatmap of the confusion table of the classification together with statisitcs about the accurcay on the table on the right. The confusion table maps the predicted class to the actual class. Consequently, the diagonal of the table is representing correct classifcations. In each field of the table one can see the absoulute and relative frequency of the prediction of a certain subtype. Values outside of the diagonal represent a wrong prediction. In the case of Figure 1 the classifier predicted four patients to have the subtype TEL-AML1, whereas they had the type pre-B ALL in reality. Since we are deallilng with a multiclassifcation problem, False Positives and False Negatives are the same for the overall model. However I will discuss this statistics per class at the end of the section for two selected classifiers. The table on the right displays statistics of the accuracy. The accuracy is imple the percentage of correctly classified samples. Cohen’s Kappa is a different measure of accuracy that accounts for the fact that correct classifications could occur by chance.</p>
+<p>The second method of interest in this work was the SVM for classification. Again I start with an overview and discuss more detail later on. For the SVM I used four different kernel methods, namely radial, linear, polynomial and simgmoid. As done with the Random Forest Classifier I used one time all genes and one time 50 genes, selected via the Random Forest variable Importance, as described above. Table 4 shows an overview of the MER, accuracy and its 95% confidence interval of the SVM Classifier with different kernels.</p>
 <div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" data-line-number="1">svmResultTable &lt;-<span class="st"> </span>resultTable[<span class="dv">7</span><span class="op">:</span><span class="dv">14</span>, ]</a>
 <a class="sourceLine" id="cb10-2" data-line-number="2"><span class="kw">kable</span>(svmResultTable, <span class="dt">caption =</span> <span class="st">&quot;Table 4: Overview of the SVM Classifier Performance with different Parameters&quot;</span>)</a></code></pre></div>
 <table>
@@ -877,26 +877,33 @@ Figure 1 shows a heatmap of the confusion table on the left and accuracy statist
 <td align="right">0.8623</td>
 <td align="left">0.81-0.9145</td>
 </tr>
+<tr class="odd">
+<td>In general the accuracy of the SVM Classif</td>
+<td align="right">iers is h</td>
+<td align="right">igh ranging</td>
+<td align="left">from 0.86 to 0.94. The confidence intervals are also reasonable narrow.</td>
+</tr>
+<tr class="even">
+<td>The overall difference between the accurac</td>
+<td align="right">y of the</td>
+<td align="right">classifier</td>
+<td align="left">with different Kernels is small (under two and a half percentage points), when trained with all genes. Training the SVM Classifier with 50 selected genes yields in a difference of over five percentage points between different kernels. The predictions were slightly more accurate, when training the SVM with all genes. I would have expected this, since the SVM is highly robust against overfitting, since it allows missclassification with the incorporation of so calles slack variables. The ability to always map the feature space also helps to deal with high dimensional data.</td>
+</tr>
 </tbody>
 </table>
-<p>TODO explain SVM overview results</p>
-<ul>
-<li>feature selection</li>
-<li>no feature selection</li>
-<li>kernel influence</li>
-</ul>
+<p>Given the small differences in accuracy between most of the kernels, it is hard to argue, why one kernel might be one percentage point more accurat. However, I try to compare shortly the most accurate kernel (radial) with the least accurate kernel (sigmoid).FIgure3 shows the heatmap of the confusion table of the SVM Classifier with the radial kernel, when trained with all genes. Figure 4 shows the same plot for the SVM Classifier with the sigmoid kernel, when trained with 50 selected genes.</p>
 <div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb11-1" data-line-number="1"><span class="kw">plotResults</span>(resultVector[[<span class="dv">7</span>]], response, <span class="kw">names</span>(resultVector)[<span class="dv">7</span>])</a></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="figures/02_combinatorix_displaySVM-1.png" alt="Figure 3 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the SVM Classifier, when trained with the radial Kernel and all genes" width="672" />
+<img src="figures/02_combinatorix_displaySVM-1.png" alt="**bold**Figure 3 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the SVM Classifier, when trained with the radial Kernel and all. Notes: T: T-ALL, Bt:TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid __bold__" width="672" />
 <p class="caption">
-Figure 3 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the SVM Classifier, when trained with the radial Kernel and all genes
+<strong>bold</strong>Figure 3 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the SVM Classifier, when trained with the radial Kernel and all. Notes: T: T-ALL, Bt:TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid <strong>bold</strong>
 </p>
 </div>
 <div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb12-1" data-line-number="1"><span class="kw">plotResults</span>(resultVector[[<span class="dv">14</span>]], response, <span class="kw">names</span>(resultVector)[<span class="dv">14</span>])</a></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="figures/02_combinatorix_displaySVM2-1.png" alt="Figure 4 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the SVM Classifier, when trained with the Sigmoid Kernel and 50 selected genes" width="672" />
+<img src="figures/02_combinatorix_displaySVM2-1.png" alt="**bold**Figure 3 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the SVM Classifier, when trained with the sigmoid Kernel and all. Notes: T: T-ALL, Bt:TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid __bold__" width="672" />
 <p class="caption">
-Figure 4 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the SVM Classifier, when trained with the Sigmoid Kernel and 50 selected genes
+<strong>bold</strong>Figure 3 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the SVM Classifier, when trained with the sigmoid Kernel and all. Notes: T: T-ALL, Bt:TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid <strong>bold</strong>
 </p>
 </div>
 <p>TODO explain SVM in Depth Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
@@ -1092,12 +1099,12 @@ Figure 4 shows a heatmap of the confusion table on the left and accuracy statist
 <a class="sourceLine" id="cb15-3" data-line-number="3"> <span class="co">#            nrow = 2, ncol = 2)</span></a></code></pre></div>
 <p>TODO Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
 </div>
-<div id="interpretation" class="section level2">
-<h2>Interpretation</h2>
-</div>
 <div id="conclusion" class="section level2">
 <h2>Conclusion</h2>
-<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. ## References</p>
+<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+</div>
+<div id="references" class="section level1 unnumbered">
+<h1>References</h1>
 <div id="refs" class="references">
 <div id="ref-breiman2001random">
 <p>Breiman, Leo. 2001. “Random Forests.” <em>Machine Learning</em> 45 (1). Springer: 5–32.</p>

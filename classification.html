@@ -356,14 +356,16 @@ div.tocify {
 </div>
 
 
-<div id="background" class="section level2">
-<h2>Background</h2>
-<p>This report is based on a 2009 study by Den Boer et al. <span class="citation">(Den Boer et al. 2009)</span>. The goal of this study was to improve prognostic classification of genetic subtypes of acute lymphoblastic leukaemia (ALL) in children. The kmowledge of these subtypes facilitate risk stratification and can thus be use to choose the appropriate treatment option.</p>
-<p>In this report however, I to use the Den Boer data set to methodically explore which methods for classification works best and how different parameters influence the classification. Precisely I use support vector machine (SVM) and random forest for classification. Additionally I use random forest for feature selection. The aim of this report is to investigate the influence of the used kernel in the SVM Classifier and the influence of the number of trees in the Random Forest Classifier. Additionally, I investigate the influence of feature selection on these two classifiers.</p>
+<div id="background" class="section level1">
+<h1>Background</h1>
+<p>This report is based on a 2009 study by Den Boer et al. <span class="citation">(Den Boer et al. 2009)</span>. The goal of this study was to improve the prognostic classification of genetic subtypes of acute lymphoblastic leukemia (ALL) in children. The knowledge of these subtypes facilitate risk stratification and can thus be used to choose the appropriate treatment option.</p>
+<p>In this report, however, I use the Den Boer data set to methodically explore which methods for classification work best and how different parameters influence the classification. Precisely I use support vector machine (SVM) and random forest for classification. Additionally, I use a random forest for feature selection. The aim of this report is to investigate the influence of the used kernel in the SVM Classifier and the influence of the number of trees in the Random Forest Classifier. Additionally, I investigate the influence of feature selection on these two classifiers.</p>
 </div>
+<div id="methods-and-data" class="section level1">
+<h1>Methods and Data</h1>
 <div id="data" class="section level2">
 <h2>Data</h2>
-<p>The used data consits of a datatable which store information about the gene expression. Gene expression was measured with microarrays. The data has been already pre-processed before I used it. This included: filtering of barely weakly expressed genes, log2 transformation to normalise the raw measurements, intersample standardisation. Additionally, I worked with a data table that stored the metadata of the samples belonging to the gene expression values. In our case the information of interest is the class of the subtype of the acute lymphoblastic leukemia. Table 1 shows the freqency of the different subtypes before filtering (filtering will be done in a later step).</p>
+<p>The used data consists of a data table that stores information about the gene expression. Gene expression was measured with microarrays. The data has been already pre-processed before I used it. This included: filtering of barely weakly expressed genes, log2 transformation to normalize the raw measurements, intersample standardization. Additionally, I worked with a data table that stored the metadata of the samples belonging to the gene expression values. In our case, the information of interest is the class of the subtype of acute lymphoblastic leukemia. Table 1 shows the frequency of the different subtypes before filtering (filtering will be done in a later step).</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw">library</span>(knitr)</a>
 <a class="sourceLine" id="cb1-2" data-line-number="2"><span class="kw">library</span>(gdata)</a>
 <a class="sourceLine" id="cb1-3" data-line-number="3"><span class="kw">library</span>(ranger)</a>
@@ -443,19 +445,20 @@ div.tocify {
 </div>
 <div id="methods-theory" class="section level2">
 <h2>Methods Theory</h2>
-<p>Due to the scope of this work, I will not be able to provide an in depth description of the methods. The aim is to only give a very short overview, so the reader understands the key terms of the methods.</p>
-<p>Random forest is a widely used method for classification <span class="citation">(Dı'az-Uriarte and De Andres 2006)</span>. The base of a random forest model are decision trees. A decision tree consists of multiple nodes. At each node tree is splitted into branches depending on the value of a independent variable <span class="citation">(Hastie, Tibshirani, and Friedman 2009)</span>. In our case this would be the expression level of a particular gene. Which variable is used at a given split is random. However, not all variables are available to sample from at each split. The number of variables available for splitting at each tree node is referred to as the mtry parameter. The end of a branch, the leaf, does not split anymore and represents the decision for a particular class. In our case that would be a cell type. A random forest consists of multiple decision trees. Each tree gives a vote for the final decision of the class. The class with the majority vote across all trees is the final class of a random forest. This number of trees used in a random forest is on interest in this report. I will investigate the influence of the number of trees on the classification accuracy. One note to parameter tuning</p>
-<p>SVM is another well established method for classification it tries to separate the data by a hyperplane. The goal is that data points in different classes are as far away from the hyperplane as possible. The data points nearest to the hyperplane are called support vectors <span class="citation">(Hastie, Tibshirani, and Friedman 2009)</span>. Often times the data points are not separable in their original dimension. Nevertheless it is always possible to separate the data in a higher dimension <span class="citation">(Hofmann 2006)</span>. Therefore we need a way to map the data points to a higher dimension. The function used for this process is called Kernel function. There are different types of Kernels and I will investigate the influence of the Kernel function on the classification accuracy. In order to validate the results I implemented leave one out cross validation (see section “Methods Implementation”). The evaluation criteria was the missclassification error (MER) respectively the Accuracy of the predictions. Since I was dealing with a multiclass classification task, looking at specificity and sensitivity is not too interesting.</p>
-<p>In microarray studies it is common to have a high number of measurements in comparison to the number of patients <span class="citation">(Kosorok, Ma, and others 2007)</span>. This is called a small n large p dataset and can lead to overfitting <span class="citation">(Johnstone and Titterington 2009)</span>. Therefore, it be benifical to select only a subset of independent variables. Ideally the ones that contain the most information. In order to find these variables I also used random forest for feature selection. Precisely, I used the impurity variable importance of the random forest. Before growing the random forest for the feature selection I tuned the mtry parameter.</p>
+<p>Due to the scope of this work, I will not be able to provide an in-depth description of the methods. The aim is to only give a very short overview, so the reader understands the key terms of the methods.</p>
+<p>Random forest is a widely used method for classification <span class="citation">(Dı'az-Uriarte and De Andres 2006)</span>. The base of a random forest model are decision trees. A decision tree consists of multiple nodes. At each node the tree is split into branches depending on the value of an independent variable <span class="citation">(Hastie, Tibshirani, and Friedman 2009)</span>. In our case, this would be the expression level of a particular gene. Which variable is used at a given split is random. However, not all variables are available to sample from at each split. The number of variables available for splitting at each tree node is referred to as the mtry parameter. The end of a branch, the leaf, does not split anymore and represents the decision for a particular class. In our case that would be a cell type. A random forest consists of multiple decision trees. Each tree gives a vote for the final decision of the class. The class with the majority vote across all trees is the final class of a random forest. This number of trees used in a random forest is on interest in this report. I will investigate the influence of the number of trees on the classification accuracy. One note to parameter tuning</p>
+<p>SVM is another well-established method for classification it tries to separate the data by a hyperplane. The goal is that data points in different classes are as far away from the hyperplane as possible. The data points nearest to the hyperplane are called support vectors <span class="citation">(Hastie, Tibshirani, and Friedman 2009)</span>. Often times the data points are not separable in their original dimension. Nevertheless, it is always possible to separate the data in a higher dimension <span class="citation">(Hofmann 2006)</span>. Therefore we need a way to map the data points to a higher dimension. The function used for this process is called Kernel function. There are different types of Kernels and I will investigate the influence of the Kernel function on the classification accuracy. In order to validate the results, I implemented to leave-one-out-cross -validation (see section “Methods Implementation”). The evaluation criteria were the misclassification error (MER) respectively the Accuracy of the predictions. Since I was dealing with a multiclass classification task, looking at specificity and sensitivity is not too interesting.</p>
+<p>In microarray studies, it is common to have a high number of measurements in comparison to the number of patients <span class="citation">(Kosorok, Ma, and others 2007)</span>. This is called a small n large p dataset and can lead to overfitting <span class="citation">(Johnstone and Titterington 2009)</span>. Therefore, it is beneficial to select only a subset of independent variables. Ideally, the ones that contain the most information. In order to find these variables I also used the random forest for feature selection. Precisely, I used the impurity variable importance of the random forest. Before growing the random forest for the feature selection I tuned the mtry parameter.</p>
 </div>
 <div id="methods-implementation" class="section level2">
 <h2>Methods Implementation</h2>
-<p>Now that I covered the theoretical basics to understand this report, it is time to present the practical implementation of the above described methods. In order to test the classification accuracy I need to split the data into a training data set and a validation data set. I order to have as many training and test patients as possible I decided to use leave one out cross validation as an approach. The standard way to do this would be to use the caret packages. I decided, however, to implement the functionality myself. The reason for this is that I also wanted to use the LOOCV approach for feature selection to avoid any bias. With my own implementation I could be sure that I used the exact same method for feature selection and the training of the model. For my Implementation I used the foreach package for parallelization, which is highly optimized. Thus, my implementation is also highly performant. The logic of my function is structured as follows: I have a base function that performs the actual task, e.g feature selection or classification and another function that implements the LOOCV logic that calls the base function in each iteration. This makes the code easy to extend, since I only need to write a new base function for a new classification method and can use my existing function for the LOOCV logic. The base function for classification take the parameters for the corresponding method, e.g. number of trees for random forest and the Kernel method for SVM.</p>
-<p>For the feature selection I applied the same principles I had one function that did the actual feature selection and one function that implements the LOOCV logic and calls the feature selection function. I is also possible to specify how many feature should be selected. However I did not want to chose the number of features arbitrary. Consequently, I sorted the variable importance of all covariates and plotted it. Subsequently, I smoothed the plot in order to make it differentiable. The goal was to find the point where the variable importance drops the steepest. This point I used as a cutoff for the number of features that I selected. In order to find the point I took the highest value of the second derivative of the smoothed line. This process is a highly reuasable ant automated process to find the number of variables to select.</p>
+<p>Now that I covered the theoretical basics to understand this report, it is time to present the practical implementation of the above-described methods. In order to test the classification accuracy, I need to split the data into a training data set and a validation data set. I order to have as many training and test patients as possible I decided to use leave one out cross-validation as an approach. The standard way to do this would be to use the caret packages. I decided, however, to implement the functionality myself. The reason for this is that I also wanted to use the LOOCV approach for feature selection to avoid any bias. With my own implementation, I could be sure that I used the exact same method for feature selection and the training of the model. For my Implementation, I used the foreach package for parallelization, which is highly optimized. Thus, my implementation is also highly performant. The logic of my function is structured as follows: I have a base function that performs the actual task, e.g feature selection or classification and another function that implements the LOOCV logic that calls the base function in each iteration. This makes the code easy to extend since I only need to write a new base function for a new classification method and can use my existing function for the LOOCV logic. The base function for classification takes the parameters for the corresponding method, e.g. the number of trees for the random forest and the Kernel method for SVM.</p>
+<p>For the feature selection, I applied the same principles I had one function that did the actual feature selection and one function that implements the LOOCV logic and calls the feature selection function. It is also possible to specify how many features should be selected. However, I did not want to choose the number of features arbitrary. Consequently, I sorted the variable importance of all covariates and plotted it. Subsequently, I smoothed the plot in order to make it differentiable. The goal was to find the point where the variable importance drops the steepest. This point I used as a cutoff for the number of features that I selected. In order to find the point, I took the highest value of the second derivative of the smoothed line. This process is a highly reusable and automated process to find the number of variables to select.</p>
 </div>
-<div id="results-and-interpretation" class="section level2">
-<h2>Results and Interpretation</h2>
-<p>The result section is structured as follows: Firstly, I present the results of the feature selection process. Secondly, I will give an overview of the results of the random forest classifier for different number of trees. Subsequently, I will present the most meaningful results more in depth. I will do the same for the SVM classifier afterwards. Finally, I will compare the best classifiers across the two methods in depth. Each description of a Table / Figure is followed by a short interpreation it.</p>
+</div>
+<div id="results-and-interpretation" class="section level1">
+<h1>Results and Interpretation</h1>
+<p>The result section is structured as follows: Firstly, I present the results of the feature selection process. Secondly, I will give an overview of the results of the random forest classifier for different numbers of trees. Subsequently, I will present the most meaningful results more in-depth. I will do the same for the SVM classifier afterward. Finally, I will compare the best classifiers across the two methods in depth. Each description of a Table / Figure is followed by a short interpretation.</p>
 <p>I included only classes that contained more than 30 patients. After the filtering, four classes remained. Figure 1 gives an overview of the remaining classes and how many cases each class contains.</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="co">## first we filter the classes and include only classes with more than 30 patients</span></a>
 <a class="sourceLine" id="cb2-2" data-line-number="2"><span class="co"># Function for class filtering</span></a>
@@ -590,12 +593,12 @@ div.tocify {
 <a class="sourceLine" id="cb4-83" data-line-number="83">                       helper[[<span class="st">&quot;genes&quot;</span>]],</a>
 <a class="sourceLine" id="cb4-84" data-line-number="84">                       helper[[<span class="st">&quot;maximalChangeIndex&quot;</span>]])</a></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="figures/02_combinatorix_prepareSelect-1.png" alt="Figure 2: Plot of the development of the Random Forest variable importance of the 200 most important genes. The red dots show the actual value of the variable importance, the green line smoothes this values and the blue vertical line indicated the point where the smoothed line changes the most." width="672" />
+<img src="figures/02_combinatorix_prepareSelect-1.png" alt="Figure 2: Plot of the development of the Random Forest variable importance of the 200 most important genes. The red dots show the actual value of the variable importance, the green line smoothes these values and the blue vertical line indicated the point where the smoothed line changes the most." width="672" />
 <p class="caption">
-Figure 2: Plot of the development of the Random Forest variable importance of the 200 most important genes. The red dots show the actual value of the variable importance, the green line smoothes this values and the blue vertical line indicated the point where the smoothed line changes the most.
+Figure 2: Plot of the development of the Random Forest variable importance of the 200 most important genes. The red dots show the actual value of the variable importance, the green line smoothes these values and the blue vertical line indicated the point where the smoothed line changes the most.
 </p>
 </div>
-<p>Accordinlgy to the plot I chose to use 50 genes, when performing the feature selection. For the comparison of the classifiers I used two sets of selected genes: One set where I selected 50 genes and one set where I included all genes. Of course, there are many other ways to determine how many features should be included. The advandate of my approach is that it is reusable and that it quantifies the loss of importance of the features. The drawbacks are that it does not account for the total number of features in the data set and the selected number can be unfavourable in extreme cases of the distribution of the variable importance i.e. it selects only one or all genes. However, it was not the focus of this report to find a method that optimally selects the number of features. Thus, I wanted just an automated, out of the box way to do this.</p>
+<p>Accordingly to the plot, I chose to use 50 genes, when performing the feature selection. For the comparison of the classifiers, I used two sets of selected genes: One set where I selected 50 genes and one set where I included all genes. Of course, there are many other ways to determine how many features should be included. The advantage of my approach is that it is reusable and that it quantifies the loss of importance of the features. The drawbacks are that it does not account for the total number of features in the data set and the selected number can be unfavorable in extreme cases of the distribution of the variable importance i.e. it selects only one or all genes. However, it was not the focus of this report to find a method that optimally selects the number of features. Thus, I wanted just an automated, out of the box way to do this.</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="co">#### Feature Selection ####</span></a>
 <a class="sourceLine" id="cb5-2" data-line-number="2"><span class="co">## Function that selects genes based on the random forest variable importance</span></a>
 <a class="sourceLine" id="cb5-3" data-line-number="3"><span class="co">## It takes a vector as index variable that indicates which patients should be used</span></a>
@@ -634,7 +637,7 @@ Figure 2: Plot of the development of the Random Forest variable importance of th
 <a class="sourceLine" id="cb5-36" data-line-number="36"></a>
 <a class="sourceLine" id="cb5-37" data-line-number="37">loocvSelections &lt;-<span class="st"> </span><span class="kw">SelectRandomForestLOOCV</span>(numberFeatures)</a>
 <a class="sourceLine" id="cb5-38" data-line-number="38"><span class="kw">write.csv</span>(loocvSelections, <span class="st">&#39;loocvSelections.csv&#39;</span>)</a></code></pre></div>
-<p>For the actual comparision of the Random Forest Classifiers I used the following numbers of trees: 200, 500 and 1000. Table 3 shows an overview of the MER, Accuracy and its 95% confidence interval.</p>
+<p>For the actual comparison of the Random Forest Classifiers I used the following numbers of trees: 200, 500 and 1000. Table 3 shows an overview of the MER, Accuracy and the 95% confidence interval.</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" data-line-number="1">getResultOverview &lt;-<span class="st"> </span><span class="cf">function</span> (results) {</a>
 <a class="sourceLine" id="cb6-2" data-line-number="2">  evaluationResults &lt;-<span class="st"> </span><span class="kw">foreach</span>(<span class="dt">i =</span> <span class="kw">c</span>(<span class="dv">1</span><span class="op">:</span><span class="kw">length</span>(results)), <span class="dt">.combine =</span> <span class="st">&#39;rbind&#39;</span>) <span class="op">%do%</span><span class="st"> </span>{</a>
 <a class="sourceLine" id="cb6-3" data-line-number="3">    res &lt;-<span class="st"> </span>results[[i]]</a>
@@ -773,9 +776,9 @@ Figure 2: Plot of the development of the Random Forest variable importance of th
 <a class="sourceLine" id="cb7-55" data-line-number="55"></a>
 <a class="sourceLine" id="cb7-56" data-line-number="56"></a>
 <a class="sourceLine" id="cb7-57" data-line-number="57"><span class="co">#### Function for LOOCV ####</span></a></code></pre></div>
-<p>The accuracy of when using all genes is with 94% very high. The 95% confidence interval is also reasonably small, which gives security about the result The number of trees seems to have no influence on the prediction accuracy, when using all genes. Only when training the Classifier with a subset of selected genes the number of trees seems to influence the prediction accuracy. Increasing the number of trees from 200 to 500, lead to an improvment of the accuracy of 10.6 percentage points. A further increase in the number of trees did not improve the prediction accuracy. The feature selection did not have an impact on the prediction when the Random Forest Classifier was trained with more than 200 trees and it decreased the accuracy when trained with 200 trees.</p>
-<p>It is a bit unexpected that the number of trees did not have a meaningful influence on the prediction accuracy. The used numbers of trees were all rather a and thud could be already considered as nearly optimal. The reason why I used many trees, is that the data set does contain over 20,000 genes. So using fewer trees could have lead to more differences in the predcion accuracies. The fact that feature selection did not have a meaningful impact on the Classifier is not unexpected. Firstly, Random Forests can deal with a large number of covariates <span class="citation">(Breiman 2001)</span>. This is due to the fact that it uses only a subset of covariates at each split. Secondly, I have already used a Random Forest to select the covariates. I will go into more detail about the practical meaning of MER and accuracy at the end of the section, when comparing the two best Classifiers of this report.</p>
-<p>In the following I will report on the detailled results of the Random Forest Classifier with 1000 trees and all genes (which yields the exact same results as the other Random Forest Classifiers expect one). Additionally, I report on the results of the Random Forest Classifier when trained with 50 genes and 200 trees.</p>
+<p>The accuracy when using all genes is with 94% very high. The 95% confidence interval is also reasonably small, which gives security about the result The number of trees seems to have no influence on the prediction accuracy when using all genes. Only when training the Classifier with a subset of selected genes the number of trees seems to influence the prediction accuracy. Increasing the number of trees from 200 to 500, lead to an improvement of the accuracy of 10.6 percentage points. A further increase in the number of trees did not improve the prediction accuracy. The feature selection did not have an impact on the prediction when the Random Forest Classifier was trained with more than 200 trees and it decreased the accuracy when trained with 200 trees.</p>
+<p>It is a bit unexpected that the number of trees did not have a meaningful influence on prediction accuracy. The used numbers of trees were all rather a and thud could be already considered as nearly optimal. The reason why I used many trees, is that the data set does contain over 20,000 genes. So using fewer trees could have lead to more differences in the prediction accuracies. The fact that feature selection did not have a meaningful impact on the Classifier is not unexpected. Firstly, Random Forests can deal with a large number of covariates <span class="citation">(Breiman 2001)</span>. This is due to the fact that it uses only a subset of covariates at each split. Secondly, I have already used a Random Forest to select covariates. I will go into more detail about the practical meaning of MER and accuracy at the end of the section when comparing the two best Classifiers of this report.</p>
+<p>In the following, I will report on the detailed results of the Random Forest Classifier with 1000 trees and all genes (which yields the exact same results as the other Random Forest Classifiers expect one). Additionally, I report on the results of the Random Forest Classifier when trained with 50 genes and 200 trees.</p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb8-1" data-line-number="1"><span class="co">#### Functions for displaying the results ####</span></a>
 <a class="sourceLine" id="cb8-2" data-line-number="2"><span class="co">## Functions for plotting a heatmap of a confusion table</span></a>
 <a class="sourceLine" id="cb8-3" data-line-number="3">plotResults &lt;-<span class="st"> </span><span class="cf">function</span>(res, response, title) {</a>
@@ -802,20 +805,20 @@ Figure 2: Plot of the development of the Random Forest variable importance of th
 <a class="sourceLine" id="cb8-24" data-line-number="24"></a>
 <a class="sourceLine" id="cb8-25" data-line-number="25"><span class="kw">plotResults</span>(resultVector[[<span class="dv">3</span>]], response, <span class="kw">names</span>(resultVector)[<span class="dv">3</span>])</a></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="figures/02_combinatorix_displayResult-1.png" alt="**bold** Figure 1 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the Random Forest Classifier, when trained with 1000 trees and all genes. Notes: T: T-ALL, Bt: TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid __bold__" width="672" />
+<img src="figures/02_combinatorix_displayResult-1.png" alt="**Figure 1** shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the Random Forest Classifier when trained with 1000 trees and all genes. Notes: T: T-ALL, Bt: TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid." width="672" />
 <p class="caption">
-<strong>bold</strong> Figure 1 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the Random Forest Classifier, when trained with 1000 trees and all genes. Notes: T: T-ALL, Bt: TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid <strong>bold</strong>
+<strong>Figure 1</strong> shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the Random Forest Classifier when trained with 1000 trees and all genes. Notes: T: T-ALL, Bt: TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid.
 </p>
 </div>
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb9-1" data-line-number="1"><span class="kw">plotResults</span>(resultVector[[<span class="dv">4</span>]], response, <span class="kw">names</span>(resultVector)[<span class="dv">4</span>])</a></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="figures/02_combinatorix_rfSecond-1.png" alt="**bold**Figure 2 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the Random Forest Classifier, when trained with 200 trees and 50 selected genes. T: T-ALL, Bt: TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid __bold__" width="672" />
+<img src="figures/02_combinatorix_rfSecond-1.png" alt="**Figure 2** shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the Random Forest Classifier when trained with 200 trees and 50 selected genes. T: T-ALL, Bt: TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid." width="672" />
 <p class="caption">
-<strong>bold</strong>Figure 2 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the Random Forest Classifier, when trained with 200 trees and 50 selected genes. T: T-ALL, Bt: TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid <strong>bold</strong>
+<strong>Figure 2</strong> shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the Random Forest Classifier when trained with 200 trees and 50 selected genes. T: T-ALL, Bt: TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid.
 </p>
 </div>
-<p>Figures 1 and 2 display a heatmap of the confusion table of the classification together with statisitcs about the accurcay on the table on the right. The confusion table maps the predicted class to the actual class. Consequently, the diagonal of the table is representing correct classifcations. In each field of the table one can see the absoulute and relative frequency of the prediction of a certain subtype. Values outside of the diagonal represent a wrong prediction. In the case of Figure 1 the classifier predicted four patients to have the subtype TEL-AML1, whereas they had the type pre-B ALL in reality. Since we are deallilng with a multiclassifcation problem, False Positives and False Negatives are the same for the overall model. However I will discuss this statistics per class at the end of the section for two selected classifiers. The table on the right displays statistics of the accuracy. The accuracy is imple the percentage of correctly classified samples. Cohen’s Kappa is a different measure of accuracy that accounts for the fact that correct classifications could occur by chance.</p>
-<p>The second method of interest in this work was the SVM for classification. Again I start with an overview and discuss more detail later on. For the SVM I used four different kernel methods, namely radial, linear, polynomial and simgmoid. As done with the Random Forest Classifier I used one time all genes and one time 50 genes, selected via the Random Forest variable Importance, as described above. Table 4 shows an overview of the MER, accuracy and its 95% confidence interval of the SVM Classifier with different kernels.</p>
+<p>Figures 1 and 2 display a heatmap of the confusion table of the classification together with statistics about the accuracy on the table on the right. The confusion table maps the predicted class to the actual class. Consequently, the diagonal of the table is representing correct classifications. In each field of the table, one can see the absolute and relative frequency of the prediction of a certain subtype. Values outside of the diagonal represent a wrong prediction. In the case of Figure 1, the classifier predicted four patients to have the subtype TEL-AML1, whereas they had the type pre-B ALL in reality. Since we are dealing with a multi-classification problem, False Positives and False Negatives are the same for the overall model. However, I will discuss these statistics per class at the end of the section for two selected classifiers. The table on the right displays statistics of the accuracy. The accuracy is simply the percentage of correctly classified samples. Cohen’s Kappa is a different measure of accuracy that accounts for the fact that correct classifications could occur by chance.</p>
+<p>The second method of interest in this work was the SVM for classification. Again I start with an overview and discuss more detail later on. For the SVM I used four different kernel methods, namely radial, linear, polynomial and sigmoid. As done with the Random Forest Classifier I used one time all genes and one time 50 genes, selected via the Random Forest variable Importance, as described above. Table 4 shows an overview of the MER, accuracy and its 95% confidence interval of the SVM Classifier with different kernels.</p>
 <div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" data-line-number="1">svmResultTable &lt;-<span class="st"> </span>resultTable[<span class="dv">7</span><span class="op">:</span><span class="dv">14</span>, ]</a>
 <a class="sourceLine" id="cb10-2" data-line-number="2"><span class="kw">kable</span>(svmResultTable, <span class="dt">caption =</span> <span class="st">&quot;Table 4: Overview of the SVM Classifier Performance with different Parameters&quot;</span>)</a></code></pre></div>
 <table>
@@ -877,37 +880,28 @@ Figure 2: Plot of the development of the Random Forest variable importance of th
 <td align="right">0.8623</td>
 <td align="left">0.81-0.9145</td>
 </tr>
-<tr class="odd">
-<td>In general the accuracy of the SVM Classif</td>
-<td align="right">iers is h</td>
-<td align="right">igh ranging</td>
-<td align="left">from 0.86 to 0.94. The confidence intervals are also reasonable narrow.</td>
-</tr>
-<tr class="even">
-<td>The overall difference between the accurac</td>
-<td align="right">y of the</td>
-<td align="right">classifier</td>
-<td align="left">with different Kernels is small (under two and a half percentage points), when trained with all genes. Training the SVM Classifier with 50 selected genes yields in a difference of over five percentage points between different kernels. The predictions were slightly more accurate, when training the SVM with all genes. I would have expected this, since the SVM is highly robust against overfitting, since it allows missclassification with the incorporation of so calles slack variables. The ability to always map the feature space also helps to deal with high dimensional data.</td>
-</tr>
 </tbody>
 </table>
-<p>Given the small differences in accuracy between most of the kernels, it is hard to argue, why one kernel might be one percentage point more accurat. However, I try to compare shortly the most accurate kernel (radial) with the least accurate kernel (sigmoid).FIgure3 shows the heatmap of the confusion table of the SVM Classifier with the radial kernel, when trained with all genes. Figure 4 shows the same plot for the SVM Classifier with the sigmoid kernel, when trained with 50 selected genes.</p>
+<p>In general, the accuracy of the SVM Classifiers is high ranging from 0.86 to 0.94. The confidence intervals are also reasonably narrow. The overall difference between the accuracy of the classifier with different Kernels is small (under two and a half percentage points), when trained with all genes. Training the SVM Classifier with 50 selected genes yields in a difference of over five percentage points between different kernels. The predictions were slightly more accurate when training the SVM with all genes. I would have expected this since the SVM is highly robust against overfitting since it allows misclassification with the incorporation of so-called slack variables. The ability to always map the feature space also helps to deal with high dimensional data.</p>
+<p>Given the small differences in accuracy between most of the kernels, it is hard to argue, why one kernel might be one percentage point more accurate than another. However, I try to compare shortly the most accurate kernel (radial) with the least accurate kernel (sigmoid). Figure 3 shows the heatmap of the confusion table of the SVM Classifier with the radial kernel when trained with all genes. Figure 4 shows the same plot for the SVM Classifier with the sigmoid kernel when trained with 50 selected genes.</p>
 <div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb11-1" data-line-number="1"><span class="kw">plotResults</span>(resultVector[[<span class="dv">7</span>]], response, <span class="kw">names</span>(resultVector)[<span class="dv">7</span>])</a></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="figures/02_combinatorix_displaySVM-1.png" alt="**bold**Figure 3 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the SVM Classifier, when trained with the radial Kernel and all. Notes: T: T-ALL, Bt:TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid __bold__" width="672" />
+<img src="figures/02_combinatorix_displaySVM-1.png" alt="**Figure 3*** shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the SVM Classifier, when trained with the radial Kernel and all. Notes: T: T-ALL, Bt:TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid." width="672" />
 <p class="caption">
-<strong>bold</strong>Figure 3 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the SVM Classifier, when trained with the radial Kernel and all. Notes: T: T-ALL, Bt:TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid <strong>bold</strong>
+<strong>Figure 3</strong>* shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the SVM Classifier, when trained with the radial Kernel and all. Notes: T: T-ALL, Bt:TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid.
 </p>
 </div>
 <div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb12-1" data-line-number="1"><span class="kw">plotResults</span>(resultVector[[<span class="dv">14</span>]], response, <span class="kw">names</span>(resultVector)[<span class="dv">14</span>])</a></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="figures/02_combinatorix_displaySVM2-1.png" alt="**bold**Figure 3 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the SVM Classifier, when trained with the sigmoid Kernel and all. Notes: T: T-ALL, Bt:TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid __bold__" width="672" />
+<img src="figures/02_combinatorix_displaySVM2-1.png" alt="**Figure 4** shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the SVM Classifier, when trained with the sigmoid Kernel and all. Notes: T: T-ALL, Bt:TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid." width="672" />
 <p class="caption">
-<strong>bold</strong>Figure 3 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the SVM Classifier, when trained with the sigmoid Kernel and all. Notes: T: T-ALL, Bt:TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid <strong>bold</strong>
+<strong>Figure 4</strong> shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the SVM Classifier, when trained with the sigmoid Kernel and all. Notes: T: T-ALL, Bt:TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid.
 </p>
 </div>
-<p>TODO explain SVM in Depth Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb13-1" data-line-number="1">cm.svmBest &lt;-<span class="st"> </span><span class="kw">t</span>(<span class="kw">confusionMatrix</span>(response, resultList[[<span class="dv">7</span>]])<span class="op">$</span>byClass)</a>
+<p>Figures 3 and 4 follow the same principle as Figures 1 and 2, thus I do not explain the general structure of the figures a second time. When trained with all genes and the radial kernels the Classifiers predicted all T-ALL types correctly. Four samples with an actual type of TEL-ALM1 were wrongly classified as pre-B ALL subtype. Two samples with the pre-B ALL subtype were falsely classified as hyperdiploid and four hyperdiploid subtypes were wrongly classified as pre-B ALL type. This is actually the exact same distribution as shown in Figure 1.</p>
+<p>The total numbers of misclassifications were higher for the SVM Classifier with the sigmoid kernels, but the origins of the mistakes were similar. The classifier made the fewest mistakes for the T-ALL subtypes. The exact numbers can be found in the plot. As stated previously the notions of false positive and false negatives only make sense when looking at the statistics per subtype. This is done in the following for the two best classifiers (best SVM and best Random Forest).</p>
+<p>Tables 5 shows the statistics per subtype for the SVM Classifier with all genes and the radial kernel and the Random Forest Classifier with 1000 trees and all genes. The statistics for both classifiers were equal so this table serves as a summary for both classifiers.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb13-1" data-line-number="1">cm.svmBest &lt;-<span class="st"> </span><span class="kw">t</span>(<span class="kw">confusionMatrix</span>(response, resultVector[[<span class="dv">7</span>]])<span class="op">$</span>byClass)</a>
 <a class="sourceLine" id="cb13-2" data-line-number="2"><span class="kw">kable</span>(<span class="kw">round</span>(cm.svmBest,<span class="dv">4</span>), <span class="dt">caption =</span> <span class="st">&quot;Table 5: Classwise performance of the SVM Classifier when trained with the radial kernel and all genes&quot;</span>)</a></code></pre></div>
 <table>
 <caption>Table 5: Classwise performance of the SVM Classifier when trained with the radial kernel and all genes</caption>
@@ -925,21 +919,21 @@ Figure 2: Plot of the development of the Random Forest variable importance of th
 <td>Sensitivity</td>
 <td align="right">1.0000</td>
 <td align="right">0.9149</td>
-<td align="right">0.9111</td>
-<td align="right">0.9231</td>
+<td align="right">0.9130</td>
+<td align="right">0.9474</td>
 </tr>
 <tr class="even">
 <td>Specificity</td>
 <td align="right">1.0000</td>
 <td align="right">1.0000</td>
-<td align="right">0.9754</td>
-<td align="right">0.9375</td>
+<td align="right">0.9835</td>
+<td align="right">0.9380</td>
 </tr>
 <tr class="odd">
 <td>Pos Pred Value</td>
 <td align="right">1.0000</td>
 <td align="right">1.0000</td>
-<td align="right">0.9318</td>
+<td align="right">0.9545</td>
 <td align="right">0.8182</td>
 </tr>
 <tr class="even">
@@ -947,41 +941,41 @@ Figure 2: Plot of the development of the Random Forest variable importance of th
 <td align="right">1.0000</td>
 <td align="right">0.9677</td>
 <td align="right">0.9675</td>
-<td align="right">0.9756</td>
+<td align="right">0.9837</td>
 </tr>
 <tr class="odd">
 <td>Precision</td>
 <td align="right">1.0000</td>
 <td align="right">1.0000</td>
-<td align="right">0.9318</td>
+<td align="right">0.9545</td>
 <td align="right">0.8182</td>
 </tr>
 <tr class="even">
 <td>Recall</td>
 <td align="right">1.0000</td>
 <td align="right">0.9149</td>
-<td align="right">0.9111</td>
-<td align="right">0.9231</td>
+<td align="right">0.9130</td>
+<td align="right">0.9474</td>
 </tr>
 <tr class="odd">
 <td>F1</td>
 <td align="right">1.0000</td>
 <td align="right">0.9556</td>
-<td align="right">0.9213</td>
-<td align="right">0.8675</td>
+<td align="right">0.9333</td>
+<td align="right">0.8780</td>
 </tr>
 <tr class="even">
 <td>Prevalence</td>
 <td align="right">0.2156</td>
 <td align="right">0.2814</td>
-<td align="right">0.2695</td>
-<td align="right">0.2335</td>
+<td align="right">0.2754</td>
+<td align="right">0.2275</td>
 </tr>
 <tr class="odd">
 <td>Detection Rate</td>
 <td align="right">0.2156</td>
 <td align="right">0.2575</td>
-<td align="right">0.2455</td>
+<td align="right">0.2515</td>
 <td align="right">0.2156</td>
 </tr>
 <tr class="even">
@@ -995,13 +989,13 @@ Figure 2: Plot of the development of the Random Forest variable importance of th
 <td>Balanced Accuracy</td>
 <td align="right">1.0000</td>
 <td align="right">0.9574</td>
-<td align="right">0.9433</td>
-<td align="right">0.9303</td>
+<td align="right">0.9483</td>
+<td align="right">0.9427</td>
 </tr>
 </tbody>
 </table>
 <div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb14-1" data-line-number="1"><span class="co">#grid.arrange(tableGrob(round(cm.svmBest,4)))</span></a>
-<a class="sourceLine" id="cb14-2" data-line-number="2">cm.rfBest &lt;-<span class="st"> </span><span class="kw">t</span>(<span class="kw">confusionMatrix</span>(response, resultList[[<span class="dv">1</span>]])<span class="op">$</span>byClass)</a>
+<a class="sourceLine" id="cb14-2" data-line-number="2">cm.rfBest &lt;-<span class="st"> </span><span class="kw">t</span>(<span class="kw">confusionMatrix</span>(response, resultVector[[<span class="dv">1</span>]])<span class="op">$</span>byClass)</a>
 <a class="sourceLine" id="cb14-3" data-line-number="3"><span class="kw">kable</span>(<span class="kw">round</span>(cm.rfBest, <span class="dv">4</span>), <span class="dt">caption =</span> <span class="st">&quot;Table 6: Classwise performance of the Random Forest Classifier when trainied with 1000 trees and all genes&quot;</span>)</a></code></pre></div>
 <table>
 <caption>Table 6: Classwise performance of the Random Forest Classifier when trainied with 1000 trees and all genes</caption>
@@ -1019,28 +1013,28 @@ Figure 2: Plot of the development of the Random Forest variable importance of th
 <td>Sensitivity</td>
 <td align="right">1.0000</td>
 <td align="right">0.9149</td>
-<td align="right">0.9333</td>
-<td align="right">0.9487</td>
+<td align="right">0.9130</td>
+<td align="right">0.9474</td>
 </tr>
 <tr class="even">
 <td>Specificity</td>
 <td align="right">1.0000</td>
 <td align="right">1.0000</td>
-<td align="right">0.9836</td>
-<td align="right">0.9453</td>
+<td align="right">0.9835</td>
+<td align="right">0.9380</td>
 </tr>
 <tr class="odd">
 <td>Pos Pred Value</td>
 <td align="right">1.0000</td>
 <td align="right">1.0000</td>
 <td align="right">0.9545</td>
-<td align="right">0.8409</td>
+<td align="right">0.8182</td>
 </tr>
 <tr class="even">
 <td>Neg Pred Value</td>
 <td align="right">1.0000</td>
 <td align="right">0.9677</td>
-<td align="right">0.9756</td>
+<td align="right">0.9675</td>
 <td align="right">0.9837</td>
 </tr>
 <tr class="odd">
@@ -1048,35 +1042,35 @@ Figure 2: Plot of the development of the Random Forest variable importance of th
 <td align="right">1.0000</td>
 <td align="right">1.0000</td>
 <td align="right">0.9545</td>
-<td align="right">0.8409</td>
+<td align="right">0.8182</td>
 </tr>
 <tr class="even">
 <td>Recall</td>
 <td align="right">1.0000</td>
 <td align="right">0.9149</td>
-<td align="right">0.9333</td>
-<td align="right">0.9487</td>
+<td align="right">0.9130</td>
+<td align="right">0.9474</td>
 </tr>
 <tr class="odd">
 <td>F1</td>
 <td align="right">1.0000</td>
 <td align="right">0.9556</td>
-<td align="right">0.9438</td>
-<td align="right">0.8916</td>
+<td align="right">0.9333</td>
+<td align="right">0.8780</td>
 </tr>
 <tr class="even">
 <td>Prevalence</td>
 <td align="right">0.2156</td>
 <td align="right">0.2814</td>
-<td align="right">0.2695</td>
-<td align="right">0.2335</td>
+<td align="right">0.2754</td>
+<td align="right">0.2275</td>
 </tr>
 <tr class="odd">
 <td>Detection Rate</td>
 <td align="right">0.2156</td>
 <td align="right">0.2575</td>
 <td align="right">0.2515</td>
-<td align="right">0.2216</td>
+<td align="right">0.2156</td>
 </tr>
 <tr class="even">
 <td>Detection Prevalence</td>
@@ -1089,19 +1083,21 @@ Figure 2: Plot of the development of the Random Forest variable importance of th
 <td>Balanced Accuracy</td>
 <td align="right">1.0000</td>
 <td align="right">0.9574</td>
-<td align="right">0.9585</td>
-<td align="right">0.9470</td>
+<td align="right">0.9483</td>
+<td align="right">0.9427</td>
 </tr>
 </tbody>
 </table>
 <div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb15-1" data-line-number="1"><span class="co">#grid.arrange(tableGrob(round(cm.rfBest, 4)),</span></a>
 <a class="sourceLine" id="cb15-2" data-line-number="2"><span class="co">#             tableGrob(round(cm.svmBest,4)), textGrob(&quot;A&quot;), textGrob(&quot;B&quot;),</span></a>
 <a class="sourceLine" id="cb15-3" data-line-number="3"> <span class="co">#            nrow = 2, ncol = 2)</span></a></code></pre></div>
-<p>TODO Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+<p>lower sensitivity means that there are less true positives, so out of the samples classified with this type, not all samples would actually have this subtype. The specificity is also lower for the SVM for the hyperdiploid subtype. This is also true for the positive predictive value.</p>
+<p>The specificity gives the true negative rate, so how many samples really do not belong do a subtype, when not classified as a subtype. So a low specificity will lead to unnecessary treatments and potential psychological distress for a patient, whereas low sensitivity classifiers will fail to identify a disease and thus a patient might not receive treatment.</p>
 </div>
-<div id="conclusion" class="section level2">
-<h2>Conclusion</h2>
-<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+<div id="conclusion" class="section level1">
+<h1>Conclusion</h1>
+<p>In summary, I did not find large differences in the prediction accuracy of the tested classifiers depending on the used parameters. Both the SVM and Random Forest Classifiers are robust against overfitting and thus did not benefit from feature selection. For the Random Forest, 500 trees could be a good number of trees to use and the radial kernels for the SVM classifier performed well in my analysis. Again, the differences in accuracy were not very high.</p>
+<p>The parameters could have a bigger impact depending on the dataset. Therefore, it could be interesting for future studies to compare the performance of a Classifier depending on its parameters in different datasets.</p>
 </div>
 <div id="references" class="section level1 unnumbered">
 <h1>References</h1>

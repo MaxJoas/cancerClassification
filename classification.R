@@ -449,10 +449,10 @@ kable(svmResultTable, caption = "Table 4: Overview of the SVM Classifier Perform
 
 
 ## @knitr inDepth
-cm.svmBest <- t(confusionMatrix(response, resultList[[7]])$byClass)
+cm.svmBest <- t(confusionMatrix(response, resultVector[[7]])$byClass)
 kable(round(cm.svmBest,4), caption = "Table 5: Classwise performance of the SVM Classifier when trained with the radial kernel and all genes")
 #grid.arrange(tableGrob(round(cm.svmBest,4)))
-cm.rfBest <- t(confusionMatrix(response, resultList[[1]])$byClass)
+cm.rfBest <- t(confusionMatrix(response, resultVector[[1]])$byClass)
 kable(round(cm.rfBest, 4), caption = "Table 6: Classwise performance of the Random Forest Classifier when trainied with 1000 trees and all genes")
 #grid.arrange(tableGrob(round(cm.rfBest, 4)),
 #             tableGrob(round(cm.svmBest,4)), textGrob("A"), textGrob("B"),

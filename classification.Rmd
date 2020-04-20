@@ -171,32 +171,30 @@ It is a bit unexpected that the number of trees did not have a meaningful influe
 
 In the following I will report on the detailled results of the Random Forest Classifier with 1000 trees and all genes (which yields the exact same results as the other Random Forest Classifiers expect one). Additionally, I report on the results of the Random Forest Classifier when trained with 50 genes and 200 trees. The statisitcs on the
 
-```{r displayResult,eval=TRUE, fig.cap="**bold**Figure 1 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the Random Forest Classifier, when trained with 1000 trees and all genes.  T: T-ALL, Bt:
-TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid __bold__"}
+
+```{r displayResult,eval=TRUE, fig.cap="**bold** Figure 1 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the Random Forest Classifier, when trained with 1000 trees and all genes. Notes: T: T-ALL, Bt: TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid __bold__"}
 ```
 
-```{r rfSecond, eval=TRUE, fig.cap="**bold**Figure 2 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the Random Forest Classifier, when trained with 200 trees and 50 selected genes. T: T-ALL, Bt:
-TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid __bold__"}
+```{r rfSecond, eval=TRUE, fig.cap="**bold**Figure 2 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the Random Forest Classifier, when trained with 200 trees and 50 selected genes. T: T-ALL, Bt: TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid __bold__"}
 ```
+
+
 Figures 1 and 2 display a heatmap of the confusion table of the classification together with statisitcs about the accurcay on the table on the right. The confusion table maps the predicted class to the actual class. Consequently, the diagonal of the table is representing correct classifcations. In each field of the table one can see the absoulute and relative frequency of the prediction of a certain subtype. Values outside of the diagonal represent a wrong prediction. In the case of Figure 1 the classifier predicted four patients to have the subtype TEL-AML1, whereas they had the type pre-B ALL in reality. Since we are deallilng with a multiclassifcation problem, False Positives and False Negatives are the same for the overall model. However I will discuss this statistics per class at the end of the section for two selected classifiers. The table on the right displays statistics of the accuracy. The accuracy is imple the percentage of correctly classified samples. Cohen's Kappa is a different measure of accuracy that accounts for the fact that correct classifications could occur by chance.
 
-The second method of interest in this work was the SVM for classification. Again I start with an overview and discuss more detail later on. For the SVM I used four different kernel methods, namely radial, linear, polynomial and simgmoidal. As done with the Random Forest Classifier I used one time all genes and one time 50 genes, selected via the Random Forest variable Importance, as described above.
+The second method of interest in this work was the SVM for classification. Again I start with an overview and discuss more detail later on. For the SVM I used four different kernel methods, namely radial, linear, polynomial and simgmoidal. As done with the Random Forest Classifier I used one time all genes and one time 50 genes, selected via the Random Forest variable Importance, as described above. Table 4 shows an overview of the MER, Accuracy and its 95% confidence interval of the SVM Classifier with different kernels.
 
 ```{r overviewResultsSVM, eval=TRUE}
 ```
 
 
-
-
-
-
-```{r displaySVM, eval=TRUE, ,fig.cap="**bold**Figure 3 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the SVM Classifier, when trained with the radial Kernel and all.  T: T-ALL, Bt:
-TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid __bold__"}
+```{r displaySVM, eval=TRUE, fig.cap="**bold**Figure 3 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the SVM Classifier, when trained with the radial Kernel and all. Notes: T: T-ALL, Bt:TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid __bold__"}
 ```
 
-```{r displaySVM2, eval=TRUE, fig.cap="**bold**Figure 4 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the SVM Classifier, when trained with the Sigmoid Kernel and 50 selected genes.  T: T-ALL, Bt:
-TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid __bold__"}
+
+
+```{r displaySVM2, eval=TRUE, fig.cap="**bold**Figure 3 shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the SVM Classifier, when trained with the sigmoid Kernel and all. Notes: T: T-ALL, Bt:TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid __bold__"}
 ```
+
 TODO explain SVM in Depth
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 ```{r inDepth, eval=TRUE}

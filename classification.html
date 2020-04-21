@@ -11,9 +11,9 @@
 
 <meta name="author" content="Maximilian Joas" />
 
-<meta name="date" content="2020-04-20" />
+<meta name="date" content="2020-04-21" />
 
-<title>Random Forest and SVM for Cancer Classification</title>
+<title>The Influence of Parameter Selection on Supervised Classification</title>
 
 <script src="classification_files/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -348,24 +348,24 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">Random Forest and SVM for Cancer Classification</h1>
-<h3 class="subtitle">Random Forest and SVM for Cancer Classification</h3>
+<h1 class="title toc-ignore">The Influence of Parameter Selection on Supervised Classification</h1>
+<h3 class="subtitle">Comparing the Accuracy of the Random Forest Classifier and the SVM Classifier when Trained with different Parameters</h3>
 <h4 class="author">Maximilian Joas</h4>
-<h4 class="date">2020-04-20</h4>
+<h4 class="date">2020-04-21</h4>
 
 </div>
 
 
 <div id="background" class="section level1">
 <h1>Background</h1>
-<p>This report is based on a 2009 study by Den Boer et al. <span class="citation">(Den Boer et al. 2009)</span>. The goal of this study was to improve the prognostic classification of genetic subtypes of acute lymphoblastic leukemia (ALL) in children. The knowledge of these subtypes facilitate risk stratification and can thus be used to choose the appropriate treatment option.</p>
+<p>This report is based on a 2009 study by Den Boer et al. <span class="citation">(2009)</span>. The goal of this study was to improve the prognostic classification of genetic subtypes of acute lymphoblastic leukemia (ALL) in children. The knowledge of these subtypes facilitate risk stratification and can thus be used to choose the appropriate treatment option.</p>
 <p>In this report, however, I use the Den Boer data set to methodically explore which methods for classification work best and how different parameters influence the classification. Precisely I use support vector machine (SVM) and random forest for classification. Additionally, I use a random forest for feature selection. The aim of this report is to investigate the influence of the used kernel in the SVM Classifier and the influence of the number of trees in the Random Forest Classifier. Additionally, I investigate the influence of feature selection on these two classifiers.</p>
 </div>
 <div id="methods-and-data" class="section level1">
 <h1>Methods and Data</h1>
 <div id="data" class="section level2">
 <h2>Data</h2>
-<p>The used data consists of a data table that stores information about the gene expression. Gene expression was measured with microarrays. The data has been already pre-processed before I used it. This included: filtering of barely weakly expressed genes, log2 transformation to normalize the raw measurements, intersample standardization. Additionally, I worked with a data table that stored the metadata of the samples belonging to the gene expression values. In our case, the information of interest is the class of the subtype of acute lymphoblastic leukemia. Table 1 shows the frequency of the different subtypes before filtering (filtering will be done in a later step).</p>
+<p>The used data consists of a data table that stores information about gene expression. Gene expression was measured with microarrays. The data has been already pre-processed before I used it. This included: filtering of weakly expressed genes, log2 transformation to normalize the raw measurements and intersample standardization. Additionally, I worked with a data table that stored the metadata of the samples belonging to the gene expression values. In our case, the information of interest is the class of the subtype of acute lymphoblastic leukemia. Table 1 shows the frequency of the different subtypes before filtering (filtering will be done in a later step).</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw">library</span>(knitr)</a>
 <a class="sourceLine" id="cb1-2" data-line-number="2"><span class="kw">library</span>(gdata)</a>
 <a class="sourceLine" id="cb1-3" data-line-number="3"><span class="kw">library</span>(ranger)</a>
@@ -395,90 +395,100 @@ div.tocify {
 <a class="sourceLine" id="cb1-27" data-line-number="27"><span class="co">## I also save the minimum number allowed cases per class in an extra variable</span></a>
 <a class="sourceLine" id="cb1-28" data-line-number="28">classVariable &lt;-<span class="st"> &quot;sample.labels&quot;</span></a>
 <a class="sourceLine" id="cb1-29" data-line-number="29">minNumberofCasesPerClass &lt;-<span class="st"> </span><span class="dv">30</span></a>
-<a class="sourceLine" id="cb1-30" data-line-number="30">preFiltered &lt;-<span class="st"> </span><span class="dv">200</span></a>
-<a class="sourceLine" id="cb1-31" data-line-number="31">parameters &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;RF 200 Trees all Genes&quot;</span>,</a>
-<a class="sourceLine" id="cb1-32" data-line-number="32">                <span class="st">&quot;RF 500 Trees all Genes&quot;</span>,</a>
-<a class="sourceLine" id="cb1-33" data-line-number="33">                <span class="st">&quot;RF 1000 Trees all Genes&quot;</span>,</a>
-<a class="sourceLine" id="cb1-34" data-line-number="34">                <span class="st">&quot;RF 200 Trees Feature Selection&quot;</span>,</a>
-<a class="sourceLine" id="cb1-35" data-line-number="35">                <span class="st">&quot;RF 500 Trees Feature Selection&quot;</span>,</a>
-<a class="sourceLine" id="cb1-36" data-line-number="36">                <span class="st">&quot;RF 1000 Trees Feature Selection&quot;</span>,</a>
-<a class="sourceLine" id="cb1-37" data-line-number="37">                <span class="st">&quot;SVM Radial Kernel all Genes&quot;</span>,</a>
-<a class="sourceLine" id="cb1-38" data-line-number="38">                <span class="st">&quot;SVM Linear Kernel all Genes&quot;</span>,</a>
-<a class="sourceLine" id="cb1-39" data-line-number="39">                <span class="st">&quot;SVM Ploynomial Kernel all Genes&quot;</span>,</a>
-<a class="sourceLine" id="cb1-40" data-line-number="40">                <span class="st">&quot;SVM Sigmoid Kernel all Genes&quot;</span>,</a>
-<a class="sourceLine" id="cb1-41" data-line-number="41">                <span class="st">&quot;SVM Radial Kernel Feature Selection&quot;</span>,</a>
-<a class="sourceLine" id="cb1-42" data-line-number="42">                <span class="st">&quot;SVM Linear Kernel Feature Selection&quot;</span>,</a>
-<a class="sourceLine" id="cb1-43" data-line-number="43">                <span class="st">&quot;SVM Ploynomial Kernel Feature Selection&quot;</span>,</a>
-<a class="sourceLine" id="cb1-44" data-line-number="44">                <span class="st">&quot;SVM Sigmoid Kernel Feature Selection&quot;</span>)</a>
-<a class="sourceLine" id="cb1-45" data-line-number="45"></a>
-<a class="sourceLine" id="cb1-46" data-line-number="46"></a>
-<a class="sourceLine" id="cb1-47" data-line-number="47"><span class="co">####  Define Local directories and files ####</span></a>
-<a class="sourceLine" id="cb1-48" data-line-number="48"><span class="co">## Find the home directory</span></a>
-<a class="sourceLine" id="cb1-49" data-line-number="49">myHome &lt;-<span class="st"> </span><span class="kw">Sys.getenv</span>(<span class="st">&quot;HOME&quot;</span>)</a>
+<a class="sourceLine" id="cb1-30" data-line-number="30"><span class="co">## this is a helper variable for the feature selection </span></a>
+<a class="sourceLine" id="cb1-31" data-line-number="31"><span class="co">## I only allow the first 200 genes of the random forest variable importance</span></a>
+<a class="sourceLine" id="cb1-32" data-line-number="32"><span class="co">## to be considerred for my final selection</span></a>
+<a class="sourceLine" id="cb1-33" data-line-number="33">preFiltered &lt;-<span class="st"> </span><span class="dv">200</span></a>
+<a class="sourceLine" id="cb1-34" data-line-number="34"><span class="co">## Expressive Naming for the result table later on</span></a>
+<a class="sourceLine" id="cb1-35" data-line-number="35">parameters &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;RF 200 Trees all Genes&quot;</span>,</a>
+<a class="sourceLine" id="cb1-36" data-line-number="36">                <span class="st">&quot;RF 500 Trees all Genes&quot;</span>,</a>
+<a class="sourceLine" id="cb1-37" data-line-number="37">                <span class="st">&quot;RF 1000 Trees all Genes&quot;</span>,</a>
+<a class="sourceLine" id="cb1-38" data-line-number="38">                <span class="st">&quot;RF 200 Trees Feature Selection&quot;</span>,</a>
+<a class="sourceLine" id="cb1-39" data-line-number="39">                <span class="st">&quot;RF 500 Trees Feature Selection&quot;</span>,</a>
+<a class="sourceLine" id="cb1-40" data-line-number="40">                <span class="st">&quot;RF 1000 Trees Feature Selection&quot;</span>,</a>
+<a class="sourceLine" id="cb1-41" data-line-number="41">                <span class="st">&quot;SVM Radial Kernel all Genes&quot;</span>,</a>
+<a class="sourceLine" id="cb1-42" data-line-number="42">                <span class="st">&quot;SVM Linear Kernel all Genes&quot;</span>,</a>
+<a class="sourceLine" id="cb1-43" data-line-number="43">                <span class="st">&quot;SVM Ploynomial Kernel all Genes&quot;</span>,</a>
+<a class="sourceLine" id="cb1-44" data-line-number="44">                <span class="st">&quot;SVM Sigmoid Kernel all Genes&quot;</span>,</a>
+<a class="sourceLine" id="cb1-45" data-line-number="45">                <span class="st">&quot;SVM Radial Kernel Feature Selection&quot;</span>,</a>
+<a class="sourceLine" id="cb1-46" data-line-number="46">                <span class="st">&quot;SVM Linear Kernel Feature Selection&quot;</span>,</a>
+<a class="sourceLine" id="cb1-47" data-line-number="47">                <span class="st">&quot;SVM Ploynomial Kernel Feature Selection&quot;</span>,</a>
+<a class="sourceLine" id="cb1-48" data-line-number="48">                <span class="st">&quot;SVM Sigmoid Kernel Feature Selection&quot;</span>)</a>
+<a class="sourceLine" id="cb1-49" data-line-number="49"></a>
 <a class="sourceLine" id="cb1-50" data-line-number="50"></a>
-<a class="sourceLine" id="cb1-51" data-line-number="51"><span class="co">## Define the main directory for the  data and results</span></a>
-<a class="sourceLine" id="cb1-52" data-line-number="52">mainDir &lt;-<span class="st"> </span><span class="kw">file.path</span>(myHome, <span class="st">&quot;uni/4_sem/biostatistics/report&quot;</span>)</a>
-<a class="sourceLine" id="cb1-53" data-line-number="53"><span class="kw">dir.create</span>(<span class="dt">path =</span> mainDir, <span class="dt">showWarnings =</span> <span class="ot">FALSE</span>)</a>
-<a class="sourceLine" id="cb1-54" data-line-number="54"><span class="kw">message</span>(<span class="st">&quot;Main dir: &quot;</span>, mainDir)</a>
-<a class="sourceLine" id="cb1-55" data-line-number="55"></a>
-<a class="sourceLine" id="cb1-56" data-line-number="56"><span class="co">## Define a file where we wills store the memory image</span></a>
-<a class="sourceLine" id="cb1-57" data-line-number="57">memImageFile &lt;-<span class="st"> </span><span class="kw">file.path</span>(mainDir, <span class="st">&quot;DenBoerData_loaded.Rdata&quot;</span>)</a>
-<a class="sourceLine" id="cb1-58" data-line-number="58"></a>
-<a class="sourceLine" id="cb1-59" data-line-number="59"><span class="co">## Define the dir where we will download the data</span></a>
-<a class="sourceLine" id="cb1-60" data-line-number="60">destDir &lt;-<span class="st"> </span><span class="kw">file.path</span>(mainDir, <span class="st">&quot;data&quot;</span>)</a>
-<a class="sourceLine" id="cb1-61" data-line-number="61"><span class="kw">message</span>(<span class="st">&quot;Local data dir: &quot;</span>, destDir)</a>
+<a class="sourceLine" id="cb1-51" data-line-number="51"><span class="co">####  Define Local directories and files ####</span></a>
+<a class="sourceLine" id="cb1-52" data-line-number="52"><span class="co">## Find the home directory</span></a>
+<a class="sourceLine" id="cb1-53" data-line-number="53">myHome &lt;-<span class="st"> </span><span class="kw">Sys.getenv</span>(<span class="st">&quot;HOME&quot;</span>)</a>
+<a class="sourceLine" id="cb1-54" data-line-number="54"></a>
+<a class="sourceLine" id="cb1-55" data-line-number="55"><span class="co">## Define the main directory for the  data and results</span></a>
+<a class="sourceLine" id="cb1-56" data-line-number="56">mainDir &lt;-<span class="st"> </span><span class="kw">file.path</span>(myHome, <span class="st">&quot;uni/4_sem/biostatistics/report&quot;</span>)</a>
+<a class="sourceLine" id="cb1-57" data-line-number="57"><span class="kw">dir.create</span>(<span class="dt">path =</span> mainDir, <span class="dt">showWarnings =</span> <span class="ot">FALSE</span>)</a>
+<a class="sourceLine" id="cb1-58" data-line-number="58"><span class="kw">message</span>(<span class="st">&quot;Main dir: &quot;</span>, mainDir)</a>
+<a class="sourceLine" id="cb1-59" data-line-number="59"></a>
+<a class="sourceLine" id="cb1-60" data-line-number="60"><span class="co">## Define a file where we wills store the memory image</span></a>
+<a class="sourceLine" id="cb1-61" data-line-number="61">memImageFile &lt;-<span class="st"> </span><span class="kw">file.path</span>(mainDir, <span class="st">&quot;DenBoerData_loaded.Rdata&quot;</span>)</a>
 <a class="sourceLine" id="cb1-62" data-line-number="62"></a>
-<a class="sourceLine" id="cb1-63" data-line-number="63"><span class="co">## Define a file where we will store all results</span></a>
-<a class="sourceLine" id="cb1-64" data-line-number="64">resultDir &lt;-<span class="st"> </span><span class="kw">file.path</span>(mainDir, <span class="st">&quot;resultDir&quot;</span>)</a>
-<a class="sourceLine" id="cb1-65" data-line-number="65"><span class="kw">message</span>(<span class="st">&quot;Result direcotry&quot;</span>, resultDir)</a>
+<a class="sourceLine" id="cb1-63" data-line-number="63"><span class="co">## Define the dir where we will download the data</span></a>
+<a class="sourceLine" id="cb1-64" data-line-number="64">destDir &lt;-<span class="st"> </span><span class="kw">file.path</span>(mainDir, <span class="st">&quot;data&quot;</span>)</a>
+<a class="sourceLine" id="cb1-65" data-line-number="65"><span class="kw">message</span>(<span class="st">&quot;Local data dir: &quot;</span>, destDir)</a>
 <a class="sourceLine" id="cb1-66" data-line-number="66"></a>
-<a class="sourceLine" id="cb1-67" data-line-number="67"><span class="co">## check if pheno data and expression data have same order of patients</span></a>
-<a class="sourceLine" id="cb1-68" data-line-number="68">check &lt;-<span class="st"> </span><span class="kw">colnames</span>(exprTable) <span class="op">==</span><span class="st"> </span><span class="kw">rownames</span>(phenoTable)</a>
-<a class="sourceLine" id="cb1-69" data-line-number="69"><span class="kw">message</span>(<span class="st">&quot;Do Pheno and Expressiondata have the same order of patients&quot;</span>)</a>
-<a class="sourceLine" id="cb1-70" data-line-number="70"><span class="kw">message</span>(<span class="kw">all</span>(<span class="dt">check =</span> <span class="ot">TRUE</span>))</a>
-<a class="sourceLine" id="cb1-71" data-line-number="71"></a>
-<a class="sourceLine" id="cb1-72" data-line-number="72"><span class="co">## Transposing the exprTable do that it has the right format for the package</span></a>
-<a class="sourceLine" id="cb1-73" data-line-number="73">exprTableTransposed &lt;-<span class="st"> </span><span class="kw">t</span>(exprTable)</a>
-<a class="sourceLine" id="cb1-74" data-line-number="74"></a>
-<a class="sourceLine" id="cb1-75" data-line-number="75"><span class="co">## this prevents an error in the ranger function due to ilegal names</span></a>
-<a class="sourceLine" id="cb1-76" data-line-number="76"><span class="kw">colnames</span>(exprTableTransposed) &lt;-<span class="st"> </span><span class="kw">make.names</span>(<span class="kw">colnames</span>(exprTableTransposed))</a></code></pre></div>
+<a class="sourceLine" id="cb1-67" data-line-number="67"><span class="co">## Define a file where we will store all results</span></a>
+<a class="sourceLine" id="cb1-68" data-line-number="68">resultDir &lt;-<span class="st"> </span><span class="kw">file.path</span>(mainDir, <span class="st">&quot;resultDir&quot;</span>)</a>
+<a class="sourceLine" id="cb1-69" data-line-number="69"><span class="kw">message</span>(<span class="st">&quot;Result direcotry&quot;</span>, resultDir)</a>
+<a class="sourceLine" id="cb1-70" data-line-number="70"></a>
+<a class="sourceLine" id="cb1-71" data-line-number="71"><span class="co">## check if pheno data and expression data have same order of patients</span></a>
+<a class="sourceLine" id="cb1-72" data-line-number="72">check &lt;-<span class="st"> </span><span class="kw">colnames</span>(exprTable) <span class="op">==</span><span class="st"> </span><span class="kw">rownames</span>(phenoTable)</a>
+<a class="sourceLine" id="cb1-73" data-line-number="73"><span class="kw">message</span>(<span class="st">&quot;Do Pheno and Expressiondata have the same order of patients&quot;</span>)</a>
+<a class="sourceLine" id="cb1-74" data-line-number="74"><span class="kw">message</span>(<span class="kw">all</span>(<span class="dt">check =</span> <span class="ot">TRUE</span>))</a>
+<a class="sourceLine" id="cb1-75" data-line-number="75"></a>
+<a class="sourceLine" id="cb1-76" data-line-number="76"><span class="co">## Transposing the exprTable do that it has the right format for the package</span></a>
+<a class="sourceLine" id="cb1-77" data-line-number="77">exprTableTransposed &lt;-<span class="st"> </span><span class="kw">t</span>(exprTable)</a>
+<a class="sourceLine" id="cb1-78" data-line-number="78"></a>
+<a class="sourceLine" id="cb1-79" data-line-number="79"><span class="co">## this prevents an error in the ranger function due to ilegal names</span></a>
+<a class="sourceLine" id="cb1-80" data-line-number="80"><span class="kw">colnames</span>(exprTableTransposed) &lt;-<span class="st"> </span><span class="kw">make.names</span>(<span class="kw">colnames</span>(exprTableTransposed))</a></code></pre></div>
 </div>
 <div id="methods-theory" class="section level2">
 <h2>Methods Theory</h2>
-<p>Due to the scope of this work, I will not be able to provide an in-depth description of the methods. The aim is to only give a very short overview, so the reader understands the key terms of the methods.</p>
-<p>Random forest is a widely used method for classification <span class="citation">(Dı'az-Uriarte and De Andres 2006)</span>. The base of a random forest model are decision trees. A decision tree consists of multiple nodes. At each node the tree is split into branches depending on the value of an independent variable <span class="citation">(Hastie, Tibshirani, and Friedman 2009)</span>. In our case, this would be the expression level of a particular gene. Which variable is used at a given split is random. However, not all variables are available to sample from at each split. The number of variables available for splitting at each tree node is referred to as the mtry parameter. The end of a branch, the leaf, does not split anymore and represents the decision for a particular class. In our case that would be a cell type. A random forest consists of multiple decision trees. Each tree gives a vote for the final decision of the class. The class with the majority vote across all trees is the final class of a random forest. This number of trees used in a random forest is on interest in this report. I will investigate the influence of the number of trees on the classification accuracy. One note to parameter tuning</p>
-<p>SVM is another well-established method for classification it tries to separate the data by a hyperplane. The goal is that data points in different classes are as far away from the hyperplane as possible. The data points nearest to the hyperplane are called support vectors <span class="citation">(Hastie, Tibshirani, and Friedman 2009)</span>. Often times the data points are not separable in their original dimension. Nevertheless, it is always possible to separate the data in a higher dimension <span class="citation">(Hofmann 2006)</span>. Therefore we need a way to map the data points to a higher dimension. The function used for this process is called Kernel function. There are different types of Kernels and I will investigate the influence of the Kernel function on the classification accuracy. In order to validate the results, I implemented to leave-one-out-cross -validation (see section “Methods Implementation”). The evaluation criteria were the misclassification error (MER) respectively the Accuracy of the predictions. Since I was dealing with a multiclass classification task, looking at specificity and sensitivity is not too interesting.</p>
-<p>In microarray studies, it is common to have a high number of measurements in comparison to the number of patients <span class="citation">(Kosorok, Ma, and others 2007)</span>. This is called a small n large p dataset and can lead to overfitting <span class="citation">(Johnstone and Titterington 2009)</span>. Therefore, it is beneficial to select only a subset of independent variables. Ideally, the ones that contain the most information. In order to find these variables I also used the random forest for feature selection. Precisely, I used the impurity variable importance of the random forest. Before growing the random forest for the feature selection I tuned the mtry parameter.</p>
+<p>Due to the limited scope of this work, I will not be able to provide an in-depth description of the methods. The aim is to only give a very short overview, so the reader understands the key terms of the methods.</p>
+<p>Random forest is a widely used method for classification <span class="citation">(Dı'az-Uriarte and De Andres 2006)</span>. The base of a random forest model are decision trees. A decision tree consists of multiple nodes. At each node the tree is split into branches depending on the value of an independent variable <span class="citation">(Hastie, Tibshirani, and Friedman 2009)</span>. In our case, this would be the expression level of a particular gene. Which variable is used at a given split is random. However, not all variables are available to sample from at each split. The number of variables available for splitting at each tree node is referred to as the mtry parameter. The end of a branch, the leaf, does not split anymore and represents the decision for a particular class. In our case that would be a leukemia subtype. A random forest consists of multiple decision trees. Each tree gives a vote for the final decision of the class. The class with the majority vote across all trees is the final class of a random forest classification This number of trees used in a random forest is on interest in this report. I will investigate the influence of the number of trees on the classification accuracy.</p>
+<p>SVM is another well-established method for classification<span class="citation">(Hastie, Tibshirani, and Friedman 2009)</span>. It tries to separate the data by a hyperplane. The goal is that data points in different classes are as far away from the hyperplane as possible. The data points nearest to the hyperplane are called support vectors <span class="citation">(Hastie, Tibshirani, and Friedman 2009)</span>. Often times the data points are not separable in their original dimension. Nevertheless, it is always possible to separate the data in a higher dimension <span class="citation">(Hofmann 2006)</span>. Therefore, we need a way to map the data points to a higher dimension. The function used for this process is called kernel function. There are different types of kernels and I will investigate the influence of the kernel function on the classification accuracy.</p>
+<p>In order to validate the results, I split my data into a training and validation data set. Therefore II implemented leave-one-out-cross -validation (loocv, see section “Methods Implementation”). The evaluation criteria were the misclassification error (MER) respectively the Accuracy of the predictions. Since I was dealing with a multiclass classification task, looking at specificity and sensitivity is not too suitable. This is due to the fact that true positive and true negative counts are the same since a true positive for one class is also a true negative for all the other classes, vice versa for false positives and false negatives.</p>
+<p>In microarray studies, it is common to have a high number of measurements in comparison to the number of samples<span class="citation">(Kosorok, Ma, and others 2007)</span>. This is called a small n large p data set and can lead to overfitting <span class="citation">(Johnstone and Titterington 2009)</span>. Therefore, it can be beneficial to select only a subset of independent variables. Ideally, the ones that contain the most information. In order to find these variables I also used the random forest for feature selection. Precisely, I used the impurity variable importance of the random forest. Before growing the random forest to determine the number of features to select, I tuned the mtry parameter. One note on parameter tuning: It is common to tune the mtry parameter and the number of trees based on the out of bag error of the Random Forest. I did not include tuning for my actual selection of genes and the training. I did not do that because I used leave-one-out-cross-validation, which would have made the process even more computationally intensive. Since the aim was to compare the parameters anyway and not due tune them this is a reasonable approach to do.</p>
 </div>
 <div id="methods-implementation" class="section level2">
 <h2>Methods Implementation</h2>
-<p>Now that I covered the theoretical basics to understand this report, it is time to present the practical implementation of the above-described methods. In order to test the classification accuracy, I need to split the data into a training data set and a validation data set. I order to have as many training and test patients as possible I decided to use leave one out cross-validation as an approach. The standard way to do this would be to use the caret packages. I decided, however, to implement the functionality myself. The reason for this is that I also wanted to use the LOOCV approach for feature selection to avoid any bias. With my own implementation, I could be sure that I used the exact same method for feature selection and the training of the model. For my Implementation, I used the foreach package for parallelization, which is highly optimized. Thus, my implementation is also highly performant. The logic of my function is structured as follows: I have a base function that performs the actual task, e.g feature selection or classification and another function that implements the LOOCV logic that calls the base function in each iteration. This makes the code easy to extend since I only need to write a new base function for a new classification method and can use my existing function for the LOOCV logic. The base function for classification takes the parameters for the corresponding method, e.g. the number of trees for the random forest and the Kernel method for SVM.</p>
-<p>For the feature selection, I applied the same principles I had one function that did the actual feature selection and one function that implements the LOOCV logic and calls the feature selection function. It is also possible to specify how many features should be selected. However, I did not want to choose the number of features arbitrary. Consequently, I sorted the variable importance of all covariates and plotted it. Subsequently, I smoothed the plot in order to make it differentiable. The goal was to find the point where the variable importance drops the steepest. This point I used as a cutoff for the number of features that I selected. In order to find the point, I took the highest value of the second derivative of the smoothed line. This process is a highly reusable and automated process to find the number of variables to select.</p>
+<p>Now that I covered the theoretical basics to understand this report, it is time to present the practical implementation of the above-described methods. In order to test the classification accuracy, I need to split the data into a training data set and a validation data set. In order to have as many training and test patients as possible, I decided to use leave-one-out-cross-validation (LOOCV) as an approach. The standard way to do this would be to use the caret packages. I decided, however, to implement the functionality myself. The reason for this is that I also wanted to use the LOOCV approach for feature selection to avoid any bias. With my own implementation, I could be sure that I used the exact same method for feature selection and the training of the model. For my Implementation, I used the foreach package for parallelization, which is highly optimized. Thus, my implementation is also highly performant. The logic of my function is structured as follows: I have a base function that performs the actual task, e.g feature selection or classification and another function that implements the LOOCV logic that calls the base function in each iteration. This makes the code easy to extend since I only need to write a new base function for a new classification method and can use my existing function for the LOOCV logic. The base function for classification takes the parameters for the corresponding method, e.g. the number of trees for the random forest and the Kernel method for SVM.</p>
+<p>For the feature selection, I applied the same principles I had one function that did the actual feature selection and one function that implements the LOOCV logic and calls the feature selection function. It is also possible to specify how many features should be selected. However, I did not want to choose the number of features arbitrary. Consequently, I sorted the variable importance of all covariates and plotted it. Subsequently, I smoothed the plot in order to make it differentiable. The goal was to find the point where the variable importance drops the steepest. This point I used as a cutoff for the number of features that I selected. In order to find the point, I took the highest value of the second derivative of the smoothed line. This process is a highly reusable and automated process to find the number of variables to select. Furthermore, I wrote some functions to display and plot the results.</p>
 </div>
 </div>
 <div id="results-and-interpretation" class="section level1">
 <h1>Results and Interpretation</h1>
-<p>The result section is structured as follows: Firstly, I present the results of the feature selection process. Secondly, I will give an overview of the results of the random forest classifier for different numbers of trees. Subsequently, I will present the most meaningful results more in-depth. I will do the same for the SVM classifier afterward. Finally, I will compare the best classifiers across the two methods in depth. Each description of a Table / Figure is followed by a short interpretation.</p>
+<p>The result section is structured as follows: Firstly, I present the results of the feature selection process. Secondly, I will give an overview of the results of the random forest classifier for different numbers of trees. Subsequently, I will present the most meaningful results more in-depth. I will do the same for the SVM classifier afterward. Finally, I will compare the best classifiers across the two methods. Each description of a Table / Figure is followed by a short interpretation.</p>
 <p>I included only classes that contained more than 30 patients. After the filtering, four classes remained. Figure 1 gives an overview of the remaining classes and how many cases each class contains.</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="co">## first we filter the classes and include only classes with more than 30 patients</span></a>
 <a class="sourceLine" id="cb2-2" data-line-number="2"><span class="co"># Function for class filtering</span></a>
 <a class="sourceLine" id="cb2-3" data-line-number="3">FilterClass &lt;-<span class="st"> </span><span class="cf">function</span>(minimumNumberofCases){</a>
-<a class="sourceLine" id="cb2-4" data-line-number="4">  releventClasses &lt;-<span class="st"> </span><span class="kw">names</span>(<span class="kw">which</span>(<span class="kw">table</span>(</a>
-<a class="sourceLine" id="cb2-5" data-line-number="5">    phenoTable[, classVariable]) <span class="op">&gt;</span><span class="st"> </span>minimumNumberofCases))</a>
+<a class="sourceLine" id="cb2-4" data-line-number="4">  classTable &lt;-<span class="st"> </span><span class="kw">table</span>(phenoTable[, classVariable])</a>
+<a class="sourceLine" id="cb2-5" data-line-number="5">  releventClasses &lt;-<span class="st"> </span><span class="kw">names</span>(<span class="kw">which</span>( classTable <span class="op">&gt;</span><span class="st"> </span>minimumNumberofCases))</a>
 <a class="sourceLine" id="cb2-6" data-line-number="6">  helper &lt;-<span class="st"> </span>phenoTable[, classVariable] <span class="op">%in%</span><span class="st"> </span>releventClasses</a>
 <a class="sourceLine" id="cb2-7" data-line-number="7">  <span class="kw">return</span>(helper)</a>
 <a class="sourceLine" id="cb2-8" data-line-number="8">}</a>
 <a class="sourceLine" id="cb2-9" data-line-number="9"></a>
-<a class="sourceLine" id="cb2-10" data-line-number="10">relevantPatients &lt;-<span class="st"> </span><span class="kw">FilterClass</span>(minNumberofCasesPerClass)</a>
-<a class="sourceLine" id="cb2-11" data-line-number="11">phenoTable &lt;-<span class="st"> </span>phenoTable[relevantPatients, ]</a>
-<a class="sourceLine" id="cb2-12" data-line-number="12"><span class="co">#remove unused factors</span></a>
-<a class="sourceLine" id="cb2-13" data-line-number="13">phenoTable[,classVariable] &lt;-<span class="st"> </span><span class="kw">factor</span>(phenoTable[,classVariable])</a>
-<a class="sourceLine" id="cb2-14" data-line-number="14">phenoTable<span class="op">$</span>Sample.title &lt;-<span class="st"> </span><span class="kw">factor</span>(phenoTable<span class="op">$</span>Sample.title)</a>
-<a class="sourceLine" id="cb2-15" data-line-number="15">exprTableTransposed &lt;-<span class="st"> </span>exprTableTransposed[relevantPatients, ]</a>
-<a class="sourceLine" id="cb2-16" data-line-number="16">classesAfterFiltered &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(<span class="kw">sort</span>(<span class="kw">table</span>(phenoTable<span class="op">$</span>Sample.title),</a>
-<a class="sourceLine" id="cb2-17" data-line-number="17">                                           <span class="dt">decreasing =</span> <span class="ot">TRUE</span>))</a>
-<a class="sourceLine" id="cb2-18" data-line-number="18"><span class="kw">colnames</span>(classesAfterFiltered) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;Class&quot;</span>, <span class="st">&quot;Freq&quot;</span>)</a>
-<a class="sourceLine" id="cb2-19" data-line-number="19"><span class="kw">kable</span>(classesAfterFiltered, <span class="dt">caption =</span> <span class="st">&quot;Table 2: Class Sizes after Filtering&quot;</span>)</a></code></pre></div>
+<a class="sourceLine" id="cb2-10" data-line-number="10"><span class="co">## gets a logical vector of which samples to include</span></a>
+<a class="sourceLine" id="cb2-11" data-line-number="11">relevantPatients &lt;-<span class="st"> </span><span class="kw">FilterClass</span>(minNumberofCasesPerClass)</a>
+<a class="sourceLine" id="cb2-12" data-line-number="12">phenoTable &lt;-<span class="st"> </span>phenoTable[relevantPatients, ]</a>
+<a class="sourceLine" id="cb2-13" data-line-number="13"><span class="co">#remove unused factors</span></a>
+<a class="sourceLine" id="cb2-14" data-line-number="14">phenoTable[,classVariable] &lt;-<span class="st"> </span><span class="kw">factor</span>(phenoTable[,classVariable])</a>
+<a class="sourceLine" id="cb2-15" data-line-number="15">phenoTable<span class="op">$</span>Sample.title &lt;-<span class="st"> </span><span class="kw">factor</span>(phenoTable<span class="op">$</span>Sample.title)</a>
+<a class="sourceLine" id="cb2-16" data-line-number="16"></a>
+<a class="sourceLine" id="cb2-17" data-line-number="17"><span class="co"># filter also exprTable</span></a>
+<a class="sourceLine" id="cb2-18" data-line-number="18">exprTableTransposed &lt;-<span class="st"> </span>exprTableTransposed[relevantPatients, ]</a>
+<a class="sourceLine" id="cb2-19" data-line-number="19"></a>
+<a class="sourceLine" id="cb2-20" data-line-number="20"><span class="co">## for displaying in markdown</span></a>
+<a class="sourceLine" id="cb2-21" data-line-number="21">classesAfterFiltered &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(<span class="kw">sort</span>(<span class="kw">table</span>(phenoTable<span class="op">$</span>Sample.title),</a>
+<a class="sourceLine" id="cb2-22" data-line-number="22">                                           <span class="dt">decreasing =</span> <span class="ot">TRUE</span>))</a>
+<a class="sourceLine" id="cb2-23" data-line-number="23"><span class="kw">colnames</span>(classesAfterFiltered) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;Class&quot;</span>, <span class="st">&quot;Freq&quot;</span>)</a>
+<a class="sourceLine" id="cb2-24" data-line-number="24"><span class="kw">kable</span>(classesAfterFiltered, <span class="dt">caption =</span> <span class="st">&quot;Table 2: Class Sizes after Filtering&quot;</span>)</a></code></pre></div>
 <table>
 <caption>Table 2: Class Sizes after Filtering</caption>
 <thead>
@@ -507,95 +517,103 @@ div.tocify {
 </tbody>
 </table>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="co">#grid.arrange(tableGrob(as.data.frame(classesAfterFiltered)))</span></a></code></pre></div>
-<p>In order to find a number of genes to select I plotted the variable importance of the 200 most important genes according to the random forest variable importance. Figure 2 shows this plot together with a smoothed line of the variable importance and the point where the variable importance drops the steepest (according to the smoothed line).</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="co">## Function that tunes the mytry parameter of RF</span></a>
-<a class="sourceLine" id="cb4-2" data-line-number="2"></a>
-<a class="sourceLine" id="cb4-3" data-line-number="3">tuneMtry &lt;-<span class="st"> </span><span class="cf">function</span>(relevantGenes) {</a>
-<a class="sourceLine" id="cb4-4" data-line-number="4">  <span class="co">## first we tune the mtry parameter of the random forest model with caret</span></a>
-<a class="sourceLine" id="cb4-5" data-line-number="5">  <span class="co">## 10 folds repeat 3 times</span></a>
-<a class="sourceLine" id="cb4-6" data-line-number="6">  control &lt;-<span class="st"> </span><span class="kw">trainControl</span>(<span class="dt">method =</span> <span class="st">&#39;repeatedcv&#39;</span>,</a>
-<a class="sourceLine" id="cb4-7" data-line-number="7">                          <span class="dt">number =</span> <span class="dv">10</span>,</a>
-<a class="sourceLine" id="cb4-8" data-line-number="8">                          <span class="dt">repeats =</span> <span class="dv">3</span>,</a>
-<a class="sourceLine" id="cb4-9" data-line-number="9">                          <span class="dt">search =</span> <span class="st">&#39;random&#39;</span>)</a>
-<a class="sourceLine" id="cb4-10" data-line-number="10">  <span class="kw">set.seed</span>(<span class="dv">123</span>)</a>
-<a class="sourceLine" id="cb4-11" data-line-number="11">  rf.random &lt;-<span class="st"> </span><span class="kw">train</span>(<span class="dt">y =</span> phenoTable[,classVariable],</a>
-<a class="sourceLine" id="cb4-12" data-line-number="12">                     <span class="dt">x =</span> exprTableTransposed[, relevantGenes],</a>
-<a class="sourceLine" id="cb4-13" data-line-number="13">                     <span class="dt">method =</span> <span class="st">&quot;ranger&quot;</span>,</a>
-<a class="sourceLine" id="cb4-14" data-line-number="14">                     <span class="dt">metric =</span> <span class="st">&quot;Accuracy&quot;</span>,</a>
-<a class="sourceLine" id="cb4-15" data-line-number="15">                     <span class="dt">trControl =</span> control)</a>
-<a class="sourceLine" id="cb4-16" data-line-number="16"></a>
-<a class="sourceLine" id="cb4-17" data-line-number="17">  tunedMtry &lt;-<span class="st"> </span>rf.random<span class="op">$</span>finalModel<span class="op">$</span>mtry</a>
-<a class="sourceLine" id="cb4-18" data-line-number="18">  <span class="kw">return</span> (tunedMtry)</a>
-<a class="sourceLine" id="cb4-19" data-line-number="19">}</a>
-<a class="sourceLine" id="cb4-20" data-line-number="20"></a>
+<p>In order to decide how many genes to select I plotted the variable importance of the 200 most important genes according to the random forest variable importance. Figure 2 shows this plot together with a smoothed line of the variable importance and the point where the variable importance drops the steepest (according to the smoothed line).</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="co">#### Prepare Feature Selection ####</span></a>
+<a class="sourceLine" id="cb4-2" data-line-number="2"><span class="co">## Function that tunes the mytry parameter of RF</span></a>
+<a class="sourceLine" id="cb4-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb4-4" data-line-number="4">tuneMtry &lt;-<span class="st"> </span><span class="cf">function</span>(relevantGenes) {</a>
+<a class="sourceLine" id="cb4-5" data-line-number="5">  <span class="co">## first we tune the mtry parameter of the random forest model with caret</span></a>
+<a class="sourceLine" id="cb4-6" data-line-number="6">  <span class="co">## 10 folds repeat 3 times</span></a>
+<a class="sourceLine" id="cb4-7" data-line-number="7">  control &lt;-<span class="st"> </span><span class="kw">trainControl</span>(<span class="dt">method =</span> <span class="st">&#39;repeatedcv&#39;</span>,</a>
+<a class="sourceLine" id="cb4-8" data-line-number="8">                          <span class="dt">number =</span> <span class="dv">10</span>,</a>
+<a class="sourceLine" id="cb4-9" data-line-number="9">                          <span class="dt">repeats =</span> <span class="dv">3</span>,</a>
+<a class="sourceLine" id="cb4-10" data-line-number="10">                          <span class="dt">search =</span> <span class="st">&#39;random&#39;</span>)</a>
+<a class="sourceLine" id="cb4-11" data-line-number="11">  <span class="kw">set.seed</span>(<span class="dv">123</span>)</a>
+<a class="sourceLine" id="cb4-12" data-line-number="12">  rf.random &lt;-<span class="st"> </span><span class="kw">train</span>(<span class="dt">y =</span> phenoTable[,classVariable],</a>
+<a class="sourceLine" id="cb4-13" data-line-number="13">                     <span class="dt">x =</span> exprTableTransposed[, relevantGenes],</a>
+<a class="sourceLine" id="cb4-14" data-line-number="14">                     <span class="dt">method =</span> <span class="st">&quot;ranger&quot;</span>,</a>
+<a class="sourceLine" id="cb4-15" data-line-number="15">                     <span class="dt">metric =</span> <span class="st">&quot;Accuracy&quot;</span>,</a>
+<a class="sourceLine" id="cb4-16" data-line-number="16">                     <span class="dt">trControl =</span> control)</a>
+<a class="sourceLine" id="cb4-17" data-line-number="17"></a>
+<a class="sourceLine" id="cb4-18" data-line-number="18">  tunedMtry &lt;-<span class="st"> </span>rf.random<span class="op">$</span>finalModel<span class="op">$</span>mtry</a>
+<a class="sourceLine" id="cb4-19" data-line-number="19">  <span class="kw">return</span> (tunedMtry)</a>
+<a class="sourceLine" id="cb4-20" data-line-number="20">}</a>
 <a class="sourceLine" id="cb4-21" data-line-number="21"></a>
-<a class="sourceLine" id="cb4-22" data-line-number="22">tunedMtryAllFeatures &lt;-<span class="st"> </span><span class="kw">tuneMtry</span>(<span class="kw">colnames</span>(exprTableTransposed))</a>
-<a class="sourceLine" id="cb4-23" data-line-number="23">tunedMtry &lt;-<span class="st"> </span>tunedMtryAllFeatures</a>
-<a class="sourceLine" id="cb4-24" data-line-number="24"><span class="co">## Function that selects genes based on the random forest variable importance</span></a>
-<a class="sourceLine" id="cb4-25" data-line-number="25"><span class="co">## It takes a vector as index variable that indicates which patients should be used</span></a>
-<a class="sourceLine" id="cb4-26" data-line-number="26">SelectFeaturesWithRandomForest &lt;-<span class="st"> </span><span class="cf">function</span>(trainIndex,</a>
-<a class="sourceLine" id="cb4-27" data-line-number="27">                                           numFeatures,</a>
-<a class="sourceLine" id="cb4-28" data-line-number="28">                                           <span class="dt">verbose =</span> <span class="ot">TRUE</span>) {</a>
-<a class="sourceLine" id="cb4-29" data-line-number="29">  <span class="cf">if</span>(verbose) <span class="kw">message</span>(<span class="st">&quot;Fitting a Random Forest for feature selection&quot;</span>)</a>
-<a class="sourceLine" id="cb4-30" data-line-number="30">  fit &lt;-<span class="st"> </span><span class="kw">ranger</span>(<span class="dt">y =</span> phenoTable[trainIndex, classVariable],</a>
-<a class="sourceLine" id="cb4-31" data-line-number="31">                <span class="dt">x =</span> exprTableTransposed[trainIndex,],</a>
-<a class="sourceLine" id="cb4-32" data-line-number="32">                <span class="dt">importance =</span> <span class="st">&quot;impurity&quot;</span>,</a>
-<a class="sourceLine" id="cb4-33" data-line-number="33">                <span class="dt">mtry =</span> tunedMtry,</a>
-<a class="sourceLine" id="cb4-34" data-line-number="34">                <span class="dt">num.threads =</span> numberThreads,</a>
-<a class="sourceLine" id="cb4-35" data-line-number="35">  )</a>
-<a class="sourceLine" id="cb4-36" data-line-number="36"></a>
-<a class="sourceLine" id="cb4-37" data-line-number="37">  <span class="cf">if</span>(verbose) <span class="kw">message</span>(<span class="st">&quot;Finished fitting, now extracting variable importance&quot;</span>)</a>
-<a class="sourceLine" id="cb4-38" data-line-number="38">  varImportance &lt;-<span class="st"> </span>fit<span class="op">$</span>variable.importance</a>
-<a class="sourceLine" id="cb4-39" data-line-number="39">  selectedGenes &lt;-<span class="st"> </span><span class="kw">sort</span>(varImportance, <span class="dt">na.last =</span> <span class="ot">TRUE</span>, <span class="dt">decreasing =</span> <span class="ot">TRUE</span>)</a>
-<a class="sourceLine" id="cb4-40" data-line-number="40">  <span class="kw">return</span>(selectedGenes[<span class="dv">1</span><span class="op">:</span>numFeatures])</a>
-<a class="sourceLine" id="cb4-41" data-line-number="41">}</a>
-<a class="sourceLine" id="cb4-42" data-line-number="42"><span class="co">## get number of features</span></a>
-<a class="sourceLine" id="cb4-43" data-line-number="43">getNumberofFeatures &lt;-<span class="st"> </span><span class="cf">function</span>() {</a>
-<a class="sourceLine" id="cb4-44" data-line-number="44">  selectedGenes &lt;-<span class="st"> </span><span class="kw">SelectFeaturesWithRandomForest</span>(<span class="kw">c</span>(<span class="dv">1</span><span class="op">:</span><span class="kw">nrow</span>(exprTableTransposed)),</a>
-<a class="sourceLine" id="cb4-45" data-line-number="45">                                                    <span class="kw">ncol</span>(exprTableTransposed))</a>
+<a class="sourceLine" id="cb4-22" data-line-number="22"></a>
+<a class="sourceLine" id="cb4-23" data-line-number="23">tunedMtryAllFeatures &lt;-<span class="st"> </span><span class="kw">tuneMtry</span>(<span class="kw">colnames</span>(exprTableTransposed))</a>
+<a class="sourceLine" id="cb4-24" data-line-number="24"><span class="co">## this is done becuase the tunedMtry parameter is used globally and gets overwritten later by the default value</span></a>
+<a class="sourceLine" id="cb4-25" data-line-number="25">tunedMtry &lt;-<span class="st"> </span>tunedMtryAllFeatures</a>
+<a class="sourceLine" id="cb4-26" data-line-number="26"></a>
+<a class="sourceLine" id="cb4-27" data-line-number="27"><span class="co">## Function that selects genes based on the random forest variable importance</span></a>
+<a class="sourceLine" id="cb4-28" data-line-number="28"><span class="co">## It takes a vector as index variable that indicates which patients should be used</span></a>
+<a class="sourceLine" id="cb4-29" data-line-number="29">SelectFeaturesWithRandomForest &lt;-<span class="st"> </span><span class="cf">function</span>(trainIndex,</a>
+<a class="sourceLine" id="cb4-30" data-line-number="30">                                           numFeatures,</a>
+<a class="sourceLine" id="cb4-31" data-line-number="31">                                           <span class="dt">verbose =</span> <span class="ot">TRUE</span>) {</a>
+<a class="sourceLine" id="cb4-32" data-line-number="32">  <span class="cf">if</span>(verbose) <span class="kw">message</span>(<span class="st">&quot;Fitting a Random Forest for feature selection&quot;</span>)</a>
+<a class="sourceLine" id="cb4-33" data-line-number="33">  fit &lt;-<span class="st"> </span><span class="kw">ranger</span>(<span class="dt">y =</span> phenoTable[trainIndex, classVariable],</a>
+<a class="sourceLine" id="cb4-34" data-line-number="34">                <span class="dt">x =</span> exprTableTransposed[trainIndex,],</a>
+<a class="sourceLine" id="cb4-35" data-line-number="35">                <span class="dt">importance =</span> <span class="st">&quot;impurity&quot;</span>,</a>
+<a class="sourceLine" id="cb4-36" data-line-number="36">                <span class="dt">mtry =</span> tunedMtry,</a>
+<a class="sourceLine" id="cb4-37" data-line-number="37">                <span class="dt">num.threads =</span> numberThreads,</a>
+<a class="sourceLine" id="cb4-38" data-line-number="38">  )</a>
+<a class="sourceLine" id="cb4-39" data-line-number="39"></a>
+<a class="sourceLine" id="cb4-40" data-line-number="40">  <span class="cf">if</span>(verbose) <span class="kw">message</span>(<span class="st">&quot;Finished fitting, now extracting variable importance&quot;</span>)</a>
+<a class="sourceLine" id="cb4-41" data-line-number="41">  varImportance &lt;-<span class="st"> </span>fit<span class="op">$</span>variable.importance</a>
+<a class="sourceLine" id="cb4-42" data-line-number="42">  selectedGenes &lt;-<span class="st"> </span><span class="kw">sort</span>(varImportance, <span class="dt">na.last =</span> <span class="ot">TRUE</span>, <span class="dt">decreasing =</span> <span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb4-43" data-line-number="43">  <span class="kw">return</span>(selectedGenes[<span class="dv">1</span><span class="op">:</span>numFeatures])</a>
+<a class="sourceLine" id="cb4-44" data-line-number="44">}</a>
+<a class="sourceLine" id="cb4-45" data-line-number="45"></a>
 <a class="sourceLine" id="cb4-46" data-line-number="46"></a>
-<a class="sourceLine" id="cb4-47" data-line-number="47">  lo &lt;-<span class="st"> </span><span class="kw">loess</span>(selectedGenes[<span class="dv">1</span><span class="op">:</span>preFiltered] <span class="op">~</span><span class="st"> </span><span class="kw">c</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">200</span>))</a>
-<a class="sourceLine" id="cb4-48" data-line-number="48">  smoothed =<span class="st"> </span><span class="kw">predict</span>(lo)</a>
-<a class="sourceLine" id="cb4-49" data-line-number="49">  secondDer &lt;-<span class="st"> </span><span class="kw">diff</span>(<span class="kw">diff</span>(smoothed))</a>
-<a class="sourceLine" id="cb4-50" data-line-number="50">  maximalChangePoint &lt;-<span class="st"> </span><span class="kw">max</span>(secondDer)</a>
-<a class="sourceLine" id="cb4-51" data-line-number="51">  maximalChangeIndex &lt;-<span class="st"> </span><span class="kw">match</span>(maximalChangePoint, secondDer)</a>
-<a class="sourceLine" id="cb4-52" data-line-number="52">  numberFeatures &lt;-<span class="st"> </span>maximalChangeIndex</a>
-<a class="sourceLine" id="cb4-53" data-line-number="53">  <span class="kw">return</span>(<span class="kw">list</span>(<span class="dt">numberFeatures =</span> numberFeatures,</a>
-<a class="sourceLine" id="cb4-54" data-line-number="54">           <span class="dt">smoothedLine =</span> smoothed,</a>
-<a class="sourceLine" id="cb4-55" data-line-number="55">           <span class="dt">genes =</span> selectedGenes,</a>
-<a class="sourceLine" id="cb4-56" data-line-number="56">           <span class="dt">maximalChangeIndex =</span> maximalChangeIndex</a>
-<a class="sourceLine" id="cb4-57" data-line-number="57">           ))</a>
-<a class="sourceLine" id="cb4-58" data-line-number="58">}</a>
-<a class="sourceLine" id="cb4-59" data-line-number="59"></a>
-<a class="sourceLine" id="cb4-60" data-line-number="60"></a>
-<a class="sourceLine" id="cb4-61" data-line-number="61">helper &lt;-<span class="st"> </span><span class="kw">getNumberofFeatures</span>()</a>
-<a class="sourceLine" id="cb4-62" data-line-number="62">numberFeatures &lt;-<span class="st"> </span>helper[[<span class="st">&quot;numberFeatures&quot;</span>]]</a>
-<a class="sourceLine" id="cb4-63" data-line-number="63"></a>
-<a class="sourceLine" id="cb4-64" data-line-number="64">plotVariableImportance &lt;-<span class="st"> </span><span class="cf">function</span>(smoothed,</a>
-<a class="sourceLine" id="cb4-65" data-line-number="65">                                   selectedGenes,</a>
-<a class="sourceLine" id="cb4-66" data-line-number="66">                                   maximalChangeIndex) {</a>
-<a class="sourceLine" id="cb4-67" data-line-number="67">  plotData &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="st">`</span><span class="dt">Variable Importance</span><span class="st">`</span> =<span class="st"> </span>selectedGenes[<span class="dv">1</span><span class="op">:</span>preFiltered],</a>
-<a class="sourceLine" id="cb4-68" data-line-number="68">                         <span class="dt">Index =</span> <span class="kw">c</span>(<span class="dv">1</span><span class="op">:</span>preFiltered),</a>
-<a class="sourceLine" id="cb4-69" data-line-number="69">                         <span class="dt">Smoothed =</span> smoothed,</a>
-<a class="sourceLine" id="cb4-70" data-line-number="70">                         <span class="dt">check.names =</span> <span class="ot">FALSE</span>)</a>
-<a class="sourceLine" id="cb4-71" data-line-number="71">  colors &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;Sepal Width&quot;</span> =<span class="st"> &quot;blue&quot;</span>, <span class="st">&quot;Petal Length&quot;</span> =<span class="st"> &quot;red&quot;</span>,</a>
-<a class="sourceLine" id="cb4-72" data-line-number="72">              <span class="st">&quot;Petal Width&quot;</span> =<span class="st"> &quot;orange&quot;</span>)</a>
-<a class="sourceLine" id="cb4-73" data-line-number="73">  <span class="kw">ggplot</span>(plotData,</a>
-<a class="sourceLine" id="cb4-74" data-line-number="74">         <span class="kw">aes</span>(<span class="dt">x =</span> Index)) <span class="op">+</span></a>
-<a class="sourceLine" id="cb4-75" data-line-number="75"><span class="st">  </span><span class="kw">geom_point</span>(<span class="kw">aes</span>(<span class="dt">y =</span> <span class="st">`</span><span class="dt">Variable Importance</span><span class="st">`</span>, <span class="dt">color =</span> <span class="st">&quot;Empiric&quot;</span>)) <span class="op">+</span></a>
-<a class="sourceLine" id="cb4-76" data-line-number="76"><span class="st">  </span><span class="kw">geom_line</span>(<span class="kw">aes</span>(<span class="dt">y =</span> smoothed, <span class="dt">color =</span> <span class="st">&quot;smoothed&quot;</span>))  <span class="op">+</span></a>
-<a class="sourceLine" id="cb4-77" data-line-number="77"><span class="st">  </span><span class="kw">geom_vline</span>(<span class="kw">aes</span>(<span class="dt">xintercept =</span> maximalChangeIndex, <span class="dt">color=</span> <span class="st">&quot;Turning Point&quot;</span>),</a>
-<a class="sourceLine" id="cb4-78" data-line-number="78">             <span class="dt">size =</span> <span class="fl">1.5</span>)</a>
-<a class="sourceLine" id="cb4-79" data-line-number="79">}</a>
-<a class="sourceLine" id="cb4-80" data-line-number="80"></a>
-<a class="sourceLine" id="cb4-81" data-line-number="81"></a>
-<a class="sourceLine" id="cb4-82" data-line-number="82"><span class="kw">plotVariableImportance</span>(helper[[<span class="st">&quot;smoothedLine&quot;</span>]],</a>
-<a class="sourceLine" id="cb4-83" data-line-number="83">                       helper[[<span class="st">&quot;genes&quot;</span>]],</a>
-<a class="sourceLine" id="cb4-84" data-line-number="84">                       helper[[<span class="st">&quot;maximalChangeIndex&quot;</span>]])</a></code></pre></div>
+<a class="sourceLine" id="cb4-47" data-line-number="47"><span class="co">## get number of features</span></a>
+<a class="sourceLine" id="cb4-48" data-line-number="48">getNumberofFeatures &lt;-<span class="st"> </span><span class="cf">function</span>() {</a>
+<a class="sourceLine" id="cb4-49" data-line-number="49">  selectedGenes &lt;-<span class="st"> </span><span class="kw">SelectFeaturesWithRandomForest</span>(<span class="kw">c</span>(<span class="dv">1</span><span class="op">:</span><span class="kw">nrow</span>(exprTableTransposed)),</a>
+<a class="sourceLine" id="cb4-50" data-line-number="50">                                                    <span class="kw">ncol</span>(exprTableTransposed))</a>
+<a class="sourceLine" id="cb4-51" data-line-number="51">  <span class="co">## helper for smoothing the plot</span></a>
+<a class="sourceLine" id="cb4-52" data-line-number="52">  lo &lt;-<span class="st"> </span><span class="kw">loess</span>(selectedGenes[<span class="dv">1</span><span class="op">:</span>preFiltered] <span class="op">~</span><span class="st"> </span><span class="kw">c</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">200</span>))</a>
+<a class="sourceLine" id="cb4-53" data-line-number="53">  smoothed =<span class="st"> </span><span class="kw">predict</span>(lo)  <span class="co"># actal smoothing</span></a>
+<a class="sourceLine" id="cb4-54" data-line-number="54">  secondDer &lt;-<span class="st"> </span><span class="kw">diff</span>(<span class="kw">diff</span>(smoothed))</a>
+<a class="sourceLine" id="cb4-55" data-line-number="55">  maximalChangePoint &lt;-<span class="st"> </span><span class="kw">max</span>(secondDer)</a>
+<a class="sourceLine" id="cb4-56" data-line-number="56">  maximalChangeIndex &lt;-<span class="st"> </span><span class="kw">match</span>(maximalChangePoint, secondDer)</a>
+<a class="sourceLine" id="cb4-57" data-line-number="57">  numberFeatures &lt;-<span class="st"> </span>maximalChangeIndex</a>
+<a class="sourceLine" id="cb4-58" data-line-number="58">  <span class="kw">return</span>(<span class="kw">list</span>(<span class="dt">numberFeatures =</span> numberFeatures,</a>
+<a class="sourceLine" id="cb4-59" data-line-number="59">           <span class="dt">smoothedLine =</span> smoothed,</a>
+<a class="sourceLine" id="cb4-60" data-line-number="60">           <span class="dt">genes =</span> selectedGenes,</a>
+<a class="sourceLine" id="cb4-61" data-line-number="61">           <span class="dt">maximalChangeIndex =</span> maximalChangeIndex</a>
+<a class="sourceLine" id="cb4-62" data-line-number="62">           ))</a>
+<a class="sourceLine" id="cb4-63" data-line-number="63">}</a>
+<a class="sourceLine" id="cb4-64" data-line-number="64"></a>
+<a class="sourceLine" id="cb4-65" data-line-number="65"><span class="co">## get the number of genes that I will select later on</span></a>
+<a class="sourceLine" id="cb4-66" data-line-number="66">helper &lt;-<span class="st"> </span><span class="kw">getNumberofFeatures</span>()</a>
+<a class="sourceLine" id="cb4-67" data-line-number="67">numberFeatures &lt;-<span class="st"> </span>helper[[<span class="st">&quot;numberFeatures&quot;</span>]]</a>
+<a class="sourceLine" id="cb4-68" data-line-number="68"></a>
+<a class="sourceLine" id="cb4-69" data-line-number="69"></a>
+<a class="sourceLine" id="cb4-70" data-line-number="70"></a>
+<a class="sourceLine" id="cb4-71" data-line-number="71"><span class="co">## Function for ploting the variable importance</span></a>
+<a class="sourceLine" id="cb4-72" data-line-number="72">plotVariableImportance &lt;-<span class="st"> </span><span class="cf">function</span>(smoothed,</a>
+<a class="sourceLine" id="cb4-73" data-line-number="73">                                   selectedGenes,</a>
+<a class="sourceLine" id="cb4-74" data-line-number="74">                                   maximalChangeIndex) {</a>
+<a class="sourceLine" id="cb4-75" data-line-number="75">  plotData &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="st">`</span><span class="dt">Variable Importance</span><span class="st">`</span> =<span class="st"> </span>selectedGenes[<span class="dv">1</span><span class="op">:</span>preFiltered],</a>
+<a class="sourceLine" id="cb4-76" data-line-number="76">                         <span class="dt">Index =</span> <span class="kw">c</span>(<span class="dv">1</span><span class="op">:</span>preFiltered),</a>
+<a class="sourceLine" id="cb4-77" data-line-number="77">                         <span class="dt">Smoothed =</span> smoothed,</a>
+<a class="sourceLine" id="cb4-78" data-line-number="78">                         <span class="dt">check.names =</span> <span class="ot">FALSE</span>)</a>
+<a class="sourceLine" id="cb4-79" data-line-number="79">  colors &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;Sepal Width&quot;</span> =<span class="st"> &quot;blue&quot;</span>, <span class="st">&quot;Petal Length&quot;</span> =<span class="st"> &quot;red&quot;</span>,</a>
+<a class="sourceLine" id="cb4-80" data-line-number="80">              <span class="st">&quot;Petal Width&quot;</span> =<span class="st"> &quot;orange&quot;</span>)</a>
+<a class="sourceLine" id="cb4-81" data-line-number="81">  <span class="kw">ggplot</span>(plotData,</a>
+<a class="sourceLine" id="cb4-82" data-line-number="82">         <span class="kw">aes</span>(<span class="dt">x =</span> Index)) <span class="op">+</span></a>
+<a class="sourceLine" id="cb4-83" data-line-number="83"><span class="st">  </span><span class="kw">geom_point</span>(<span class="kw">aes</span>(<span class="dt">y =</span> <span class="st">`</span><span class="dt">Variable Importance</span><span class="st">`</span>, <span class="dt">color =</span> <span class="st">&quot;Empiric&quot;</span>)) <span class="op">+</span></a>
+<a class="sourceLine" id="cb4-84" data-line-number="84"><span class="st">  </span><span class="kw">geom_line</span>(<span class="kw">aes</span>(<span class="dt">y =</span> smoothed, <span class="dt">color =</span> <span class="st">&quot;smoothed&quot;</span>))  <span class="op">+</span></a>
+<a class="sourceLine" id="cb4-85" data-line-number="85"><span class="st">  </span><span class="kw">geom_vline</span>(<span class="kw">aes</span>(<span class="dt">xintercept =</span> maximalChangeIndex, <span class="dt">color=</span> <span class="st">&quot;Turning Point&quot;</span>),</a>
+<a class="sourceLine" id="cb4-86" data-line-number="86">             <span class="dt">size =</span> <span class="fl">1.5</span>)</a>
+<a class="sourceLine" id="cb4-87" data-line-number="87">}</a>
+<a class="sourceLine" id="cb4-88" data-line-number="88"></a>
+<a class="sourceLine" id="cb4-89" data-line-number="89"><span class="co">## execute the plotting function</span></a>
+<a class="sourceLine" id="cb4-90" data-line-number="90"><span class="kw">plotVariableImportance</span>(helper[[<span class="st">&quot;smoothedLine&quot;</span>]],</a>
+<a class="sourceLine" id="cb4-91" data-line-number="91">                       helper[[<span class="st">&quot;genes&quot;</span>]],</a>
+<a class="sourceLine" id="cb4-92" data-line-number="92">                       helper[[<span class="st">&quot;maximalChangeIndex&quot;</span>]])</a></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="figures/02_combinatorix_prepareSelect-1.png" alt="Figure 2: Plot of the development of the Random Forest variable importance of the 200 most important genes. The red dots show the actual value of the variable importance, the green line smoothes these values and the blue vertical line indicated the point where the smoothed line changes the most." width="672" />
+<img src="figures/02_combinatorix_prepareSelect-1.png" alt="Figure 2: Plot of the development of the Random Forest variable importance of the 200 most important genes. For practical reasons concerning the smoothing, I limited the number of genes to 200. The red dots show the actual value of the variable importance, the green line smoothes these values and the blue vertical line indicated the point where the smoothed line changes the most." width="672" />
 <p class="caption">
-Figure 2: Plot of the development of the Random Forest variable importance of the 200 most important genes. The red dots show the actual value of the variable importance, the green line smoothes these values and the blue vertical line indicated the point where the smoothed line changes the most.
+Figure 2: Plot of the development of the Random Forest variable importance of the 200 most important genes. For practical reasons concerning the smoothing, I limited the number of genes to 200. The red dots show the actual value of the variable importance, the green line smoothes these values and the blue vertical line indicated the point where the smoothed line changes the most.
 </p>
 </div>
 <p>Accordingly to the plot, I chose to use 50 genes, when performing the feature selection. For the comparison of the classifiers, I used two sets of selected genes: One set where I selected 50 genes and one set where I included all genes. Of course, there are many other ways to determine how many features should be included. The advantage of my approach is that it is reusable and that it quantifies the loss of importance of the features. The drawbacks are that it does not account for the total number of features in the data set and the selected number can be unfavorable in extreme cases of the distribution of the variable importance i.e. it selects only one or all genes. However, it was not the focus of this report to find a method that optimally selects the number of features. Thus, I wanted just an automated, out of the box way to do this.</p>
@@ -635,9 +653,10 @@ Figure 2: Plot of the development of the Random Forest variable importance of th
 <a class="sourceLine" id="cb5-34" data-line-number="34">  <span class="kw">return</span>(res)</a>
 <a class="sourceLine" id="cb5-35" data-line-number="35">}</a>
 <a class="sourceLine" id="cb5-36" data-line-number="36"></a>
-<a class="sourceLine" id="cb5-37" data-line-number="37">loocvSelections &lt;-<span class="st"> </span><span class="kw">SelectRandomForestLOOCV</span>(numberFeatures)</a>
-<a class="sourceLine" id="cb5-38" data-line-number="38"><span class="kw">write.csv</span>(loocvSelections, <span class="st">&#39;loocvSelections.csv&#39;</span>)</a></code></pre></div>
-<p>For the actual comparison of the Random Forest Classifiers I used the following numbers of trees: 200, 500 and 1000. Table 3 shows an overview of the MER, Accuracy and the 95% confidence interval.</p>
+<a class="sourceLine" id="cb5-37" data-line-number="37"><span class="co">## perform actual feature selection and save selctions</span></a>
+<a class="sourceLine" id="cb5-38" data-line-number="38">loocvSelections &lt;-<span class="st"> </span><span class="kw">SelectRandomForestLOOCV</span>(numberFeatures)</a>
+<a class="sourceLine" id="cb5-39" data-line-number="39"><span class="kw">write.csv</span>(loocvSelections, <span class="st">&#39;loocvSelections.csv&#39;</span>)</a></code></pre></div>
+<p>For the actual comparison of the Random Forest Classifiers, I used the following numbers of trees: 200, 500 and 1000. Table 3 shows an overview of the MER, Accuracy and 95% confidence interval.</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" data-line-number="1">getResultOverview &lt;-<span class="st"> </span><span class="cf">function</span> (results) {</a>
 <a class="sourceLine" id="cb6-2" data-line-number="2">  evaluationResults &lt;-<span class="st"> </span><span class="kw">foreach</span>(<span class="dt">i =</span> <span class="kw">c</span>(<span class="dv">1</span><span class="op">:</span><span class="kw">length</span>(results)), <span class="dt">.combine =</span> <span class="st">&#39;rbind&#39;</span>) <span class="op">%do%</span><span class="st"> </span>{</a>
 <a class="sourceLine" id="cb6-3" data-line-number="3">    res &lt;-<span class="st"> </span>results[[i]]</a>
@@ -748,36 +767,111 @@ Figure 2: Plot of the development of the Random Forest variable importance of th
 <a class="sourceLine" id="cb7-27" data-line-number="27"></a>
 <a class="sourceLine" id="cb7-28" data-line-number="28"></a>
 <a class="sourceLine" id="cb7-29" data-line-number="29"></a>
-<a class="sourceLine" id="cb7-30" data-line-number="30"></a>
-<a class="sourceLine" id="cb7-31" data-line-number="31"></a>
-<a class="sourceLine" id="cb7-32" data-line-number="32"><span class="co">## Function that classifies patients with SVM</span></a>
-<a class="sourceLine" id="cb7-33" data-line-number="33">SvmClassifier &lt;-<span class="st"> </span><span class="cf">function</span>(myKernel,</a>
-<a class="sourceLine" id="cb7-34" data-line-number="34">                          testIndex,</a>
-<a class="sourceLine" id="cb7-35" data-line-number="35">                          trainIndex,</a>
-<a class="sourceLine" id="cb7-36" data-line-number="36">                          selectedCovariates,</a>
-<a class="sourceLine" id="cb7-37" data-line-number="37">                          <span class="dt">verbose =</span> <span class="ot">TRUE</span>) {</a>
-<a class="sourceLine" id="cb7-38" data-line-number="38">  <span class="cf">if</span>(verbose) <span class="kw">message</span>(<span class="st">&quot;Starting fitting a SVM Mode&quot;</span>)</a>
-<a class="sourceLine" id="cb7-39" data-line-number="39">  svm.fit &lt;-<span class="st"> </span><span class="kw">svm</span>(<span class="dt">y =</span> phenoTable[trainIndex, classVariable],</a>
-<a class="sourceLine" id="cb7-40" data-line-number="40">                 <span class="dt">x =</span> exprTableTransposed[trainIndex, selectedCovariates],</a>
-<a class="sourceLine" id="cb7-41" data-line-number="41">                 <span class="dt">kernel =</span> myKernel,</a>
-<a class="sourceLine" id="cb7-42" data-line-number="42">                 <span class="dt">gamma =</span> <span class="fl">0.1</span>,</a>
-<a class="sourceLine" id="cb7-43" data-line-number="43">                 <span class="dt">cost =</span> <span class="dv">10</span>,</a>
-<a class="sourceLine" id="cb7-44" data-line-number="44">                 <span class="dt">type =</span> <span class="st">&quot;C-classification&quot;</span>)</a>
-<a class="sourceLine" id="cb7-45" data-line-number="45">  <span class="co"># neccessary in case the test index has length one (loocv)</span></a>
-<a class="sourceLine" id="cb7-46" data-line-number="46">  testData &lt;-<span class="st"> </span><span class="kw">t</span>(<span class="kw">as.data.frame</span>(exprTableTransposed[testIndex,</a>
-<a class="sourceLine" id="cb7-47" data-line-number="47">                                                  selectedCovariates]))</a>
-<a class="sourceLine" id="cb7-48" data-line-number="48">  <span class="cf">if</span>(<span class="kw">length</span>(testIndex) <span class="op">!=</span><span class="dv">1</span>) {</a>
-<a class="sourceLine" id="cb7-49" data-line-number="49">    testData &lt;-<span class="st"> </span>exprTableTransposed[testIndex, selectedCovariates]</a>
-<a class="sourceLine" id="cb7-50" data-line-number="50">  }</a>
-<a class="sourceLine" id="cb7-51" data-line-number="51">  predicted &lt;-<span class="st"> </span><span class="kw">predict</span>(svm.fit, <span class="dt">newdata =</span> testData)</a>
-<a class="sourceLine" id="cb7-52" data-line-number="52">  <span class="kw">return</span>(predicted)</a>
-<a class="sourceLine" id="cb7-53" data-line-number="53">}</a>
+<a class="sourceLine" id="cb7-30" data-line-number="30"><span class="co">## Function that classifies patients with SVM</span></a>
+<a class="sourceLine" id="cb7-31" data-line-number="31">SvmClassifier &lt;-<span class="st"> </span><span class="cf">function</span>(myKernel,</a>
+<a class="sourceLine" id="cb7-32" data-line-number="32">                          testIndex,</a>
+<a class="sourceLine" id="cb7-33" data-line-number="33">                          trainIndex,</a>
+<a class="sourceLine" id="cb7-34" data-line-number="34">                          selectedCovariates,</a>
+<a class="sourceLine" id="cb7-35" data-line-number="35">                          <span class="dt">verbose =</span> <span class="ot">TRUE</span>) {</a>
+<a class="sourceLine" id="cb7-36" data-line-number="36">  <span class="cf">if</span>(verbose) <span class="kw">message</span>(<span class="st">&quot;Starting fitting a SVM Mode&quot;</span>)</a>
+<a class="sourceLine" id="cb7-37" data-line-number="37">  svm.fit &lt;-<span class="st"> </span><span class="kw">svm</span>(<span class="dt">y =</span> phenoTable[trainIndex, classVariable],</a>
+<a class="sourceLine" id="cb7-38" data-line-number="38">                 <span class="dt">x =</span> exprTableTransposed[trainIndex, selectedCovariates],</a>
+<a class="sourceLine" id="cb7-39" data-line-number="39">                 <span class="dt">kernel =</span> myKernel,</a>
+<a class="sourceLine" id="cb7-40" data-line-number="40">                 <span class="dt">gamma =</span> <span class="fl">0.1</span>,</a>
+<a class="sourceLine" id="cb7-41" data-line-number="41">                 <span class="dt">cost =</span> <span class="dv">10</span>,</a>
+<a class="sourceLine" id="cb7-42" data-line-number="42">                 <span class="dt">type =</span> <span class="st">&quot;C-classification&quot;</span>)</a>
+<a class="sourceLine" id="cb7-43" data-line-number="43">  <span class="co"># neccessary in case the test index has length one (loocv)</span></a>
+<a class="sourceLine" id="cb7-44" data-line-number="44">  testData &lt;-<span class="st"> </span><span class="kw">t</span>(<span class="kw">as.data.frame</span>(exprTableTransposed[testIndex,</a>
+<a class="sourceLine" id="cb7-45" data-line-number="45">                                                  selectedCovariates]))</a>
+<a class="sourceLine" id="cb7-46" data-line-number="46">  <span class="cf">if</span>(<span class="kw">length</span>(testIndex) <span class="op">!=</span><span class="dv">1</span>) {</a>
+<a class="sourceLine" id="cb7-47" data-line-number="47">    testData &lt;-<span class="st"> </span>exprTableTransposed[testIndex, selectedCovariates]</a>
+<a class="sourceLine" id="cb7-48" data-line-number="48">  }</a>
+<a class="sourceLine" id="cb7-49" data-line-number="49">  predicted &lt;-<span class="st"> </span><span class="kw">predict</span>(svm.fit, <span class="dt">newdata =</span> testData)</a>
+<a class="sourceLine" id="cb7-50" data-line-number="50">  <span class="kw">return</span>(predicted)</a>
+<a class="sourceLine" id="cb7-51" data-line-number="51">}</a>
+<a class="sourceLine" id="cb7-52" data-line-number="52"></a>
+<a class="sourceLine" id="cb7-53" data-line-number="53"></a>
 <a class="sourceLine" id="cb7-54" data-line-number="54"></a>
-<a class="sourceLine" id="cb7-55" data-line-number="55"></a>
-<a class="sourceLine" id="cb7-56" data-line-number="56"></a>
-<a class="sourceLine" id="cb7-57" data-line-number="57"><span class="co">#### Function for LOOCV ####</span></a></code></pre></div>
-<p>The accuracy when using all genes is with 94% very high. The 95% confidence interval is also reasonably small, which gives security about the result The number of trees seems to have no influence on the prediction accuracy when using all genes. Only when training the Classifier with a subset of selected genes the number of trees seems to influence the prediction accuracy. Increasing the number of trees from 200 to 500, lead to an improvement of the accuracy of 10.6 percentage points. A further increase in the number of trees did not improve the prediction accuracy. The feature selection did not have an impact on the prediction when the Random Forest Classifier was trained with more than 200 trees and it decreased the accuracy when trained with 200 trees.</p>
-<p>It is a bit unexpected that the number of trees did not have a meaningful influence on prediction accuracy. The used numbers of trees were all rather a and thud could be already considered as nearly optimal. The reason why I used many trees, is that the data set does contain over 20,000 genes. So using fewer trees could have lead to more differences in the prediction accuracies. The fact that feature selection did not have a meaningful impact on the Classifier is not unexpected. Firstly, Random Forests can deal with a large number of covariates <span class="citation">(Breiman 2001)</span>. This is due to the fact that it uses only a subset of covariates at each split. Secondly, I have already used a Random Forest to select covariates. I will go into more detail about the practical meaning of MER and accuracy at the end of the section when comparing the two best Classifiers of this report.</p>
+<a class="sourceLine" id="cb7-55" data-line-number="55"><span class="co">#### Function for LOOCV ####</span></a>
+<a class="sourceLine" id="cb7-56" data-line-number="56">LOOCV &lt;-<span class="st"> </span><span class="cf">function</span>(FUN,</a>
+<a class="sourceLine" id="cb7-57" data-line-number="57">                  parameter,</a>
+<a class="sourceLine" id="cb7-58" data-line-number="58">                  selection,</a>
+<a class="sourceLine" id="cb7-59" data-line-number="59">                  <span class="dt">verbose =</span> <span class="ot">FALSE</span>) {</a>
+<a class="sourceLine" id="cb7-60" data-line-number="60">  res &lt;-<span class="st"> </span><span class="kw">foreach</span>(<span class="dt">i =</span> <span class="dv">1</span><span class="op">:</span><span class="kw">nrow</span>(exprTableTransposed)) <span class="op">%dopar%</span><span class="st"> </span>{</a>
+<a class="sourceLine" id="cb7-61" data-line-number="61">    curVariables &lt;-<span class="st"> </span><span class="kw">names</span>(selection[</a>
+<a class="sourceLine" id="cb7-62" data-line-number="62">      <span class="kw">rownames</span>(exprTableTransposed)[i]][[<span class="dv">1</span>]])</a>
+<a class="sourceLine" id="cb7-63" data-line-number="63">    trainIndex &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dv">1</span><span class="op">:</span><span class="kw">nrow</span>(exprTableTransposed))[<span class="op">-</span>i]</a>
+<a class="sourceLine" id="cb7-64" data-line-number="64">    <span class="cf">if</span>(verbose) <span class="kw">message</span>(<span class="st">&quot;Fitting Loocv&quot;</span>)</a>
+<a class="sourceLine" id="cb7-65" data-line-number="65">    res &lt;-<span class="st"> </span><span class="kw">FUN</span>(parameter,</a>
+<a class="sourceLine" id="cb7-66" data-line-number="66">               i, <span class="op">-</span>i,</a>
+<a class="sourceLine" id="cb7-67" data-line-number="67">               curVariables,</a>
+<a class="sourceLine" id="cb7-68" data-line-number="68">               verbose)</a>
+<a class="sourceLine" id="cb7-69" data-line-number="69">    res &lt;-<span class="st"> </span><span class="kw">droplevels</span>(res)</a>
+<a class="sourceLine" id="cb7-70" data-line-number="70">    <span class="kw">names</span>(res) &lt;-<span class="st"> </span><span class="ot">NULL</span></a>
+<a class="sourceLine" id="cb7-71" data-line-number="71">    <span class="kw">return</span>(res)</a>
+<a class="sourceLine" id="cb7-72" data-line-number="72">  }</a>
+<a class="sourceLine" id="cb7-73" data-line-number="73">  <span class="cf">if</span>(verbose) <span class="kw">message</span>(<span class="st">&#39;returning&#39;</span>)</a>
+<a class="sourceLine" id="cb7-74" data-line-number="74">  <span class="kw">names</span>(res) &lt;-<span class="st"> </span><span class="kw">rownames</span>(exprTableTransposed)</a>
+<a class="sourceLine" id="cb7-75" data-line-number="75">  <span class="kw">return</span>(<span class="kw">unlist</span>(res))</a>
+<a class="sourceLine" id="cb7-76" data-line-number="76">}</a>
+<a class="sourceLine" id="cb7-77" data-line-number="77"></a>
+<a class="sourceLine" id="cb7-78" data-line-number="78"></a>
+<a class="sourceLine" id="cb7-79" data-line-number="79"><span class="co">## helper for perfoming the classification with two different sets of selcted genes</span></a>
+<a class="sourceLine" id="cb7-80" data-line-number="80">allGenesSelected &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="kw">list</span>(selectedGenes), <span class="kw">nrow</span>(exprTableTransposed))</a>
+<a class="sourceLine" id="cb7-81" data-line-number="81"><span class="kw">names</span>(allGenesSelected) &lt;-<span class="st"> </span><span class="kw">rownames</span>(exprTableTransposed)</a>
+<a class="sourceLine" id="cb7-82" data-line-number="82">selections &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt">allGenes =</span> allGenesSelected,</a>
+<a class="sourceLine" id="cb7-83" data-line-number="83">                   <span class="dt">rfSelection =</span> loocvSelections)</a>
+<a class="sourceLine" id="cb7-84" data-line-number="84"></a>
+<a class="sourceLine" id="cb7-85" data-line-number="85"></a>
+<a class="sourceLine" id="cb7-86" data-line-number="86"><span class="co">## this loop saves all prediction results in a list</span></a>
+<a class="sourceLine" id="cb7-87" data-line-number="87"><span class="co">## might be a over engineered for our case, but as soon as one want to compare</span></a>
+<a class="sourceLine" id="cb7-88" data-line-number="88"><span class="co">## more parameters and methods and feature selection this becomes very useful</span></a>
+<a class="sourceLine" id="cb7-89" data-line-number="89">resultVector &lt;-<span class="st"> </span><span class="kw">foreach</span>(<span class="dt">selection =</span> <span class="kw">names</span>(selections), <span class="dt">.combine =</span> <span class="st">&quot;c&quot;</span>) <span class="op">%do%</span><span class="st"> </span>{</a>
+<a class="sourceLine" id="cb7-90" data-line-number="90">  </a>
+<a class="sourceLine" id="cb7-91" data-line-number="91">    tunedMtry &lt;-<span class="st"> </span><span class="kw">sqrt</span>(numberFeatures)</a>
+<a class="sourceLine" id="cb7-92" data-line-number="92">  </a>
+<a class="sourceLine" id="cb7-93" data-line-number="93">  <span class="kw">message</span>(tunedMtry)</a>
+<a class="sourceLine" id="cb7-94" data-line-number="94">  selData &lt;-<span class="st"> </span>selections[[selection]]</a>
+<a class="sourceLine" id="cb7-95" data-line-number="95">  <span class="co">## combines all the results with the random forest</span></a>
+<a class="sourceLine" id="cb7-96" data-line-number="96">  rf.comb &lt;-<span class="st"> </span><span class="kw">foreach</span>(<span class="dt">numTree =</span> numberOfTrees, <span class="dt">.combine =</span> <span class="st">&quot;c&quot;</span>) <span class="op">%do%</span><span class="st"> </span>{</a>
+<a class="sourceLine" id="cb7-97" data-line-number="97">    rf.loocv &lt;-<span class="st"> </span><span class="kw">LOOCV</span>(RandomForestClassifier, numTree, selData)</a>
+<a class="sourceLine" id="cb7-98" data-line-number="98">    helperLoocvFile &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span class="st">&quot;rf_loocv_Selection_&quot;</span>, selection,</a>
+<a class="sourceLine" id="cb7-99" data-line-number="99">                              <span class="st">&quot;_numTrees_&quot;</span>, numTree, <span class="st">&quot;.csv&quot;</span>)</a>
+<a class="sourceLine" id="cb7-100" data-line-number="100">    curLoocvFile &lt;-<span class="st"> </span><span class="kw">file.path</span>(resultDir, helperLoocvFile)</a>
+<a class="sourceLine" id="cb7-101" data-line-number="101">    <span class="kw">write.csv</span>(rf.loocv, curLoocvFile)</a>
+<a class="sourceLine" id="cb7-102" data-line-number="102">    res &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt">numTree =</span> rf.loocv)</a>
+<a class="sourceLine" id="cb7-103" data-line-number="103">    <span class="kw">names</span>(res) &lt;-<span class="st"> </span><span class="kw">paste0</span>(numTree)</a>
+<a class="sourceLine" id="cb7-104" data-line-number="104">    <span class="kw">return</span>(res)</a>
+<a class="sourceLine" id="cb7-105" data-line-number="105">  }</a>
+<a class="sourceLine" id="cb7-106" data-line-number="106">  <span class="co">## combines all results of the svm</span></a>
+<a class="sourceLine" id="cb7-107" data-line-number="107">  svm.comb &lt;-<span class="st"> </span><span class="kw">foreach</span> (<span class="dt">kern =</span> kernels, <span class="dt">.combine =</span> <span class="st">&quot;c&quot;</span>) <span class="op">%do%</span><span class="st"> </span>{</a>
+<a class="sourceLine" id="cb7-108" data-line-number="108">    svm.loocv &lt;-<span class="st"> </span><span class="kw">LOOCV</span>(SvmClassifier, kern, selData)</a>
+<a class="sourceLine" id="cb7-109" data-line-number="109">    helperLoocvFile &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span class="st">&quot;SVM_loocv_Selection_&quot;</span>,</a>
+<a class="sourceLine" id="cb7-110" data-line-number="110">                              selection, <span class="st">&quot;_kernel_&quot;</span>, kern, <span class="st">&quot;.csv&quot;</span>)</a>
+<a class="sourceLine" id="cb7-111" data-line-number="111">    curLoocvFile &lt;-<span class="st"> </span><span class="kw">file.path</span>(resultDir, helperLoocvFile)</a>
+<a class="sourceLine" id="cb7-112" data-line-number="112">    <span class="kw">write.csv</span>(svm.loocv, curLoocvFile)</a>
+<a class="sourceLine" id="cb7-113" data-line-number="113">    res &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt">kern =</span> svm.loocv)</a>
+<a class="sourceLine" id="cb7-114" data-line-number="114">    <span class="kw">names</span>(res) &lt;-<span class="st"> </span><span class="kw">paste0</span>(kern)</a>
+<a class="sourceLine" id="cb7-115" data-line-number="115">    <span class="kw">return</span>(res)</a>
+<a class="sourceLine" id="cb7-116" data-line-number="116">  }</a>
+<a class="sourceLine" id="cb7-117" data-line-number="117">  svm.name &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span class="st">&quot;svm &quot;</span>, selection)</a>
+<a class="sourceLine" id="cb7-118" data-line-number="118">  rf.name &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span class="st">&quot;rf &quot;</span>, selection)</a>
+<a class="sourceLine" id="cb7-119" data-line-number="119">  res &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dt">rfRes =</span> rf.comb, <span class="dt">svmRes =</span> svm.comb)</a>
+<a class="sourceLine" id="cb7-120" data-line-number="120">  <span class="kw">names</span>(res) &lt;-<span class="st"> </span><span class="kw">paste0</span>(selection, <span class="kw">names</span>(res))</a>
+<a class="sourceLine" id="cb7-121" data-line-number="121">  <span class="kw">return</span>(res)</a>
+<a class="sourceLine" id="cb7-122" data-line-number="122">}</a>
+<a class="sourceLine" id="cb7-123" data-line-number="123"></a>
+<a class="sourceLine" id="cb7-124" data-line-number="124"></a>
+<a class="sourceLine" id="cb7-125" data-line-number="125"><span class="co">## Reordering the results to have the same methods together</span></a>
+<a class="sourceLine" id="cb7-126" data-line-number="126">index &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">8</span>,<span class="dv">9</span>,<span class="dv">10</span>,<span class="dv">4</span>,<span class="dv">5</span>,<span class="dv">6</span>,<span class="dv">7</span>,<span class="dv">11</span>,<span class="dv">12</span>,<span class="dv">13</span>,<span class="dv">14</span>)</a>
+<a class="sourceLine" id="cb7-127" data-line-number="127">resultVector &lt;-<span class="st"> </span>resultVector[<span class="kw">order</span>(index)]</a>
+<a class="sourceLine" id="cb7-128" data-line-number="128"></a>
+<a class="sourceLine" id="cb7-129" data-line-number="129"><span class="kw">names</span>(resultVector) &lt;-<span class="st"> </span>parameters</a>
+<a class="sourceLine" id="cb7-130" data-line-number="130">response &lt;-<span class="st"> </span>phenoTable[, classVariable]</a>
+<a class="sourceLine" id="cb7-131" data-line-number="131">response &lt;-<span class="st"> </span><span class="kw">factor</span>(response, <span class="dt">levels =</span> <span class="kw">rev</span>(<span class="kw">levels</span>(response)))</a>
+<a class="sourceLine" id="cb7-132" data-line-number="132"><span class="kw">names</span>(response) &lt;-<span class="st"> </span><span class="kw">rownames</span>(phenoTable)</a></code></pre></div>
+<p>The accuracy when using all genes is with 94% very high. The 95% confidence interval is also reasonably narrow, which gives security about the result. An accuracy of 94% means that 94% of the samples were classified correctly. The number of trees seems to have no influence on the prediction accuracy when using all genes. Only when training the Classifier with a subset of selected genes the number of trees seems to influence the prediction accuracy. Increasing the number of trees from 200 to 500, lead to an improvement in the accuracy of 10.6 percentage points. A further increase in the number of trees did not improve the prediction accuracy. The feature selection did not have an impact on the prediction when the Random Forest Classifier was trained with more than 200 trees and it decreased the accuracy when trained with 200 trees.</p>
+<p>It is a bit unexpected that the number of trees did not have a meaningful influence on prediction accuracy. The used numbers of trees were all rather high and thus could be already considered as nearly optimal. The reason why I used many trees, is that the data set does contain over 20,000 genes. So using fewer trees could have lead to more differences in the prediction accuracies. The fact that feature selection did not have a meaningful impact on the Classifier is not unexpected. Firstly, Random Forests can deal with a large number of covariates <span class="citation">(Breiman 2001)</span>. This is due to the fact that it uses only a subset of covariates at each split. Secondly, I have already used a Random Forest to select covariates.</p>
 <p>In the following, I will report on the detailed results of the Random Forest Classifier with 1000 trees and all genes (which yields the exact same results as the other Random Forest Classifiers expect one). Additionally, I report on the results of the Random Forest Classifier when trained with 50 genes and 200 trees.</p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb8-1" data-line-number="1"><span class="co">#### Functions for displaying the results ####</span></a>
 <a class="sourceLine" id="cb8-2" data-line-number="2"><span class="co">## Functions for plotting a heatmap of a confusion table</span></a>
@@ -794,7 +888,7 @@ Figure 2: Plot of the development of the Random Forest variable importance of th
 <a class="sourceLine" id="cb8-13" data-line-number="13"><span class="st">             </span><span class="kw">geom_text</span>(<span class="kw">aes</span>(<span class="dt">label =</span> <span class="kw">paste</span>(<span class="st">&quot;&quot;</span>,Freq,<span class="st">&quot;,&quot;</span>,Perc,<span class="st">&quot;%&quot;</span>)),</a>
 <a class="sourceLine" id="cb8-14" data-line-number="14">             <span class="dt">color =</span> <span class="st">&#39;white&#39;</span>, <span class="dt">size =</span> <span class="dv">3</span>, <span class="dt">fontface =</span> <span class="st">&quot;bold&quot;</span>) <span class="op">+</span></a>
 <a class="sourceLine" id="cb8-15" data-line-number="15"><span class="st">             </span><span class="kw">theme_light</span>()</a>
-<a class="sourceLine" id="cb8-16" data-line-number="16"></a>
+<a class="sourceLine" id="cb8-16" data-line-number="16">  cm.stats &lt;-<span class="st"> </span>cm.stats[<span class="op">-</span><span class="kw">c</span>(<span class="dv">5</span>,<span class="dv">7</span>), ,drop =<span class="st"> </span>F]</a>
 <a class="sourceLine" id="cb8-17" data-line-number="17">  cm.statsTable &lt;-<span class="st">  </span><span class="kw">tableGrob</span>(cm.stats)</a>
 <a class="sourceLine" id="cb8-18" data-line-number="18"></a>
 <a class="sourceLine" id="cb8-19" data-line-number="19">  <span class="kw">grid.arrange</span>(cm.plot, cm.statsTable,<span class="dt">nrow =</span> <span class="dv">1</span>, <span class="dt">ncol =</span> <span class="dv">2</span>, <span class="dt">widths=</span><span class="kw">c</span>(<span class="fl">0.7</span>, <span class="fl">0.3</span>))</a>
@@ -817,8 +911,8 @@ Figure 2: Plot of the development of the Random Forest variable importance of th
 <strong>Figure 2</strong> shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the Random Forest Classifier when trained with 200 trees and 50 selected genes. T: T-ALL, Bt: TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid.
 </p>
 </div>
-<p>Figures 1 and 2 display a heatmap of the confusion table of the classification together with statistics about the accuracy on the table on the right. The confusion table maps the predicted class to the actual class. Consequently, the diagonal of the table is representing correct classifications. In each field of the table, one can see the absolute and relative frequency of the prediction of a certain subtype. Values outside of the diagonal represent a wrong prediction. In the case of Figure 1, the classifier predicted four patients to have the subtype TEL-AML1, whereas they had the type pre-B ALL in reality. Since we are dealing with a multi-classification problem, False Positives and False Negatives are the same for the overall model. However, I will discuss these statistics per class at the end of the section for two selected classifiers. The table on the right displays statistics of the accuracy. The accuracy is simply the percentage of correctly classified samples. Cohen’s Kappa is a different measure of accuracy that accounts for the fact that correct classifications could occur by chance.</p>
-<p>The second method of interest in this work was the SVM for classification. Again I start with an overview and discuss more detail later on. For the SVM I used four different kernel methods, namely radial, linear, polynomial and sigmoid. As done with the Random Forest Classifier I used one time all genes and one time 50 genes, selected via the Random Forest variable Importance, as described above. Table 4 shows an overview of the MER, accuracy and its 95% confidence interval of the SVM Classifier with different kernels.</p>
+<p>Figures 1 and 2 display a heatmap of the confusion table of the classification together with statistics about the accuracy on the table on the right. The confusion table maps the predicted class to the actual class. Consequently, the diagonal of the table is representing correct classifications. In each field of the table, one can see the absolute and relative frequency of the prediction of a certain subtype. Values outside of the diagonal represent a wrong prediction. In the case of Figure 1, the classifier predicted four patients to have the subtype TEL-AML1, whereas they had the type pre-B ALL in reality. Since we are dealing with a multi-classification problem, False Positives and False Negatives are the same for the overall model. However, I will discuss these statistics per class at the end of the section for two selected classifiers. The table on the right displays accuracy statistics. The accuracy is simply the percentage of correctly classified samples. Cohen’s Kappa is a different measure of accuracy that accounts for the fact that correct classifications could occur by chance.</p>
+<p>The second method of interest in this work was the SVM for classification. Again I start with an overview and discuss more details later on. For the SVM I used four different kernel methods, namely radial, linear, polynomial and sigmoid. As done with the Random Forest Classifier I used one time all genes and one time 50 genes, selected via the Random Forest variable Importance, as described above. Table 4 shows an overview of the MER, accuracy and its 95% confidence interval of the SVM Classifier with different kernels.</p>
 <div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" data-line-number="1">svmResultTable &lt;-<span class="st"> </span>resultTable[<span class="dv">7</span><span class="op">:</span><span class="dv">14</span>, ]</a>
 <a class="sourceLine" id="cb10-2" data-line-number="2"><span class="kw">kable</span>(svmResultTable, <span class="dt">caption =</span> <span class="st">&quot;Table 4: Overview of the SVM Classifier Performance with different Parameters&quot;</span>)</a></code></pre></div>
 <table>
@@ -886,25 +980,25 @@ Figure 2: Plot of the development of the Random Forest variable importance of th
 <p>Given the small differences in accuracy between most of the kernels, it is hard to argue, why one kernel might be one percentage point more accurate than another. However, I try to compare shortly the most accurate kernel (radial) with the least accurate kernel (sigmoid). Figure 3 shows the heatmap of the confusion table of the SVM Classifier with the radial kernel when trained with all genes. Figure 4 shows the same plot for the SVM Classifier with the sigmoid kernel when trained with 50 selected genes.</p>
 <div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb11-1" data-line-number="1"><span class="kw">plotResults</span>(resultVector[[<span class="dv">7</span>]], response, <span class="kw">names</span>(resultVector)[<span class="dv">7</span>])</a></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="figures/02_combinatorix_displaySVM-1.png" alt="**Figure 3*** shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the SVM Classifier, when trained with the radial Kernel and all. Notes: T: T-ALL, Bt:TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid." width="672" />
+<img src="figures/02_combinatorix_displaySVM-1.png" alt="**Figure 3** shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the SVM Classifier when trained with the radial Kernel and all. Notes: T: T-ALL, Bt:TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid." width="672" />
 <p class="caption">
-<strong>Figure 3</strong>* shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the SVM Classifier, when trained with the radial Kernel and all. Notes: T: T-ALL, Bt:TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid.
+<strong>Figure 3</strong> shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the SVM Classifier when trained with the radial Kernel and all. Notes: T: T-ALL, Bt:TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid.
 </p>
 </div>
 <div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb12-1" data-line-number="1"><span class="kw">plotResults</span>(resultVector[[<span class="dv">14</span>]], response, <span class="kw">names</span>(resultVector)[<span class="dv">14</span>])</a></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="figures/02_combinatorix_displaySVM2-1.png" alt="**Figure 4** shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the SVM Classifier, when trained with the sigmoid Kernel and all. Notes: T: T-ALL, Bt:TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid." width="672" />
+<img src="figures/02_combinatorix_displaySVM2-1.png" alt="**Figure 4** shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the SVM Classifier when trained with the sigmoid Kernel and all. Notes: T: T-ALL, Bt:TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid." width="672" />
 <p class="caption">
-<strong>Figure 4</strong> shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the SVM Classifier, when trained with the sigmoid Kernel and all. Notes: T: T-ALL, Bt:TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid.
+<strong>Figure 4</strong> shows a heatmap of the confusion table on the left and accuracy statistics on the right. This particular data comes from the SVM Classifier when trained with the sigmoid Kernel and all. Notes: T: T-ALL, Bt:TEL-AML1, Bo: pre-B ALL, Bh: hyperdiploid.
 </p>
 </div>
 <p>Figures 3 and 4 follow the same principle as Figures 1 and 2, thus I do not explain the general structure of the figures a second time. When trained with all genes and the radial kernels the Classifiers predicted all T-ALL types correctly. Four samples with an actual type of TEL-ALM1 were wrongly classified as pre-B ALL subtype. Two samples with the pre-B ALL subtype were falsely classified as hyperdiploid and four hyperdiploid subtypes were wrongly classified as pre-B ALL type. This is actually the exact same distribution as shown in Figure 1.</p>
 <p>The total numbers of misclassifications were higher for the SVM Classifier with the sigmoid kernels, but the origins of the mistakes were similar. The classifier made the fewest mistakes for the T-ALL subtypes. The exact numbers can be found in the plot. As stated previously the notions of false positive and false negatives only make sense when looking at the statistics per subtype. This is done in the following for the two best classifiers (best SVM and best Random Forest).</p>
 <p>Tables 5 shows the statistics per subtype for the SVM Classifier with all genes and the radial kernel and the Random Forest Classifier with 1000 trees and all genes. The statistics for both classifiers were equal so this table serves as a summary for both classifiers.</p>
 <div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb13-1" data-line-number="1">cm.svmBest &lt;-<span class="st"> </span><span class="kw">t</span>(<span class="kw">confusionMatrix</span>(response, resultVector[[<span class="dv">7</span>]])<span class="op">$</span>byClass)</a>
-<a class="sourceLine" id="cb13-2" data-line-number="2"><span class="kw">kable</span>(<span class="kw">round</span>(cm.svmBest,<span class="dv">4</span>), <span class="dt">caption =</span> <span class="st">&quot;Table 5: Classwise performance of the SVM Classifier when trained with the radial kernel and all genes&quot;</span>)</a></code></pre></div>
+<a class="sourceLine" id="cb13-2" data-line-number="2"><span class="kw">kable</span>(<span class="kw">round</span>(cm.svmBest,<span class="dv">4</span>), <span class="dt">caption =</span> <span class="st">&quot;Table 5: Classwise performance of the SVM Classifier when trained with the radial kernel and all genes (same for the Random Forest Classifier when trainied with 1000 trees and all genes&quot;</span>)</a></code></pre></div>
 <table>
-<caption>Table 5: Classwise performance of the SVM Classifier when trained with the radial kernel and all genes</caption>
+<caption>Table 5: Classwise performance of the SVM Classifier when trained with the radial kernel and all genes (same for the Random Forest Classifier when trainied with 1000 trees and all genes</caption>
 <thead>
 <tr class="header">
 <th></th>
@@ -919,21 +1013,21 @@ Figure 2: Plot of the development of the Random Forest variable importance of th
 <td>Sensitivity</td>
 <td align="right">1.0000</td>
 <td align="right">0.9149</td>
-<td align="right">0.9130</td>
-<td align="right">0.9474</td>
+<td align="right">0.9111</td>
+<td align="right">0.9231</td>
 </tr>
 <tr class="even">
 <td>Specificity</td>
 <td align="right">1.0000</td>
 <td align="right">1.0000</td>
-<td align="right">0.9835</td>
-<td align="right">0.9380</td>
+<td align="right">0.9754</td>
+<td align="right">0.9375</td>
 </tr>
 <tr class="odd">
 <td>Pos Pred Value</td>
 <td align="right">1.0000</td>
 <td align="right">1.0000</td>
-<td align="right">0.9545</td>
+<td align="right">0.9318</td>
 <td align="right">0.8182</td>
 </tr>
 <tr class="even">
@@ -941,41 +1035,41 @@ Figure 2: Plot of the development of the Random Forest variable importance of th
 <td align="right">1.0000</td>
 <td align="right">0.9677</td>
 <td align="right">0.9675</td>
-<td align="right">0.9837</td>
+<td align="right">0.9756</td>
 </tr>
 <tr class="odd">
 <td>Precision</td>
 <td align="right">1.0000</td>
 <td align="right">1.0000</td>
-<td align="right">0.9545</td>
+<td align="right">0.9318</td>
 <td align="right">0.8182</td>
 </tr>
 <tr class="even">
 <td>Recall</td>
 <td align="right">1.0000</td>
 <td align="right">0.9149</td>
-<td align="right">0.9130</td>
-<td align="right">0.9474</td>
+<td align="right">0.9111</td>
+<td align="right">0.9231</td>
 </tr>
 <tr class="odd">
 <td>F1</td>
 <td align="right">1.0000</td>
 <td align="right">0.9556</td>
-<td align="right">0.9333</td>
-<td align="right">0.8780</td>
+<td align="right">0.9213</td>
+<td align="right">0.8675</td>
 </tr>
 <tr class="even">
 <td>Prevalence</td>
 <td align="right">0.2156</td>
 <td align="right">0.2814</td>
-<td align="right">0.2754</td>
-<td align="right">0.2275</td>
+<td align="right">0.2695</td>
+<td align="right">0.2335</td>
 </tr>
 <tr class="odd">
 <td>Detection Rate</td>
 <td align="right">0.2156</td>
 <td align="right">0.2575</td>
-<td align="right">0.2515</td>
+<td align="right">0.2455</td>
 <td align="right">0.2156</td>
 </tr>
 <tr class="even">
@@ -989,115 +1083,22 @@ Figure 2: Plot of the development of the Random Forest variable importance of th
 <td>Balanced Accuracy</td>
 <td align="right">1.0000</td>
 <td align="right">0.9574</td>
-<td align="right">0.9483</td>
-<td align="right">0.9427</td>
+<td align="right">0.9433</td>
+<td align="right">0.9303</td>
 </tr>
 </tbody>
 </table>
 <div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb14-1" data-line-number="1"><span class="co">#grid.arrange(tableGrob(round(cm.svmBest,4)))</span></a>
 <a class="sourceLine" id="cb14-2" data-line-number="2">cm.rfBest &lt;-<span class="st"> </span><span class="kw">t</span>(<span class="kw">confusionMatrix</span>(response, resultVector[[<span class="dv">1</span>]])<span class="op">$</span>byClass)</a>
-<a class="sourceLine" id="cb14-3" data-line-number="3"><span class="kw">kable</span>(<span class="kw">round</span>(cm.rfBest, <span class="dv">4</span>), <span class="dt">caption =</span> <span class="st">&quot;Table 6: Classwise performance of the Random Forest Classifier when trainied with 1000 trees and all genes&quot;</span>)</a></code></pre></div>
-<table>
-<caption>Table 6: Classwise performance of the Random Forest Classifier when trainied with 1000 trees and all genes</caption>
-<thead>
-<tr class="header">
-<th></th>
-<th align="right">Class: T</th>
-<th align="right">Class: Bt</th>
-<th align="right">Class: Bh</th>
-<th align="right">Class: Bo</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>Sensitivity</td>
-<td align="right">1.0000</td>
-<td align="right">0.9149</td>
-<td align="right">0.9130</td>
-<td align="right">0.9474</td>
-</tr>
-<tr class="even">
-<td>Specificity</td>
-<td align="right">1.0000</td>
-<td align="right">1.0000</td>
-<td align="right">0.9835</td>
-<td align="right">0.9380</td>
-</tr>
-<tr class="odd">
-<td>Pos Pred Value</td>
-<td align="right">1.0000</td>
-<td align="right">1.0000</td>
-<td align="right">0.9545</td>
-<td align="right">0.8182</td>
-</tr>
-<tr class="even">
-<td>Neg Pred Value</td>
-<td align="right">1.0000</td>
-<td align="right">0.9677</td>
-<td align="right">0.9675</td>
-<td align="right">0.9837</td>
-</tr>
-<tr class="odd">
-<td>Precision</td>
-<td align="right">1.0000</td>
-<td align="right">1.0000</td>
-<td align="right">0.9545</td>
-<td align="right">0.8182</td>
-</tr>
-<tr class="even">
-<td>Recall</td>
-<td align="right">1.0000</td>
-<td align="right">0.9149</td>
-<td align="right">0.9130</td>
-<td align="right">0.9474</td>
-</tr>
-<tr class="odd">
-<td>F1</td>
-<td align="right">1.0000</td>
-<td align="right">0.9556</td>
-<td align="right">0.9333</td>
-<td align="right">0.8780</td>
-</tr>
-<tr class="even">
-<td>Prevalence</td>
-<td align="right">0.2156</td>
-<td align="right">0.2814</td>
-<td align="right">0.2754</td>
-<td align="right">0.2275</td>
-</tr>
-<tr class="odd">
-<td>Detection Rate</td>
-<td align="right">0.2156</td>
-<td align="right">0.2575</td>
-<td align="right">0.2515</td>
-<td align="right">0.2156</td>
-</tr>
-<tr class="even">
-<td>Detection Prevalence</td>
-<td align="right">0.2156</td>
-<td align="right">0.2575</td>
-<td align="right">0.2635</td>
-<td align="right">0.2635</td>
-</tr>
-<tr class="odd">
-<td>Balanced Accuracy</td>
-<td align="right">1.0000</td>
-<td align="right">0.9574</td>
-<td align="right">0.9483</td>
-<td align="right">0.9427</td>
-</tr>
-</tbody>
-</table>
-<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb15-1" data-line-number="1"><span class="co">#grid.arrange(tableGrob(round(cm.rfBest, 4)),</span></a>
-<a class="sourceLine" id="cb15-2" data-line-number="2"><span class="co">#             tableGrob(round(cm.svmBest,4)), textGrob(&quot;A&quot;), textGrob(&quot;B&quot;),</span></a>
-<a class="sourceLine" id="cb15-3" data-line-number="3"> <span class="co">#            nrow = 2, ncol = 2)</span></a></code></pre></div>
-<p>lower sensitivity means that there are less true positives, so out of the samples classified with this type, not all samples would actually have this subtype. The specificity is also lower for the SVM for the hyperdiploid subtype. This is also true for the positive predictive value.</p>
-<p>The specificity gives the true negative rate, so how many samples really do not belong do a subtype, when not classified as a subtype. So a low specificity will lead to unnecessary treatments and potential psychological distress for a patient, whereas low sensitivity classifiers will fail to identify a disease and thus a patient might not receive treatment.</p>
+<a class="sourceLine" id="cb14-3" data-line-number="3"><span class="co">#kable(round(cm.rfBest, 4), caption = &quot;Table 6: Classwise performance of the Random Forest Classifier when trainied with 1000 trees and all genes&quot;)</span></a>
+<a class="sourceLine" id="cb14-4" data-line-number="4"><span class="co">#grid.arrange(tableGrob(round(cm.rfBest, 4)),</span></a>
+<a class="sourceLine" id="cb14-5" data-line-number="5"><span class="co">#             tableGrob(round(cm.svmBest,4)), textGrob(&quot;A&quot;), textGrob(&quot;B&quot;),</span></a>
+<a class="sourceLine" id="cb14-6" data-line-number="6"> <span class="co">#            nrow = 2, ncol = 2)</span></a></code></pre></div>
 </div>
 <div id="conclusion" class="section level1">
 <h1>Conclusion</h1>
 <p>In summary, I did not find large differences in the prediction accuracy of the tested classifiers depending on the used parameters. Both the SVM and Random Forest Classifiers are robust against overfitting and thus did not benefit from feature selection. For the Random Forest, 500 trees could be a good number of trees to use and the radial kernels for the SVM classifier performed well in my analysis. Again, the differences in accuracy were not very high.</p>
-<p>The parameters could have a bigger impact depending on the dataset. Therefore, it could be interesting for future studies to compare the performance of a Classifier depending on its parameters in different datasets.</p>
+<p>The parameters could have a bigger impact depending on the data set. Therefore, it could be interesting for future studies to compare the performance of a Classifier depending on its parameters in different datasets.</p>
 </div>
 <div id="references" class="section level1 unnumbered">
 <h1>References</h1>

@@ -28,7 +28,11 @@ kernels <- c("radial", "linear", "polynomial", "sigmoid")
 ## I also save the minimum number allowed cases per class in an extra variable
 classVariable <- "sample.labels"
 minNumberofCasesPerClass <- 30
+## this is a helper variable for the feature selection 
+## I only allow the first 200 genes of the random forest variable importance
+## to be considerred for my final selection
 preFiltered <- 200
+## Expressive Naming for the result table later on
 parameters <- c("RF 200 Trees all Genes",
                 "RF 500 Trees all Genes",
                 "RF 1000 Trees all Genes",
@@ -75,27 +79,38 @@ exprTableTransposed <- t(exprTable)
 
 ## this prevents an error in the ranger function due to ilegal names
 colnames(exprTableTransposed) <- make.names(colnames(exprTableTransposed))
+
+
 ## @knitr preFilter
+#### Classs Filtering ####
+## beofre filtering I dsiplay the class frequency in a table
 classesbeforeFiltered <- as.data.frame(sort(table(phenoTable$Sample.title),
                                            decreasing = TRUE))
 colnames(classesbeforeFiltered) <- c("Class", "Freq")
 kable(classesbeforeFiltered, caption = "Table 1: Class Sizes before Filtering")
+
+
 ## @knitr filter
 ## first we filter the classes and include only classes with more than 30 patients
 # Function for class filtering
 FilterClass <- function(minimumNumberofCases){
-  releventClasses <- names(which(table(
-    phenoTable[, classVariable]) > minimumNumberofCases))
+  classTable <- table(phenoTable[, classVariable])
+  releventClasses <- names(which( classTable > minimumNumberofCases))
   helper <- phenoTable[, classVariable] %in% releventClasses
   return(helper)
 }
 
+## gets a logical vector of which samples to include
 relevantPatients <- FilterClass(minNumberofCasesPerClass)
 phenoTable <- phenoTable[relevantPatients, ]
 #remove unused factors
 phenoTable[,classVariable] <- factor(phenoTable[,classVariable])
 phenoTable$Sample.title <- factor(phenoTable$Sample.title)
+
+# filter also exprTable
 exprTableTransposed <- exprTableTransposed[relevantPatients, ]
+
+## for displaying in markdown
 classesAfterFiltered <- as.data.frame(sort(table(phenoTable$Sample.title),
                                            decreasing = TRUE))
 colnames(classesAfterFiltered) <- c("Class", "Freq")
@@ -104,6 +119,7 @@ kable(classesAfterFiltered, caption = "Table 2: Class Sizes after Filtering")
 
 
 ## @knitr prepareSelect
+#### Prepare Feature Selection ####
 ## Function that tunes the mytry parameter of RF
 
 tuneMtry <- function(relevantGenes) {
@@ -126,7 +142,9 @@ tuneMtry <- function(relevantGenes) {
 
 
 tunedMtryAllFeatures <- tuneMtry(colnames(exprTableTransposed))
+## this is done becuase the tunedMtry parameter is used globally and gets overwritten later by the default value
 tunedMtry <- tunedMtryAllFeatures
+
 ## Function that selects genes based on the random forest variable importance
 ## It takes a vector as index variable that indicates which patients should be used
 SelectFeaturesWithRandomForest <- function(trainIndex,
@@ -145,13 +163,15 @@ SelectFeaturesWithRandomForest <- function(trainIndex,
   selectedGenes <- sort(varImportance, na.last = TRUE, decreasing = TRUE)
   return(selectedGenes[1:numFeatures])
 }
+
+
 ## get number of features
 getNumberofFeatures <- function() {
   selectedGenes <- SelectFeaturesWithRandomForest(c(1:nrow(exprTableTransposed)),
                                                     ncol(exprTableTransposed))
-
+  ## helper for smoothing the plot
   lo <- loess(selectedGenes[1:preFiltered] ~ c(1:200))
-  smoothed = predict(lo)
+  smoothed = predict(lo)  # actal smoothing
   secondDer <- diff(diff(smoothed))
   maximalChangePoint <- max(secondDer)
   maximalChangeIndex <- match(maximalChangePoint, secondDer)
@@ -163,10 +183,13 @@ getNumberofFeatures <- function() {
            ))
 }
 
-
+## get the number of genes that I will select later on
 helper <- getNumberofFeatures()
 numberFeatures <- helper[["numberFeatures"]]
 
+
+
+## Function for ploting the variable importance
 plotVariableImportance <- function(smoothed,
                                    selectedGenes,
                                    maximalChangeIndex) {
@@ -184,7 +207,7 @@ plotVariableImportance <- function(smoothed,
              size = 1.5)
 }
 
-
+## execute the plotting function
 plotVariableImportance(helper[["smoothedLine"]],
                        helper[["genes"]],
                        helper[["maximalChangeIndex"]])
@@ -228,8 +251,11 @@ SelectRandomForestLOOCV <- function(numFeatures,
   return(res)
 }
 
+## perform actual feature selection and save selctions
 loocvSelections <- SelectRandomForestLOOCV(numberFeatures)
 write.csv(loocvSelections, 'loocvSelections.csv')
+
+
 
 ## @knitr execute
 #### Classifier Functions ####
@@ -261,8 +287,6 @@ RandomForestClassifier <- function(numberTrees,
 
 
 
-
-
 ## Function that classifies patients with SVM
 SvmClassifier <- function(myKernel,
                           testIndex,
@@ -289,7 +313,6 @@ SvmClassifier <- function(myKernel,
 
 
 #### Function for LOOCV ####
-## ----------------------------------------------------------------------------
 LOOCV <- function(FUN,
                   parameter,
                   selection,
@@ -313,18 +336,23 @@ LOOCV <- function(FUN,
 }
 
 
-
+## helper for perfoming the classification with two different sets of selcted genes
 allGenesSelected <- rep(list(selectedGenes), nrow(exprTableTransposed))
 names(allGenesSelected) <- rownames(exprTableTransposed)
 selections <- list(allGenes = allGenesSelected,
                    rfSelection = loocvSelections)
-tunedMtry = tunedMtryAllFeatures
+
+
+## this loop saves all prediction results in a list
+## might be a over engineered for our case, but as soon as one want to compare
+## more parameters and methods and feature selection this becomes very useful
 resultVector <- foreach(selection = names(selections), .combine = "c") %do% {
-  if(selection == "rfSelection"){
-    tunedMtry = tunedMtryFeatureSelection
-  }
+  
+    tunedMtry <- sqrt(numberFeatures)
+  
   message(tunedMtry)
   selData <- selections[[selection]]
+  ## combines all the results with the random forest
   rf.comb <- foreach(numTree = numberOfTrees, .combine = "c") %do% {
     rf.loocv <- LOOCV(RandomForestClassifier, numTree, selData)
     helperLoocvFile <- paste0("rf_loocv_Selection_", selection,
@@ -335,6 +363,7 @@ resultVector <- foreach(selection = names(selections), .combine = "c") %do% {
     names(res) <- paste0(numTree)
     return(res)
   }
+  ## combines all results of the svm
   svm.comb <- foreach (kern = kernels, .combine = "c") %do% {
     svm.loocv <- LOOCV(SvmClassifier, kern, selData)
     helperLoocvFile <- paste0("SVM_loocv_Selection_",
@@ -351,6 +380,8 @@ resultVector <- foreach(selection = names(selections), .combine = "c") %do% {
   names(res) <- paste0(selection, names(res))
   return(res)
 }
+
+
 ## Reordering the results to have the same methods together
 index <- c(1,2,3,8,9,10,4,5,6,7,11,12,13,14)
 resultVector <- resultVector[order(index)]
@@ -378,7 +409,7 @@ plotResults <- function(res, response, title) {
              geom_text(aes(label = paste("",Freq,",",Perc,"%")),
              color = 'white', size = 3, fontface = "bold") +
              theme_light()
-
+  cm.stats <- cm.stats[-c(5,7), ,drop = F]
   cm.statsTable <-  tableGrob(cm.stats)
 
   grid.arrange(cm.plot, cm.statsTable,nrow = 1, ncol = 2, widths=c(0.7, 0.3))
@@ -450,10 +481,10 @@ kable(svmResultTable, caption = "Table 4: Overview of the SVM Classifier Perform
 
 ## @knitr inDepth
 cm.svmBest <- t(confusionMatrix(response, resultVector[[7]])$byClass)
-kable(round(cm.svmBest,4), caption = "Table 5: Classwise performance of the SVM Classifier when trained with the radial kernel and all genes")
+kable(round(cm.svmBest,4), caption = "Table 5: Classwise performance of the SVM Classifier when trained with the radial kernel and all genes (same for the Random Forest Classifier when trainied with 1000 trees and all genes")
 #grid.arrange(tableGrob(round(cm.svmBest,4)))
 cm.rfBest <- t(confusionMatrix(response, resultVector[[1]])$byClass)
-kable(round(cm.rfBest, 4), caption = "Table 6: Classwise performance of the Random Forest Classifier when trainied with 1000 trees and all genes")
+#kable(round(cm.rfBest, 4), caption = "Table 6: Classwise performance of the Random Forest Classifier when trainied with 1000 trees and all genes")
 #grid.arrange(tableGrob(round(cm.rfBest, 4)),
 #             tableGrob(round(cm.svmBest,4)), textGrob("A"), textGrob("B"),
  #            nrow = 2, ncol = 2)

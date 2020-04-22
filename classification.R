@@ -9,6 +9,8 @@ library(e1071)
 library(pROC)
 library(grid)
 library(gridExtra)
+library(stats)
+
 
 
 ## done in class, loads all the input data
@@ -39,6 +41,9 @@ parameters <- c("RF 200 Trees all Genes",
                 "RF 200 Trees Feature Selection",
                 "RF 500 Trees Feature Selection",
                 "RF 1000 Trees Feature Selection",
+                "RF 200 Trees Variance Selection",
+                "RF 500 Trees Variance Selection",
+                "RF 1000 Trees Variance Selection",
                 "SVM Radial Kernel all Genes",
                 "SVM Linear Kernel all Genes",
                 "SVM Ploynomial Kernel all Genes",
@@ -46,7 +51,11 @@ parameters <- c("RF 200 Trees all Genes",
                 "SVM Radial Kernel Feature Selection",
                 "SVM Linear Kernel Feature Selection",
                 "SVM Ploynomial Kernel Feature Selection",
-                "SVM Sigmoid Kernel Feature Selection")
+                "SVM Sigmoid Kernel Feature Selection",
+                "SVM Radial Kernel Variance Selection",
+                "SVM Linear Kernel Variance Selection",
+                "SVM Ploynomial Kernel Variance Selection",
+                "SVM Sigmoid Kernel Variance Selection")
 
 
 ####  Define Local directories and files ####
@@ -165,12 +174,13 @@ SelectFeaturesWithRandomForest <- function(trainIndex,
 }
 
 
+
 ## get number of features
-getNumberofFeatures <- function() {
-  selectedGenes <- SelectFeaturesWithRandomForest(c(1:nrow(exprTableTransposed)),
-                                                    ncol(exprTableTransposed))
+getNumberofFeatures <- function(FUN, preFiltered) {
+  selectedGenes <- FUN(c(1:nrow(exprTableTransposed)),
+                       ncol(exprTableTransposed))
   ## helper for smoothing the plot
-  lo <- loess(selectedGenes[1:preFiltered] ~ c(1:200))
+  lo <- loess(selectedGenes[1:preFiltered] ~ c(1:preFiltered))
   smoothed = predict(lo)  # actal smoothing
   secondDer <- diff(diff(smoothed))
   maximalChangePoint <- max(secondDer)
@@ -183,16 +193,19 @@ getNumberofFeatures <- function() {
            ))
 }
 
+
+
 ## get the number of genes that I will select later on
-helper <- getNumberofFeatures()
-numberFeatures <- helper[["numberFeatures"]]
+helperRFSelection <- getNumberofFeatures(SelectFeaturesWithRandomForest, preFiltered)
+numberFeaturesRF <- helperRFSelection[["numberFeatures"]]
 
 
 
 ## Function for ploting the variable importance
 plotVariableImportance <- function(smoothed,
                                    selectedGenes,
-                                   maximalChangeIndex) {
+                                   maximalChangeIndex,
+                                   preFiltered) {
   plotData <- data.frame(`Variable Importance` = selectedGenes[1:preFiltered],
                          Index = c(1:preFiltered),
                          Smoothed = smoothed,
@@ -208,42 +221,42 @@ plotVariableImportance <- function(smoothed,
 }
 
 ## execute the plotting function
-plotVariableImportance(helper[["smoothedLine"]],
-                       helper[["genes"]],
-                       helper[["maximalChangeIndex"]])
+plotVariableImportance(helperRFSelection[["smoothedLine"]],
+                       helperRFSelection[["genes"]],
+                       helperRFSelection[["maximalChangeIndex"]],
+                       preFiltered = preFiltered)
 
 
+## @knitr plotVariance
+## Function for selecting genes based on Variance
+SelectGenesByVariance <- function(trainIndex,
+                                  numFeatures,
+                                  verbose = TRUE) {
+  if(verbose) message("Gettin genewise Variance")
+  genewiseVar <- apply(exprTableTransposed[trainIndex, ], 2, var)
+  sortedVar <- sort(genewiseVar, decreasing = TRUE, na.last = TRUE)
+  return(sortedVar[1:numFeatures])
+}
+
+helperVarSelection <- getNumberofFeatures(SelectGenesByVariance, 500) 
+numberFeaturesVar <- helperVarSelection[["numberFeatures"]]
+
+## execute the plotting function
+plotVariableImportance(helperVarSelection[["smoothedLine"]],
+                       helperVarSelection[["genes"]],
+                       helperVarSelection[["maximalChangeIndex"]],
+                       500)
 
 ## @knitr select
 #### Feature Selection ####
-## Function that selects genes based on the random forest variable importance
-## It takes a vector as index variable that indicates which patients should be used
-SelectFeaturesWithRandomForest <- function(trainIndex,
-                                           numFeatures,
-                                           verbose = TRUE) {
-  if(verbose) message("Fitting a Random Forest for feature selection")
-  fit <- ranger(y = phenoTable[trainIndex, classVariable],
-                x = exprTableTransposed[trainIndex,],
-                importance = "impurity",
-                mtry = tunedMtry,
-                num.threads = numberThreads,
-  )
-
-  if(verbose) message("Finished fitting, now extracting variable importance")
-  varImportance <- fit$variable.importance
-  selectedGenes <- sort(varImportance, na.last = TRUE, decreasing = TRUE)
-  return(selectedGenes[1:numFeatures])
-}
-
-
-
 ## Selection with leave one out cross validation
-SelectRandomForestLOOCV <- function(numFeatures,
-                                    verbose = FALSE) {
+SelectLOOCV <- function(FUN,
+                        numFeatures,
+                        verbose = FALSE) {
   res <- foreach(i = 1:nrow(exprTableTransposed)) %dopar% {
-    curVariables <- SelectFeaturesWithRandomForest(-i,
-                                                   numFeatures,
-                                                   verbose)
+    curVariables <- FUN(-i,
+                         numFeatures,
+                         verbose)
     return(curVariables)
 
   }
@@ -252,10 +265,10 @@ SelectRandomForestLOOCV <- function(numFeatures,
 }
 
 ## perform actual feature selection and save selctions
-loocvSelections <- SelectRandomForestLOOCV(numberFeatures)
-write.csv(loocvSelections, 'loocvSelections.csv')
+loocvSelectionsRF <- SelectLOOCV(SelectFeaturesWithRandomForest, numberFeaturesRF)
 
-
+## perfomr variance based selection
+loocvSelectionsVar <- SelectLOOCV(SelectGenesByVariance, numberFeaturesVar)
 
 ## @knitr execute
 #### Classifier Functions ####
@@ -340,7 +353,8 @@ LOOCV <- function(FUN,
 allGenesSelected <- rep(list(selectedGenes), nrow(exprTableTransposed))
 names(allGenesSelected) <- rownames(exprTableTransposed)
 selections <- list(allGenes = allGenesSelected,
-                   rfSelection = loocvSelections)
+                   rfSelection = loocvSelectionsRF,
+                   varSelection = loocvSelectionsVar)
 
 
 ## this loop saves all prediction results in a list
@@ -348,7 +362,7 @@ selections <- list(allGenes = allGenesSelected,
 ## more parameters and methods and feature selection this becomes very useful
 resultVector <- foreach(selection = names(selections), .combine = "c") %do% {
   
-    tunedMtry <- sqrt(numberFeatures)
+    tunedMtry <- ceiling(sqrt(numberFeatures))
   
   message(tunedMtry)
   selData <- selections[[selection]]
@@ -383,7 +397,7 @@ resultVector <- foreach(selection = names(selections), .combine = "c") %do% {
 
 
 ## Reordering the results to have the same methods together
-index <- c(1,2,3,8,9,10,4,5,6,7,11,12,13,14)
+index <- c(1,2,3,8,9, 10, 15, 16, 17,4,5,6,7,11,12,13,14, 18, 19, 20, 21)
 resultVector <- resultVector[order(index)]
 
 names(resultVector) <- parameters

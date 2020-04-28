@@ -437,7 +437,7 @@ plotResults <- function(res, response) {
 
 plotResults(resultVector[[3]], response)
 ## @knitr rfSecond
-plotResults(resultVector[[6]], response)
+plotResults(resultVector[[7]], response)
 
 ## @knitr displaySVM
 plotResults(resultVector[[14]], response)
@@ -497,11 +497,11 @@ kable(svmResultTable, caption = "Table 4: Overview of the SVM Classifier Perform
 
 
 ## @knitr inDepth
-cm.svmBest <- t(confusionMatrix(response, resultVector[[14]])$byClass)
-kable(round(cm.svmBest,4), caption = "Table 5: Classwise statistics of the SVM Classifier when trained with the radial kernel and the selected genes by the Random Forest Variable Importance.")
+cm.svmBest <- t(confusionMatrix(response, resultVector[[12]])$byClass)
+kable(round(cm.svmBest,4), caption = "Table 5: Classwise statistics of the SVM Classifier trained with the polynomial kernel and allgenes. And the Random Forest Classifier trained with 1000 trees and all Genes")
 #grid.arrange(tableGrob(round(cm.svmBest,4)))
-cm.rfBest <- t(confusionMatrix(response, resultVector[[3]])$byClass)
-kable(round(cm.svmBest,4), caption = "Table 6: Classwise statistics of the Random Forest Classifier trained with 1000 trees and all Genes.")
+#cm.rfBest <- t(confusionMatrix(response, resultVector[[3]])$byClass)
+#kable(round(cm.svmBest,4), caption = "Table 6: Classwise statistics of the Random Forest Classifier trained with 1000 trees and all Genes.")
 #kable(round(cm.rfBest, 4), caption = "Table 6: Classwise performance of the Random Forest Classifier when trainied with 1000 trees and all genes")
 #grid.arrange(tableGrob(round(cm.rfBest, 4)),
 #             tableGrob(round(cm.svmBest,4)), textGrob("A"), textGrob("B"),

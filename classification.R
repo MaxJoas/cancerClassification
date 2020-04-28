@@ -20,7 +20,7 @@ load("./DenBoerData_loaded.Rdata")
 ## Note the the numberThreads variable gets passed later to the ranger function
 ## this is neccessary, because ranger uses all available threads as a default and I
 ## did not intend to overload the cluster.
-numberThreads <- 4
+numberThreads <- 6
 doMC::registerDoMC(numberThreads)
 ## Here I store all the different parameters we want to use for the different
 ## classification methods
@@ -94,7 +94,7 @@ colnames(exprTableTransposed) <- make.names(colnames(exprTableTransposed))
 #### Classs Filtering ####
 ## beofre filtering I dsiplay the class frequency in a table
 classesbeforeFiltered <- as.data.frame(sort(table(phenoTable$Sample.title),
-                                           decreasing = TRUE))
+                                            decreasing = TRUE))
 colnames(classesbeforeFiltered) <- c("Class", "Freq")
 kable(classesbeforeFiltered, caption = "Table 1: Class Sizes before Filtering")
 
@@ -144,7 +144,7 @@ tuneMtry <- function(relevantGenes) {
                      method = "ranger",
                      metric = "Accuracy",
                      trControl = control)
-
+  
   tunedMtry <- rf.random$finalModel$mtry
   return (tunedMtry)
 }
@@ -166,7 +166,7 @@ SelectFeaturesWithRandomForest <- function(trainIndex,
                 mtry = tunedMtry,
                 num.threads = numberThreads,
   )
-
+  
   if(verbose) message("Finished fitting, now extracting variable importance")
   varImportance <- fit$variable.importance
   selectedGenes <- sort(varImportance, na.last = TRUE, decreasing = TRUE)
@@ -187,10 +187,10 @@ getNumberofFeatures <- function(FUN, preFiltered) {
   maximalChangeIndex <- match(maximalChangePoint, secondDer)
   numberFeatures <- maximalChangeIndex
   return(list(numberFeatures = numberFeatures,
-           smoothedLine = smoothed,
-           genes = selectedGenes,
-           maximalChangeIndex = maximalChangeIndex
-           ))
+              smoothedLine = smoothed,
+              genes = selectedGenes,
+              maximalChangeIndex = maximalChangeIndex
+  ))
 }
 
 
@@ -214,10 +214,10 @@ plotVariableImportance <- function(smoothed,
               "Petal Width" = "orange")
   ggplot(plotData,
          aes(x = Index)) +
-  geom_point(aes(y = `Variable Importance`, color = "Empiric")) +
-  geom_line(aes(y = smoothed, color = "smoothed"))  +
-  geom_vline(aes(xintercept = maximalChangeIndex, color= "Turning Point"),
-             size = 1.5)
+    geom_point(aes(y = `Variable Importance`, color = "Empiric")) +
+    geom_line(aes(y = smoothed, color = "smoothed"))  +
+    geom_vline(aes(xintercept = maximalChangeIndex, color= "Turning Point"),
+               size = 1.5)
 }
 
 ## execute the plotting function
@@ -255,10 +255,10 @@ SelectLOOCV <- function(FUN,
                         verbose = FALSE) {
   res <- foreach(i = 1:nrow(exprTableTransposed)) %dopar% {
     curVariables <- FUN(-i,
-                         numFeatures,
-                         verbose)
+                        numFeatures,
+                        verbose)
     return(curVariables)
-
+    
   }
   names(res) <- rownames(phenoTable)
   return(res)
@@ -285,7 +285,7 @@ RandomForestClassifier <- function(numberTrees,
                    num.trees = numberTrees,
                    num.threads = numberThreads,
                    mtry = tunedMtry)
-
+  
   testData <- t(as.data.frame(exprTableTransposed[testIndex,
                                                   selectedCovariates]))
   if(length(testIndex) !=1) {
@@ -348,11 +348,14 @@ LOOCV <- function(FUN,
   return(unlist(res))
 }
 
-
+# for using all genes in classifiers helper variable
+selectedGenes <- rep(1, ncol(exprTableTransposed))
+names(selectedGenes) <- colnames(exprTableTransposed)
 ## helper for perfoming the classification with two different sets of selcted genes
 allGenesSelected <- rep(list(selectedGenes), nrow(exprTableTransposed))
 names(allGenesSelected) <- rownames(exprTableTransposed)
-selections <- list(allGenes = allGenesSelected,
+selections <- list(
+                   allGenes = allGenesSelected,
                    rfSelection = loocvSelectionsRF,
                    varSelection = loocvSelectionsVar)
 
@@ -362,10 +365,10 @@ selections <- list(allGenes = allGenesSelected,
 ## more parameters and methods and feature selections this becomes very useful
 resultVector <- foreach(selection = names(selections), .combine = "c") %do% {
   selData <- selections[[selection]]
-    tunedMtry <- ceiling(sqrt(length(selData[[1]])))
+  tunedMtry <- ceiling(sqrt(length(selData[[1]])))
   
   message(tunedMtry)
- 
+  
   ## combines all the results with the random forest
   rf.comb <- foreach(numTree = numberOfTrees, .combine = "c") %do% {
     rf.loocv <- LOOCV(RandomForestClassifier, numTree, selData)
@@ -410,50 +413,50 @@ names(response) <- rownames(phenoTable)
 ## @knitr displayResult
 #### Functions for displaying the results ####
 ## Functions for plotting a heatmap of a confusion table
-plotResults <- function(res, response, title) {
+plotResults <- function(res, response) {
   cm <- confusionMatrix(res, response)
   cm.table <- as.data.frame(cm$table)
   cm.stats <-data.frame(Stats = cm$overall)
   cm.stats$Stats <- round(cm.stats$Stats,2)
   cm.percentage <- as.data.frame(prop.table(cm$table))
   cm.table$Perc <- round(cm.percentage$Freq*100,2)
-
+  
   cm.plot <- ggplot(data = cm.table, aes(x = Prediction , y =  Reference, fill = Freq)) +
-             geom_raster(aes(fill = Freq)) +
-             geom_text(aes(label = paste("",Freq,",",Perc,"%")),
-             color = 'white', size = 3, fontface = "bold") +
-             theme_light()
+    geom_raster(aes(fill = Freq)) +
+    geom_text(aes(label = paste("",Freq,",",Perc,"%")),
+              color = 'white', size = 3, fontface = "bold") +
+    theme_light()
   cm.stats <- cm.stats[-c(5,7), ,drop = F]
   cm.statsTable <-  tableGrob(cm.stats)
-
+  
   grid.arrange(cm.plot, cm.statsTable,nrow = 1, ncol = 2, widths=c(0.7, 0.3))
   #top = textGrob(paste0("Confusion Table Heatmap \n",title), gp = gpar(fontsize=20,font=1)))
-
+  
 }
 
 
-plotResults(resultVector[[3]], response, names(resultVector)[3])
+plotResults(resultVector[[3]], response)
 ## @knitr rfSecond
-plotResults(resultVector[[4]], response, names(resultVector)[4])
+plotResults(resultVector[[6]], response)
 
 ## @knitr displaySVM
-plotResults(resultVector[[7]], response, names(resultVector)[7])
+plotResults(resultVector[[14]], response)
 ## @knitr displaySVM2
-plotResults(resultVector[[14]], response, names(resultVector)[14])
+plotResults(resultVector[[18]], response)
 ## @knitr appendix
-plotResults(resultVector[[5]], response, names(resultVector)[5])
-plotResults(resultVector[[6]], response, names(resultVector)[6])
+plotResults(resultVector[[5]], response)
+plotResults(resultVector[[6]], response)
 
-plotResults(resultVector[[8]], response, names(resultVector)[8])
-plotResults(resultVector[[9]], response, names(resultVector)[9])
-plotResults(resultVector[[10]], response, names(resultVector)[10])
-plotResults(resultVector[[11]], response, names(resultVector)[11])
-plotResults(resultVector[[12]], response, names(resultVector)[12])
-plotResults(resultVector[[13]], response, names(resultVector)[13])
+plotResults(resultVector[[8]], response)
+plotResults(resultVector[[9]], response)
+plotResults(resultVector[[10]], response)
+plotResults(resultVector[[11]], response)
+plotResults(resultVector[[12]], response)
+plotResults(resultVector[[13]], response)
 
 
-plotResults(resultVector[[1]], response, names(resultVector)[1])
-plotResults(resultVector[[2]], response, names(resultVector)[2])
+plotResults(resultVector[[1]], response)
+plotResults(resultVector[[2]], response)
 ## @knitr overviewResultsRF
 getResultOverview <- function (results) {
   evaluationResults <- foreach(i = c(1:length(results)), .combine = 'rbind') %do% {
@@ -468,9 +471,9 @@ getResultOverview <- function (results) {
     misclError <-  errors / sum(cm.table)
     accuracy <- 1 - misclError
     ci.upper <- accuracy + 1.96 *
-                sqrt( (accuracy * (1 - accuracy)) / nrow(exprTableTransposed))
+      sqrt( (accuracy * (1 - accuracy)) / nrow(exprTableTransposed))
     ci.lower <- accuracy - 1.96 *
-                sqrt( (accuracy * (1 - accuracy)) / nrow(exprTableTransposed))
+      sqrt( (accuracy * (1 - accuracy)) / nrow(exprTableTransposed))
     ci.interval <- paste0(round(ci.lower,4), "-", round(ci.upper,4))
     message("Misclassifiction Error for current predictions:")
     message(round(misclError,4))
@@ -494,14 +497,15 @@ kable(svmResultTable, caption = "Table 4: Overview of the SVM Classifier Perform
 
 
 ## @knitr inDepth
-cm.svmBest <- t(confusionMatrix(response, resultVector[[7]])$byClass)
-kable(round(cm.svmBest,4), caption = "Table 5: Classwise performance of the SVM Classifier when trained with the radial kernel and all genes (same for the Random Forest Classifier when trainied with 1000 trees and all genes")
+cm.svmBest <- t(confusionMatrix(response, resultVector[[14]])$byClass)
+kable(round(cm.svmBest,4), caption = "Table 5: Classwise statistics of the SVM Classifier when trained with the radial kernel and the selected genes by the Random Forest Variable Importance.")
 #grid.arrange(tableGrob(round(cm.svmBest,4)))
-cm.rfBest <- t(confusionMatrix(response, resultVector[[1]])$byClass)
+cm.rfBest <- t(confusionMatrix(response, resultVector[[3]])$byClass)
+kable(round(cm.svmBest,4), caption = "Table 6: Classwise statistics of the Random Forest Classifier trained with 1000 trees and all Genes.")
 #kable(round(cm.rfBest, 4), caption = "Table 6: Classwise performance of the Random Forest Classifier when trainied with 1000 trees and all genes")
 #grid.arrange(tableGrob(round(cm.rfBest, 4)),
 #             tableGrob(round(cm.svmBest,4)), textGrob("A"), textGrob("B"),
- #            nrow = 2, ncol = 2)
+#            nrow = 2, ncol = 2)
 ## @knitr saving
 #### Saving the image file
 message("Saving Image file")

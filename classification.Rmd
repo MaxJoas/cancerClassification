@@ -119,7 +119,7 @@ In order to validate the results, I split my data into a training and validation
 
 In microarray studies, it is common to have a high number of measurements in comparison to the number of
 samples[@smallnlargep]. This is called a small n large p data set and can lead to overfitting [@johnstone2009statistical]. Therefore, it can be beneficial to select only a subset of independent variables. Ideally, the ones that contain the most information. In order to find these variables I also used the random forest for feature selection. Precisely,
-I used the impurity variable importance of the random forest. Before growing the random forest to determine the number of features to select, I tuned the mtry parameter. One note on parameter tuning: It is common to tune the mtry parameter and the number of trees based on the out of bag error of the Random Forest. I did not include tuning for my actual selection of genes and the training. I did not do that because I used leave-one-out-cross-validation, which would have made the process even more computationally intensive. Since the aim was to compare the parameters anyway and not due tune them this is a reasonable approach to do.
+I used the impurity variable importance of the random forest. Before growing the random forest to determine the number of features to select, I tuned the mtry parameter. One note on parameter tuning: It is common to tune the mtry parameter and the number of trees based on the out of bag error of the Random Forest. I did not include tuning for my actual selection of genes and the training. I did not do that because I used leave-one-out-cross-validation, which would have made the process even more computationally intensive. Since the aim was to compare the parameters anyway and not to tune them this is a reasonable approach to do. Since I used the random forest also as classifier I also wanted to include a method for feature selection that is independent of the classification method. Therefore I chose a simple approach: I selected the genes with the most variance across the all samples.
 
 
 
@@ -136,7 +136,7 @@ This makes the code easy to extend since I  only need to write a new base functi
 The base function for classification takes the parameters for the corresponding method, e.g. the number of trees for the random forest and the Kernel method for SVM.
 
 For the feature selection, I applied the same principles I had one function that did the actual feature selection and one function that implements the LOOCV logic and calls the feature selection function. It is also possible to specify how many features should be selected. However, I did not want to choose the number of features arbitrary. Consequently, I sorted the variable importance of all covariates and plotted it. Subsequently, I smoothed the plot in order to make it differentiable. The goal was to find the point where the variable importance drops the steepest. This point I used as a cutoff for the number of features that I selected. In order to find the point, I took the highest value of the second derivative
-of the smoothed line. This process is a highly reusable and automated process to find the number of variables to select. Furthermore, I wrote some functions to display and plot the results.
+of the smoothed line. This process is a highly reusable and automated process to find the number of variables to select. The same was done when I used the variance as feature selection criteria. Furthermore, I wrote some functions to display and plot the results.
 
 
 
@@ -165,11 +165,12 @@ For the comparison of the classifiers, I used two sets of selected genes: One se
 
 For the actual comparison of the Random Forest Classifiers, I used the following numbers of trees: 200, 500 and 1000. Table 3 shows an overview of the MER, Accuracy and 95% confidence interval.
 
+ ```{r execute, eval=TRUE}
+```
 ```{r overviewResultsRF, eval=TRUE}
 ```
 
- ```{r execute, eval=TRUE}
-```
+
 
 The accuracy when using all genes is with 94% very high. The 95% confidence interval is also reasonably narrow, which gives security about the result. An accuracy of 94% means that 94% of the samples were classified correctly.
 The number of trees seems to have no influence on the prediction accuracy when using all genes. Only when training the Classifier with a subset of selected genes the number of trees seems to influence the prediction accuracy. Increasing the number of trees from 200 to 500, lead to an improvement in the accuracy of 10.6 percentage points. A further increase in the number of trees did not improve the prediction accuracy. The feature selection did not have an impact on the prediction when the Random Forest Classifier was trained with more than 200 trees and it decreased the accuracy when trained with 200 trees.

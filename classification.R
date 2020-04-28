@@ -38,9 +38,9 @@ preFiltered <- 200
 parameters <- c("RF 200 Trees all Genes",
                 "RF 500 Trees all Genes",
                 "RF 1000 Trees all Genes",
-                "RF 200 Trees Feature Selection",
-                "RF 500 Trees Feature Selection",
-                "RF 1000 Trees Feature Selection",
+                "RF 200 Trees RF Selection",
+                "RF 500 Trees RF Selection",
+                "RF 1000 Trees RF Selection",
                 "RF 200 Trees Variance Selection",
                 "RF 500 Trees Variance Selection",
                 "RF 1000 Trees Variance Selection",
@@ -48,10 +48,10 @@ parameters <- c("RF 200 Trees all Genes",
                 "SVM Linear Kernel all Genes",
                 "SVM Ploynomial Kernel all Genes",
                 "SVM Sigmoid Kernel all Genes",
-                "SVM Radial Kernel Feature Selection",
-                "SVM Linear Kernel Feature Selection",
-                "SVM Ploynomial Kernel Feature Selection",
-                "SVM Sigmoid Kernel Feature Selection",
+                "SVM Radial Kernel RF Selection",
+                "SVM Linear Kernel RF Selection",
+                "SVM Ploynomial Kernel RF Selection",
+                "SVM Sigmoid Kernel RF Selection",
                 "SVM Radial Kernel Variance Selection",
                 "SVM Linear Kernel Variance Selection",
                 "SVM Ploynomial Kernel Variance Selection",
@@ -358,14 +358,14 @@ selections <- list(allGenes = allGenesSelected,
 
 
 ## this loop saves all prediction results in a list
-## might be a over engineered for our case, but as soon as one want to compare
-## more parameters and methods and feature selection this becomes very useful
+## might be a bit over-engineered for our case, but as soon as one want to compare
+## more parameters and methods and feature selections this becomes very useful
 resultVector <- foreach(selection = names(selections), .combine = "c") %do% {
-  
-    tunedMtry <- ceiling(sqrt(numberFeatures))
+  selData <- selections[[selection]]
+    tunedMtry <- ceiling(sqrt(length(selData[[1]])))
   
   message(tunedMtry)
-  selData <- selections[[selection]]
+ 
   ## combines all the results with the random forest
   rf.comb <- foreach(numTree = numberOfTrees, .combine = "c") %do% {
     rf.loocv <- LOOCV(RandomForestClassifier, numTree, selData)
@@ -485,11 +485,11 @@ getResultOverview <- function (results) {
 
 
 resultTable <- getResultOverview(resultVector)
-rfResultTable <- resultTable[1:6, ]
+rfResultTable <- resultTable[1:9, ]
 kable(rfResultTable, caption = "Table 3: Overview of the Random Forest Classifier Performance with different Parameters")
 
 ## @knitr overviewResultsSVM
-svmResultTable <- resultTable[7:14, ]
+svmResultTable <- resultTable[10:21, ]
 kable(svmResultTable, caption = "Table 4: Overview of the SVM Classifier Performance with different Parameters")
 
 
